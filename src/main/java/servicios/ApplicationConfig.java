@@ -1,0 +1,52 @@
+
+package servicios;
+
+import java.util.Set;
+import javax.ws.rs.core.Application;
+
+/**
+ *
+ * @author Franco Sili
+ */
+@javax.ws.rs.ApplicationPath("ws")
+public class ApplicationConfig extends Application {
+
+    @Override
+    public Set<Class<?>> getClasses() {
+        Set<Class<?>> resources = new java.util.HashSet<>();
+        addRestResourceClasses(resources);
+        return resources;
+    }
+
+    /**
+     * Do not modify addRestResourceClasses() method.
+     * It is automatically populated with
+     * all resources defined in the project.
+     * If required, comment out calling this method in getClasses().
+     */
+    private void addRestResourceClasses(Set<Class<?>> resources) {
+        resources.add(servicios.BuscaProductosRest.class);
+        resources.add(servicios.CteTipoRest.class);
+        resources.add(servicios.DepositoRest.class);
+        resources.add(servicios.FiltroListaPrecioRest.class);
+        resources.add(servicios.FormaPagoRest.class);
+        resources.add(servicios.ListaPrecioRest.class);
+        resources.add(servicios.PadronRest.class);
+        resources.add(servicios.PendientesCancelarRest.class);
+        resources.add(servicios.PerfilRest.class);
+        resources.add(servicios.ProductoRest.class);
+        resources.add(servicios.ProveedoresRest.class);
+        resources.add(servicios.RubroRest.class);
+        resources.add(servicios.SisComprobanteRest.class);
+        resources.add(servicios.SisFormaPagoRest.class);
+        resources.add(servicios.SisIVARest.class);
+        resources.add(servicios.SisMonedaRest.class);
+        resources.add(servicios.SisTipoOperacionRest.class);
+        resources.add(servicios.SisUnidadRest.class);
+        resources.add(servicios.SubRubroRest.class);
+        resources.add(servicios.SucursalRest.class);
+        resources.add(servicios.UsuarioRest.class);
+        resources.add(utils.CrossRules.class);
+    }
+    
+}
