@@ -83,23 +83,29 @@ public class FormaPagoRest {
             }
             
             //valido que tenga Rubros disponibles
-            if(user.getIdPerfil().getIdSucursal().getIdEmpresa().getFormaPagoCollection().isEmpty()) {
+            if(user.getIdPerfil().getIdSucursal().getIdEmpresa().getListaPrecioCollection().isEmpty()) {
                 respuesta.setControl(AppCodigo.ERROR, "No hay Formas de Pagos disponibles");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
             //busco los SubRubros de la empresa del usuario
             List<Payload> formaPagos = new ArrayList<>();
-            for(FormaPago p : user.getIdPerfil().getIdSucursal().getIdEmpresa().getFormaPagoCollection()){
-                FormaPagoResponse fp = new FormaPagoResponse(p);
-                if(!p.getIdListaPrecios().getListaPrecioDetCollection().isEmpty()) {
-                    fp.getListaPrecio().agregarListaPrecioDet(p.getIdListaPrecios().getListaPrecioDetCollection());
+            for(ListaPrecio l : user.getIdPerfil().getIdSucursal().getIdEmpresa().getListaPrecioCollection()){
+                if(l.getFormaPagoCollection().isEmpty()) {
+                    respuesta.setControl(AppCodigo.ERROR, "No hay Formas de Pagos disponibles");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
-//                //Seteo editable en false si la coleccion de FactCab es distinta de vacia
-//                if(!p.getFactCabCollection().isEmpty()){
-//                    fp.setEditar(false);
-//                } 
-                formaPagos.add(fp);
+                for(FormaPago p : l.getFormaPagoCollection()) {
+                    FormaPagoResponse fp = new FormaPagoResponse(p);
+                    if(!p.getIdListaPrecios().getListaPrecioDetCollection().isEmpty()) {
+                        fp.getListaPrecio().agregarListaPrecioDet(p.getIdListaPrecios().getListaPrecioDetCollection());
+                    }
+    //                //Seteo editable en false si la coleccion de FactCab es distinta de vacia
+    //                if(!p.getFactCabCollection().isEmpty()){
+    //                    fp.setEditar(false);
+    //                } 
+                    formaPagos.add(fp);
+                }
             }
             respuesta.setArraydatos(formaPagos);
             respuesta.setControl(AppCodigo.OK, "Lista de Formas de Pago");
@@ -179,7 +185,7 @@ public class FormaPagoRest {
             
             boolean transaccion;            
             FormaPago formaPago = new FormaPago();
-            formaPago.setIdEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa());
+            formaPago.setIdEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
             formaPago.setTipo(sisFormaPago);
             formaPago.setDescripcion(descripcion);
             formaPago.setIdListaPrecios(listaPrecio);

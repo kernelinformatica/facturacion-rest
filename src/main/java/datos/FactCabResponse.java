@@ -28,7 +28,7 @@ public class FactCabResponse {
     private Date fechaDolar;
     private Integer idDepositos;
     private Object observaciones;
-    private SisSitIvaResponse sitIVA;
+    private String sitIVA;
     private CteTipoResponse cteTipo;
     private SisMonedasResponse idmoneda;
     
@@ -51,7 +51,7 @@ public class FactCabResponse {
         this.fechaDolar = f.getFechaDolar();
         this.idDepositos = f.getIdDepositos();
         this.observaciones = f.getObservaciones();
-        this.sitIVA = new SisSitIvaResponse(f.getSitIVA());
+        this.sitIVA = f.getSitIVA();
         this.cteTipo = new CteTipoResponse(f.getIdCteTipo());
         this.idmoneda = new SisMonedasResponse(f.getIdmoneda());
     }
@@ -216,11 +216,11 @@ public class FactCabResponse {
         this.idDepositos = idDepositos;
     }
 
-    public SisSitIvaResponse getSitIVA() {
+    public String getSitIVA() {
         return sitIVA;
     }
 
-    public void setSitIVA(SisSitIvaResponse sitIVA) {
+    public void setSitIVA(String sitIVA) {
         this.sitIVA = sitIVA;
     }
 }

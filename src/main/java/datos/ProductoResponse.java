@@ -29,6 +29,7 @@ public class ProductoResponse implements Payload {
     private SisUnidadResponse unidadCompra;
     private SisUnidadResponse unidadVenta;
     private boolean editar; 
+    private ModeloCabResponse modeloCab;
 
     public ProductoResponse(Producto p) {
         this.idProductos = p.getIdProductos();
@@ -52,6 +53,7 @@ public class ProductoResponse implements Payload {
         this.unidadCompra = new SisUnidadResponse(p.getUnidadCompra());
         this.unidadVenta = new SisUnidadResponse(p.getUnidadVenta());
         this.editar = true;
+        this.modeloCab = new ModeloCabResponse(p.getIdModeloCab());
     }
     
     public Integer getIdProductos() {
@@ -234,4 +236,14 @@ public class ProductoResponse implements Payload {
     public void setEditar(boolean editar) {
         this.editar = editar;
     }
+
+    public ModeloCabResponse getModeloCab() {
+        return modeloCab;
+    }
+
+    public void setModeloCab(ModeloCabResponse modeloCab) {
+        this.modeloCab = modeloCab;
+    }
+    
+    
 }

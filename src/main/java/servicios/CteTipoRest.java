@@ -350,4 +350,73 @@ public class CteTipoRest {
         } 
     }    
     
+    
+    @GET
+    @Path("/{modulo}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getComprobantesFiltrados(
+        @PathParam("modulo") String modulo,
+        @HeaderParam ("token") String token,  
+        @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+        ServicioResponse respuesta = new ServicioResponse();
+        try {
+            //valido que token no sea null
+            if(token == null || token.trim().isEmpty()) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, token vacio");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+
+            //Busco el token
+            Acceso userToken = accesoFacade.findByToken(token);
+
+            //valido que Acceso no sea null
+            if(userToken == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, Acceso nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+
+            //Busco el usuario
+            Usuario user = usuarioFacade.getByToken(userToken);
+
+            //valido que el Usuario no sea null
+            if(user == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, Usuario nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+
+            //valido vencimiento token
+            if(!accesoFacade.validarToken(userToken, user)) {
+                respuesta.setControl(AppCodigo.ERROR, "Credenciales incorrectas");
+                return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
+            }
+            
+            //valido que el Usuario no sea null
+            if(modulo == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, modulo vacio");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            
+            List<CteTipo> cteTipoList = cteTipoFacade.getByModulo(user.getIdPerfil().getIdSucursal().getIdEmpresa(), modulo);
+            
+            //valido que tenga comprobantes disponibles
+            if(cteTipoList.isEmpty()) {
+                respuesta.setControl(AppCodigo.ERROR, "No hay Tipos de Comprobantes disponibles");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            
+            //busco los tipos de comprobantes de la empresa del usuario
+            List<Payload> cteTipos = new ArrayList<>();
+            for(CteTipo p : cteTipoList){
+                CteTipoResponse pr = new CteTipoResponse(p);
+                cteTipos.add(pr);
+            }
+            respuesta.setArraydatos(cteTipos);
+            respuesta.setControl(AppCodigo.OK, "Lista de Tipos de Comprobantes");
+            return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+        } catch (Exception e) {
+            respuesta.setControl(AppCodigo.ERROR, e.getMessage());
+            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+        }
+    }
 }

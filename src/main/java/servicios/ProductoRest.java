@@ -244,7 +244,7 @@ public class ProductoRest {
             producto.setIdIVA(sisIVA);
             producto.setUnidadCompra(sisUniudadCompra);
             producto.setUnidadVenta(sisUnidadVenta);
-            producto.setIdEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa());
+            producto.setIdEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
             transaccion = productoFacade.setProductoNuevo(producto);
             if(!transaccion) {
                 respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Producto, clave primaria repetida");
