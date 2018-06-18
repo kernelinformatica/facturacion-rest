@@ -8,16 +8,20 @@ import java.math.BigDecimal;
  */
 public class FacturaResponse implements Payload{
     private String cuentaContable;
-    private String descripcion;
+    private String descripcion;  
     private BigDecimal importeTotal;
 
-    public FacturaResponse(String cuentaContable, String descripcion, BigDecimal importeTotal) {
+    public FacturaResponse(String cuentaContable, String descripcion, String tipoModelo, BigDecimal importeTotal) {
         this.cuentaContable = cuentaContable;
         this.descripcion = descripcion;
         this.importeTotal = importeTotal;
     }
     
-    
+    public FacturaResponse(String cuentaContable, String descripcion, BigDecimal importeTotal) {
+        this.cuentaContable = cuentaContable;
+        this.descripcion = descripcion;
+        this.importeTotal = importeTotal;
+    }
 
     public String getCuentaContable() {
         return cuentaContable;
@@ -44,7 +48,6 @@ public class FacturaResponse implements Payload{
     public void setImporteTotal(BigDecimal importeTotal) {
         this.importeTotal = importeTotal;
     }
-    
     
     @Override
     public String getClassName() {

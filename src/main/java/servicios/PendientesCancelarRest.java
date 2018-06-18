@@ -4,8 +4,10 @@ import com.google.gson.JsonObject;
 import datos.AppCodigo;
 import datos.Payload;
 import datos.PendientesCancelarResponse;
+import datos.ProductoResponse;
 import datos.ServicioResponse;
 import entidades.Acceso;
+import entidades.Producto;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
@@ -27,6 +29,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
+import persistencia.ProductoFacade;
 import persistencia.UsuarioFacade;
 import utils.Utils;
 
@@ -41,6 +44,7 @@ public class PendientesCancelarRest {
     @Inject UsuarioFacade usuarioFacade;
     @Inject AccesoFacade accesoFacade;
     @Inject Utils utils; 
+    @Inject ProductoFacade productoFacade;
     
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -117,25 +121,26 @@ public class PendientesCancelarRest {
             ResultSet rs = callableStatement.executeQuery();
             List<Payload> pendientes = new ArrayList<>();
                 while (rs.next()) {
+                    Producto prod = productoFacade.find(rs.getInt("idProductos"));
+                    if(prod == null) {
+                        break;
+                    }
+                    ProductoResponse producto = new ProductoResponse(prod);
+                    producto.getModeloCab().agregarModeloDetalle(prod.getIdModeloCab().getModeloDetalleCollection());
                     PendientesCancelarResponse pendientesCancelar = new PendientesCancelarResponse(
                             rs.getString("comprobante"),
                             rs.getString("numero"),
-                            rs.getString("codProducto"),
                             rs.getBigDecimal("original"),
                             rs.getBigDecimal("pendiente"),
-                            rs.getString("articulo"),
                             rs.getBigDecimal("precio"),
                             rs.getBigDecimal("dolar"),
                             rs.getString("moneda"),
                             rs.getBigDecimal("porCalc"),
                             rs.getBigDecimal("ivaPorc"),
                             rs.getInt("deposito"),
-                            rs.getBoolean("trazable"),
-                            rs.getString("rubro"),
-                            rs.getString("subRubro"));
+                            producto);
                     pendientes.add(pendientesCancelar);
                 }
-            
             if(pendientes.isEmpty()) {
                 respuesta.setControl(AppCodigo.ERROR, "No hay Comprobantes Pendientes");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();

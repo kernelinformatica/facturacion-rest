@@ -1,5 +1,6 @@
 package datos;
 
+import entidades.Producto;
 import java.math.BigDecimal;
 
 /**
@@ -9,54 +10,36 @@ import java.math.BigDecimal;
 public class PendientesCancelarResponse implements Payload{
     private String comprobante;
     private String numero;   
-    private String codProducto;
     private BigDecimal original;
     private BigDecimal pendiente;
-    private String articulo;
     private BigDecimal precio;
     private BigDecimal dolar;
     private String moneda;
     private BigDecimal porCalc;
     private BigDecimal ivaPorc;
     private Integer deposito;
-    private boolean trazable;
-    private String rubro;
-    private String subRubro;
+    private ProductoResponse producto;
 
-    public PendientesCancelarResponse(String comprobante, String numero, String codProducto, BigDecimal original, BigDecimal pendiente, String articulo, BigDecimal precio, BigDecimal dolar, String moneda, BigDecimal porCalc, BigDecimal ivaPorc, Integer deposito, boolean trazable, String rubro, String subRubro) {
+    public PendientesCancelarResponse(String comprobante, String numero, BigDecimal original, BigDecimal pendiente, BigDecimal precio, BigDecimal dolar, String moneda, BigDecimal porCalc, BigDecimal ivaPorc, Integer deposito, ProductoResponse producto) {
         this.comprobante = comprobante;
         this.numero = numero;
-        this.codProducto = codProducto;
         this.original = original;
         this.pendiente = pendiente;
-        this.articulo = articulo;
         this.precio = precio;
         this.dolar = dolar;
         this.moneda = moneda;
         this.porCalc = porCalc;
         this.ivaPorc = ivaPorc;
         this.deposito = deposito;
-        this.trazable = trazable;
-        this.rubro = rubro;
-        this.subRubro = subRubro;
+        this.producto = producto;
     }
 
-    
-    
-    public String getCodProducto() {
-        return codProducto;
+    public ProductoResponse getProducto() {
+        return producto;
     }
 
-    public void setCodProducto(String codProducto) {
-        this.codProducto = codProducto;
-    }
-
-    public String getArticulo() {
-        return articulo;
-    }
-
-    public void setArticulo(String articulo) {
-        this.articulo = articulo;
+    public void setProducto(ProductoResponse producto) {
+        this.producto = producto;
     }
 
     public BigDecimal getPrecio() {
@@ -81,14 +64,6 @@ public class PendientesCancelarResponse implements Payload{
 
     public void setDeposito(Integer deposito) {
         this.deposito = deposito;
-    }
-
-    public boolean isTrazable() {
-        return trazable;
-    }
-
-    public void setTrazable(boolean trazable) {
-        this.trazable = trazable;
     }
 
     public String getComprobante() {
@@ -146,24 +121,6 @@ public class PendientesCancelarResponse implements Payload{
     public void setPorCalc(BigDecimal porCalc) {
         this.porCalc = porCalc;
     }
-
-    public String getRubro() {
-        return rubro;
-    }
-
-    public void setRubro(String rubro) {
-        this.rubro = rubro;
-    }
-
-    public String getSubRubro() {
-        return subRubro;
-    }
-
-    public void setSubRubro(String subRubro) {
-        this.subRubro = subRubro;
-    }
-    
-    
 
     @Override
     public String getClassName() {

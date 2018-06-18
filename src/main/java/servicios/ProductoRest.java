@@ -6,6 +6,7 @@ import datos.Payload;
 import datos.ProductoResponse;
 import datos.ServicioResponse;
 import entidades.Acceso;
+import entidades.ModeloDetalle;
 import entidades.Producto;
 import entidades.SisIVA;
 import entidades.SisUnidad;
@@ -104,6 +105,7 @@ public class ProductoRest {
             List<Payload> productosResponse = new ArrayList<>();
             for(Producto s : productos) {
                 ProductoResponse sr = new ProductoResponse(s);
+                sr.getModeloCab().agregarModeloDetalle(s.getIdModeloCab().getModeloDetalleCollection());
                 if(!s.getLoteCollection().isEmpty()) {
                     sr.setEditar(false);
                 }

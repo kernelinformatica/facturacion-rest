@@ -8,12 +8,8 @@ import datos.ModeloDetalleResponse;
 import datos.Payload;
 import datos.ServicioResponse;
 import entidades.Acceso;
-import entidades.FormaPago;
-import entidades.ListaPrecio;
-import entidades.ListaPrecioDet;
 import entidades.ModeloDetalle;
 import entidades.Producto;
-import entidades.SisFormaPago;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
@@ -37,6 +33,7 @@ import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
 import persistencia.ModeloDetalleFacade;
 import persistencia.ProductoFacade;
+import persistencia.SisTipoModeloFacade;
 import persistencia.UsuarioFacade;
 import utils.Utils;
 
@@ -46,17 +43,18 @@ import utils.Utils;
  */
 
 @Stateless
-@Path("factura")
-public class FacturaRest {
+@Path("buscaModelo")
+public class BuscaModeloRest {
     @Inject UsuarioFacade usuarioFacade;
     @Inject AccesoFacade accesoFacade;
     @Inject ProductoFacade productoFacade;
     @Inject ModeloDetalleFacade modeloFacade;
+    @Inject SisTipoModeloFacade sisTipoModeloFacade;
     
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getFactura(  
+    public Response getModelo(  
         @HeaderParam ("token") String token,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         
@@ -124,21 +122,111 @@ public class FacturaRest {
                 if(producto.getIdModeloCab().getModeloDetalleCollection().isEmpty()) {
                     respuesta.setControl(AppCodigo.ERROR, "Error, el producto:  " + producto.getDescripcion() + "no tiene un modelo asociado");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                }
-                
-                //Agrego a la lista de modelos response
+                }               
+                //Agrego a la lista de modelos response y calculo dependiendo operadores y tipo de modelo
+                // % porcentual
+                // + sumar
+                // - restar
+                // * multiplicar
+                // / dividir
+                // n                
                 for(ModeloDetalle p : producto.getIdModeloCab().getModeloDetalleCollection()) {
-                    ModeloDetalleResponse modeloResponse = new ModeloDetalleResponse(p, precio.multiply(new BigDecimal(cantidad)));
+                    BigDecimal total = new BigDecimal(BigInteger.ZERO);
+                    BigDecimal cien = new BigDecimal(100);
+                //De acuerdo al operador tengo que realizar distintas operaciones.
+                    if(p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(1).getTipo())) {
+                        switch (p.getOperador()) {
+                            case "+":
+                                total = total.add(precio.add(new BigDecimal(cantidad)));
+                                break;
+                            case "%":
+                                total = total.add(precio.multiply(new BigDecimal(cantidad)).divide(cien));
+                                break;
+                            case "-":
+                                total = total.add(precio.subtract(new BigDecimal(cantidad)));
+                                break;
+                            case "*":
+                                total = total.add(precio.multiply(new BigDecimal(cantidad)));
+                                break;
+                            case "/":
+                                total = total.add(precio.divide(new BigDecimal(cantidad)));
+                                break;
+                            case "n":
+                                total = precio;
+                                break;
+                            default:
+                                break;
+                        }
+                    } else if (p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(2).getTipo())) {
+                        BigDecimal porcentaje = new BigDecimal(BigInteger.ZERO);
+                        total = total.add(precio.multiply(new BigDecimal(cantidad)));
+                        if(p.getValor().equals(new BigDecimal(BigInteger.ZERO))) {
+                            porcentaje = porcentaje.add(producto.getIdIVA().getPorcIVA().divide(new BigDecimal(100)));
+                            total = total.multiply(porcentaje);
+                        } else {
+                            porcentaje = porcentaje.add(p.getValor().divide(cien));
+                            total = total.multiply(porcentaje);
+                        }
+                    } else if (p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(3).getTipo())) {
+                        total = total.add(precio.multiply(new BigDecimal(cantidad)));
+                        if(p.getValor().equals(new BigDecimal(BigInteger.ZERO))) {
+                            switch (p.getOperador()) {
+                                case "+":
+                                    total = total.add(producto.getIdIVA().getPorcIVA());
+                                    break;
+                                case "%":
+                                    total = total.multiply(producto.getIdIVA().getPorcIVA().divide(cien));
+                                    break;
+                                case "-":
+                                    total = total.subtract(producto.getIdIVA().getPorcIVA());
+                                    break;
+                                case "*":
+                                    total = total.multiply(producto.getIdIVA().getPorcIVA());
+                                    break;
+                                case "/":
+                                    total = total.divide(producto.getIdIVA().getPorcIVA());
+                                    break;
+                                case "n":
+                                    total = precio;
+                                    break;
+                                default:
+                                    break;
+                            }
+                        } else {
+                            switch (p.getOperador()) {
+                                case "+":
+                                    total = total.add(p.getValor());
+                                    break;
+                                case "%":
+                                    total = total.multiply(p.getValor().divide(cien));
+                                    break;
+                                case "-":
+                                    total = total.subtract(p.getValor());
+                                    break;
+                                case "*":
+                                    total = total.multiply(p.getValor());
+                                    break;
+                                case "/":
+                                    total = total.divide(p.getValor());
+                                    break;
+                                case "n":
+                                    total = precio;
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                    }
+                    ModeloDetalleResponse modeloResponse = new ModeloDetalleResponse(p, total);
                     modelos.add(modeloResponse);
                 } 
-            }
-            
+            }           
             List<FacturaResponse> listaFacturas = new ArrayList<>();
             List<Payload> lista = new ArrayList<>();
             Map<String, List<FacturaResponse>> map = new HashMap<>();
             //Armo la lista de facturas response a partir de la lista de modelos obtenidas para todos los productos
             for(ModeloDetalleResponse mdr : modelos) {
-                FacturaResponse fr = new FacturaResponse(mdr.getCtaContable(),mdr.getDescripcion(),mdr.getTotalModelo());
+                FacturaResponse fr = new FacturaResponse(mdr.getCtaContable(), mdr.getDescripcion(), mdr.getTotalModelo());
                 listaFacturas.add(fr);
             }
             //Separo por cuenta contable la lista de facturas y los seteo en el Map
@@ -147,7 +235,7 @@ public class FacturaRest {
                 if(map.containsKey(key)){
                     List<FacturaResponse> list = map.get(key);
                     list.add(fr);
-                }else{
+                } else {
                     List<FacturaResponse> list = new ArrayList<>();
                     list.add(fr);
                     map.put(key, list);
@@ -160,7 +248,7 @@ public class FacturaRest {
                 String cuentaContable = "";
                 //Recorro la lista dentro del Map
                 for(FacturaResponse fr : entry.getValue()) {
-                    //De acuerdo al operador tengo que realizar distintas operaciones.
+                    //Sumo los totales de acuerdo a la cuenta contable.
                     total = total.add(fr.getImporteTotal());
                     descripcion = fr.getDescripcion();
                     cuentaContable = fr.getCuentaContable();
