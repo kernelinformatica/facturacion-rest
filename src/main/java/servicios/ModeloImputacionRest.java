@@ -3,21 +3,18 @@ package servicios;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import datos.AppCodigo;
-import datos.ListaPreciosResponse;
+import datos.ModeloCabResponse;
 import datos.Payload;
 import datos.ServicioResponse;
 import entidades.Acceso;
-import entidades.ListaPrecio;
-import entidades.ListaPrecioDet;
-import entidades.Producto;
-import entidades.SisMonedas;
+import entidades.ModeloCab;
+import entidades.ModeloDetalle;
+import entidades.SisTipoModelo;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -35,10 +32,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
-import persistencia.ListaPrecioDetFacade;
-import persistencia.ListaPrecioFacade;
-import persistencia.ProductoFacade;
-import persistencia.SisMonedasFacade;
+import persistencia.ModeloCabFacade;
+import persistencia.ModeloDetalleFacade;
+import persistencia.SisTipoModeloFacade;
 import persistencia.UsuarioFacade;
 import utils.Utils;
 
@@ -46,21 +42,19 @@ import utils.Utils;
  *
  * @author FrancoSili
  */
-
 @Stateless
-@Path("listaPrecios")
-public class ListaPrecioRest {
+@Path("modeloImputacion")
+public class ModeloImputacionRest {
     @Inject UsuarioFacade usuarioFacade;
     @Inject AccesoFacade accesoFacade;
-    @Inject SisMonedasFacade sisMonedasFacade;
-    @Inject ListaPrecioFacade listaPrecioFacade;
-    @Inject ProductoFacade productoFacade;
-    @Inject ListaPrecioDetFacade listaPrecioDetFacade; 
+    @Inject ModeloDetalleFacade modeloDetalleFacade;
+    @Inject SisTipoModeloFacade sisTipoModeloFacade;
+    @Inject ModeloCabFacade modeloCabFacade; 
     
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getListaPrecios(  
+    public Response getModeloImputacion(  
         @HeaderParam ("token") String token,  
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
@@ -95,23 +89,21 @@ public class ListaPrecioRest {
                 return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
             }
             
-            //Valido que haya Listas de precios para esa empresa.
-            if(user.getIdPerfil().getIdSucursal().getIdEmpresa().getListaPrecioCollection().isEmpty()) {
-                respuesta.setControl(AppCodigo.ERROR, "No hay Listas de precios disponibles");
+            //Valido que haya Modelos de imputacion esa empresa.
+            if(user.getIdPerfil().getIdSucursal().getIdEmpresa().getModeloCabCollection().isEmpty()) {
+                respuesta.setControl(AppCodigo.ERROR, "No hay Modelos de Imputacion disponibles");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
             //busco los SubRubros de la empresa del usuario
-            List<Payload> listaPreciosResponse = new ArrayList<>();
-            for(ListaPrecio s : user.getIdPerfil().getIdSucursal().getIdEmpresa().getListaPrecioCollection()) {
-                ListaPreciosResponse sr = new ListaPreciosResponse(s);
-                if(!s.getListaPrecioDetCollection().isEmpty()) {
-                    sr.agregarListaPrecioDet(s.getListaPrecioDetCollection());
-                }
-                listaPreciosResponse.add(sr);
+            List<Payload> modeloCabResponse = new ArrayList<>();
+            for(ModeloCab s : user.getIdPerfil().getIdSucursal().getIdEmpresa().getModeloCabCollection()) {
+                ModeloCabResponse mcr = new ModeloCabResponse(s);
+                mcr.agregarModeloDetalle(s.getModeloDetalleCollection());
+                modeloCabResponse.add(mcr);
             }
-            respuesta.setArraydatos(listaPreciosResponse);
-            respuesta.setControl(AppCodigo.OK, "Lista de Precios");
+            respuesta.setArraydatos(modeloCabResponse);
+            respuesta.setControl(AppCodigo.OK, "Modelos de Imputacion");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception e) {
             respuesta.setControl(AppCodigo.ERROR, e.getMessage());
@@ -122,7 +114,7 @@ public class ListaPrecioRest {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response setListaPrecio(  
+    public Response setModeloImputacion(  
         @HeaderParam ("token") String token,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         
@@ -132,17 +124,9 @@ public class ListaPrecioRest {
             JsonObject jsonBody = Utils.getJsonObjectFromRequest(request);
             
             // Obtengo los atributos del body
-            Integer codLista = (Integer) Utils.getKeyFromJsonObject("codLista", jsonBody, "Integer");
-            Date fechaAlta = (Date) Utils.getKeyFromJsonObject("fechaAlta", jsonBody, "Date");
-            Date vigenciaDesde = (Date) Utils.getKeyFromJsonObject("vigenciaDesde", jsonBody, "Date");
-            Date vigenciaHasta = (Date) Utils.getKeyFromJsonObject("vigenciaHasta", jsonBody, "Date");
-            boolean activa = (Boolean) Utils.getKeyFromJsonObject("activa", jsonBody, "boolean");
-            Integer idPadronCliente = (Integer) Utils.getKeyFromJsonObject("idPadronCliente", jsonBody, "Integer");
-            Integer idPadronRepresentante = (Integer) Utils.getKeyFromJsonObject("idPadronRepresentante", jsonBody, "Integer");
-            BigDecimal porc1 = (BigDecimal) Utils.getKeyFromJsonObject("porc1", jsonBody, "BigDecimal");
-            String condiciones = (String) Utils.getKeyFromJsonObject("condiciones", jsonBody, "String");
-            Integer idMoneda = (Integer) Utils.getKeyFromJsonObject("idMoneda", jsonBody, "Integer");
-            List<JsonElement> preciosDet = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("preciosDet", jsonBody, "ArrayList");           
+            String descripcion = (String) Utils.getKeyFromJsonObject("descripcion", jsonBody, "String");
+            List<JsonElement> modeloDetalleList = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("modeloDetalle", jsonBody, "ArrayList");           
+            
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, token vacio");
@@ -173,79 +157,66 @@ public class ListaPrecioRest {
                 return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
             }
 
-            //Me fijo que  descripcion, idRubro e idEmpresa no sean nulos
-            if(codLista == 0 || idPadronCliente == 0 || idPadronRepresentante == 0 || porc1 == null || condiciones == null || idMoneda == 0) {
+            //Me fijo que  descripcion no sea nulo
+            if(descripcion == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, algun campo esta en nulo");
-                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-            }
-
-            SisMonedas sisMonedas = sisMonedasFacade.find(idMoneda);
-            //Pregunto si existe SisMonedas
-            if(sisMonedas == null) {
-                respuesta.setControl(AppCodigo.ERROR, "No existe la Moneda");
-                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-            }
-            
-            //Valido fechas
-             if(fechaAlta.after(vigenciaDesde) || vigenciaHasta.before(vigenciaDesde) ) {
-                respuesta.setControl(AppCodigo.ERROR, "Error, vigenciaDesde debe ser igual o mayor que fechaAlta y debe ser igual o menor a vigenciaHasta.");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
             boolean transaccion;
-            ListaPrecio listaPrecio = new ListaPrecio();
-            listaPrecio.setCodigoLista(codLista);
-            listaPrecio.setFechaAlta(fechaAlta);
-            listaPrecio.setVigenciaDesde(vigenciaDesde);
-            listaPrecio.setVigenciaHasta(vigenciaHasta);
-            listaPrecio.setActiva(activa);
-            listaPrecio.setIdEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa());
-            listaPrecio.setIdPadronCliente(idPadronCliente);
-            listaPrecio.setIdPadronRepresentante(idPadronRepresentante);
-            listaPrecio.setPorc1(porc1);
-            listaPrecio.setCondiciones(condiciones);
-            listaPrecio.setIdMoneda(sisMonedas);
-            transaccion = listaPrecioFacade.setListaPrecioNuevo(listaPrecio);
+            ModeloCab modeloCab = new ModeloCab();
+            modeloCab.setIdEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa());
+            modeloCab.setDescripcion(descripcion);
+            transaccion = modeloCabFacade.setModeloCabNuevo(modeloCab);
             if(!transaccion) {
-                respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta la Lsita de Precios, clave primaria repetida");
+                respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Modelo Cabecera, clave primaria repetida");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            if(preciosDet.isEmpty()) {
-                respuesta.setControl(AppCodigo.ERROR, "Lista de Precios sin detalles");
+            if(modeloDetalleList.isEmpty()) {
+                respuesta.setControl(AppCodigo.ERROR, "Lista de detalles Vacia");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            for(JsonElement j : preciosDet) {
+            for(JsonElement j : modeloDetalleList) {
                 boolean transaccion2;
-                ListaPrecioDet listaPrecioDet = new ListaPrecioDet();
-                BigDecimal precio = (BigDecimal) Utils.getKeyFromJsonObject("precio", j.getAsJsonObject(), "BigDecimal");
-                BigDecimal cotaInf = (BigDecimal) Utils.getKeyFromJsonObject("cotaInf", j.getAsJsonObject(), "BigDecimal");
-                BigDecimal cotaSup = (BigDecimal) Utils.getKeyFromJsonObject("cotaSup", j.getAsJsonObject(), "BigDecimal");
-                String observaciones = (String) Utils.getKeyFromJsonObject("observaciones", j.getAsJsonObject(), "String");
-                Integer idProducto = (Integer) Utils.getKeyFromJsonObject("idProducto", j.getAsJsonObject(), "Integer"); 
-                if(precio == null || cotaInf == null || cotaSup == null || idProducto == 0) {
+                ModeloDetalle modeloDetalle = new ModeloDetalle();
+                String ctaContable = (String) Utils.getKeyFromJsonObject("ctaContable", j.getAsJsonObject(), "String");
+                Integer orden = (Integer) Utils.getKeyFromJsonObject("orden", j.getAsJsonObject(), "Integer");
+                String descripcionDetalle = (String) Utils.getKeyFromJsonObject("descripcionDetalle", j.getAsJsonObject(), "String");
+                String dh = (String) Utils.getKeyFromJsonObject("dh", j.getAsJsonObject(), "String");
+                boolean prioritario = (Boolean) Utils.getKeyFromJsonObject("prioritario", j.getAsJsonObject(), "boolean");
+                BigDecimal valor = (BigDecimal) Utils.getKeyFromJsonObject("valor", j.getAsJsonObject(), "BigDecimal");
+                String operador = (String) Utils.getKeyFromJsonObject("operador", j.getAsJsonObject(), "String");
+                Integer idSisTipoModelo = (Integer) Utils.getKeyFromJsonObject("idSisTipoModelo", j.getAsJsonObject(), "Integer");
+                
+                if(idSisTipoModelo == null) {
                     respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, algun campo esta vacio");
                     return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
                 }
-                Producto producto = productoFacade.find(idProducto);
-                if(producto == null) {
-                    listaPrecioFacade.deleteListaPrecio(listaPrecio);
-                    respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, el producto con id " + idProducto + " no existe");
+                
+                SisTipoModelo sisTipoModelo = sisTipoModeloFacade.find(idSisTipoModelo);
+                if(sisTipoModelo == null) {
+                    modeloCabFacade.deleteModeloCab(modeloCab);
+                    respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, el tipo de modelo con id " + sisTipoModelo + " no existe");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
-                listaPrecioDet.setIdListaPrecios(listaPrecio);
-                listaPrecioDet.setPrecio(precio);
-                listaPrecioDet.setCotaInf(cotaInf);
-                listaPrecioDet.setCotaSup(cotaSup);
-                listaPrecioDet.setObservaciones(observaciones);
-                listaPrecioDet.setIdProductos(producto);
-                transaccion2 = listaPrecioDetFacade.setListaPrecioDetNuevo(listaPrecioDet);
+                
+                modeloDetalle.setCtaContable(ctaContable);
+                modeloDetalle.setDescripcion(descripcionDetalle);
+                modeloDetalle.setDh(dh);
+                modeloDetalle.setIdModeloCab(modeloCab);
+                modeloDetalle.setIdSisTipoModelo(sisTipoModelo);
+                modeloDetalle.setOperador(operador);
+                modeloDetalle.setOrden(orden);
+                modeloDetalle.setPrioritario(prioritario);
+                modeloDetalle.setValor(valor);
+                transaccion2 = modeloDetalleFacade.setModeloDetalleNuevo(modeloDetalle);
                 if(!transaccion2) {
-                    listaPrecioFacade.deleteListaPrecio(listaPrecio);
-                    respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Detalle con el producto con codigo: "+ producto.getCodProducto() +", clave primaria repetida");
+                    modeloCabFacade.deleteModeloCab(modeloCab);
+                    respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Detalle, clave primaria repetida");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
             }
-            respuesta.setControl(AppCodigo.OK, "Lista de Precios creado con exito, con detalles");
+            respuesta.setControl(AppCodigo.OK, "Modelo de Imputacion creado con exito, con detalles");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception ex) { 
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
@@ -256,7 +227,7 @@ public class ListaPrecioRest {
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response editListaPrecio(  
+    public Response editModeloImputacion(  
         @HeaderParam ("token") String token,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         
@@ -266,12 +237,9 @@ public class ListaPrecioRest {
             JsonObject jsonBody = Utils.getJsonObjectFromRequest(request);
             
             // Obtengo los atributos del body
-            Integer idLista = (Integer) Utils.getKeyFromJsonObject("idLista", jsonBody, "Integer");            
-            Date fechaAlta = (Date) Utils.getKeyFromJsonObject("fechaAlta", jsonBody, "Date");
-            Date vigenciaDesde = (Date) Utils.getKeyFromJsonObject("vigenciaDesde", jsonBody, "Date");
-            Date vigenciaHasta = (Date) Utils.getKeyFromJsonObject("vigenciaHasta", jsonBody, "Date");            
-            String condiciones = (String) Utils.getKeyFromJsonObject("condiciones", jsonBody, "String");
-            List<JsonElement> preciosDet = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("preciosDet", jsonBody, "ArrayList");           
+            Integer idModeloCab = (Integer) Utils.getKeyFromJsonObject("idModeloCab", jsonBody, "Integer");                      
+            String descripcion = (String) Utils.getKeyFromJsonObject("descripcion", jsonBody, "String");
+            List<JsonElement> modeloDetalleList = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("modeloDetalle", jsonBody, "ArrayList");           
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, token vacio");
@@ -303,71 +271,71 @@ public class ListaPrecioRest {
             }
 
             //Me fijo que  descripcion, idRubro e idEmpresa no sean nulos
-            if(condiciones == null || idLista == 0) {
+            if(idModeloCab == null || descripcion == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, algun campo esta en nulo");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-           
-            //Valido fechas
-            if( vigenciaDesde.before(fechaAlta) && vigenciaHasta.after(vigenciaDesde)) {
-                respuesta.setControl(AppCodigo.ERROR, "Error, vigenciaDesde debe ser igual o mayor que fechaAlta y debe ser igual o menor a vigenciaHasta.");
+
+            ModeloCab modeloCab = modeloCabFacade.find(idModeloCab);
+            
+            //valido que exista la lista de precio
+            if(modeloCab == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, no existe el modelo de Imputacion");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
             boolean transaccion;
-            ListaPrecio listaPrecio = listaPrecioFacade.find(idLista);
-            
-            //valido que exista la lista de precio
-            if(listaPrecio == null) {
-                respuesta.setControl(AppCodigo.ERROR, "Error, no existe lista de precio");
-                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-            }
-
-            listaPrecio.setFechaAlta(fechaAlta);
-            listaPrecio.setVigenciaDesde(vigenciaDesde);
-            listaPrecio.setVigenciaHasta(vigenciaHasta);                       
-            listaPrecio.setCondiciones(condiciones);
-            listaPrecio.getListaPrecioDetCollection().clear();
-            transaccion = listaPrecioFacade.editListaPrecio(listaPrecio);
+            modeloCab.setDescripcion(descripcion);
+            modeloCab.getModeloDetalleCollection().clear();
+            transaccion = modeloCabFacade.editModeloCab(modeloCab);
             if(!transaccion) {
                 respuesta.setControl(AppCodigo.ERROR, "No se pudo editar la Lsita de Precios");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            if(preciosDet.isEmpty()) {
-                respuesta.setControl(AppCodigo.ERROR, "Lista de Precios sin detalles");
+            if(modeloDetalleList.isEmpty()) {
+                respuesta.setControl(AppCodigo.ERROR, "Modelo de imputacion sin detalles");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            for(JsonElement j : preciosDet) {
+            for(JsonElement j : modeloDetalleList) {
                 boolean transaccion2;
-                BigDecimal precio = (BigDecimal) Utils.getKeyFromJsonObject("precio", j.getAsJsonObject(), "BigDecimal");
-                BigDecimal cotaInf = (BigDecimal) Utils.getKeyFromJsonObject("cotaInf", j.getAsJsonObject(), "BigDecimal");
-                BigDecimal cotaSup = (BigDecimal) Utils.getKeyFromJsonObject("cotaSup", j.getAsJsonObject(), "BigDecimal");
-                String observaciones = (String) Utils.getKeyFromJsonObject("observaciones", j.getAsJsonObject(), "String");
-                Integer idProducto = (Integer) Utils.getKeyFromJsonObject("idProducto", j.getAsJsonObject(), "Integer"); 
-                if(precio == null || cotaInf == null || cotaSup == null || idProducto == 0) {
+                String ctaContable = (String) Utils.getKeyFromJsonObject("ctaContable", j.getAsJsonObject(), "String");
+                Integer orden = (Integer) Utils.getKeyFromJsonObject("orden", j.getAsJsonObject(), "Integer");
+                String descripcionDetalle = (String) Utils.getKeyFromJsonObject("descripcionDetalle", j.getAsJsonObject(), "String");
+                String dh = (String) Utils.getKeyFromJsonObject("dh", j.getAsJsonObject(), "String");
+                boolean prioritario = (Boolean) Utils.getKeyFromJsonObject("prioritario", j.getAsJsonObject(), "boolean");
+                BigDecimal valor = (BigDecimal) Utils.getKeyFromJsonObject("valor", j.getAsJsonObject(), "BigDecimal");
+                String operador = (String) Utils.getKeyFromJsonObject("operador", j.getAsJsonObject(), "String");
+                Integer idSisTipoModelo = (Integer) Utils.getKeyFromJsonObject("idSisTipoModelo", j.getAsJsonObject(), "Integer");
+                
+                if(idSisTipoModelo == null) {
                     respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, algun campo esta vacio");
+                    return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+                }
+                
+                SisTipoModelo sisTipoModelo = sisTipoModeloFacade.find(idSisTipoModelo);
+                if(sisTipoModelo == null) {
+                    modeloCabFacade.deleteModeloCab(modeloCab);
+                    respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, el tipo de modelo con id " + sisTipoModelo + " no existe");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
-                Producto producto = productoFacade.find(idProducto);
-                if(producto == null) {
-                    respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, el producto con id " + idProducto + " no existe");
-                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                } else {
-                    ListaPrecioDet listaPrecioDet = new ListaPrecioDet();
-                    listaPrecioDet.setIdListaPrecios(listaPrecio);
-                    listaPrecioDet.setPrecio(precio);
-                    listaPrecioDet.setCotaInf(cotaInf);
-                    listaPrecioDet.setCotaSup(cotaSup);
-                    listaPrecioDet.setObservaciones(observaciones);
-                    listaPrecioDet.setIdProductos(producto);
-                    transaccion2 = listaPrecioDetFacade.setListaPrecioDetNuevo(listaPrecioDet);
-                }
+                ModeloDetalle modeloDetalle = new ModeloDetalle();
+                modeloDetalle.setCtaContable(ctaContable);
+                modeloDetalle.setDescripcion(descripcionDetalle);
+                modeloDetalle.setDh(dh);
+                modeloDetalle.setIdModeloCab(modeloCab);
+                modeloDetalle.setIdSisTipoModelo(sisTipoModelo);
+                modeloDetalle.setOperador(operador);
+                modeloDetalle.setOrden(orden);
+                modeloDetalle.setPrioritario(prioritario);
+                modeloDetalle.setValor(valor);
+                transaccion2 = modeloDetalleFacade.setModeloDetalleNuevo(modeloDetalle);
                 if(!transaccion2) {
-                    respuesta.setControl(AppCodigo.ERROR, "No se pudo modificar el Detalle con el producto con codigo: "+ producto.getCodProducto());
+                    modeloCabFacade.deleteModeloCab(modeloCab);
+                    respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Detalle, clave primaria repetida");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
-            }            
-            respuesta.setControl(AppCodigo.OK, "Lista de Precios y detalles editada con exito");
+            }
+            respuesta.setControl(AppCodigo.OK, "Modelos de imputacion y detalles editado con exito");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception ex) { 
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
@@ -376,12 +344,12 @@ public class ListaPrecioRest {
     } 
     
     @DELETE
-    @Path ("/{idLista}")
+    @Path ("/{idModeloCab}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON) 
-    public Response deleteListaPrecio(  
+    public Response deleteModeloImputacion(  
         @HeaderParam ("token") String token,
-        @PathParam ("idLista") int idLista,
+        @PathParam ("idModeloCab") Integer idModeloCab,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {
@@ -416,25 +384,27 @@ public class ListaPrecioRest {
             }
             
             //Me fijo que descCorta y idRubro no sean nulos
-            if(idLista == 0) {
+            if(idModeloCab == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, algun campo esta vacio");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
            
-            ListaPrecio listaPrecio = listaPrecioFacade.find(idLista);
+            ModeloCab modeloCab = modeloCabFacade.find(idModeloCab);
             
-            //Pregunto si existe el Producto
-            if(listaPrecio == null) {
-                respuesta.setControl(AppCodigo.ERROR, "No existe la lista de precios");
+            //valido que exista el modelo de imputacion
+            if(modeloCab == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, no existe el modelo de Imputacion");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
+            
             boolean transaccion;
-            transaccion = listaPrecioFacade.deleteListaPrecio(listaPrecio);
+            transaccion = modeloCabFacade.deleteModeloCab(modeloCab);
             if(!transaccion) {
-                respuesta.setControl(AppCodigo.ERROR, "No se pudo borrar la lista de precios");
+                respuesta.setControl(AppCodigo.ERROR, "No se pudo borrar el Modelo de Imputacion");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            respuesta.setControl(AppCodigo.OK, "Lista de precios borrada con exito");
+            
+            respuesta.setControl(AppCodigo.OK, "Modelo de imputacion borrado con exito");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception e) {
             respuesta.setControl(AppCodigo.ERROR, e.getMessage());

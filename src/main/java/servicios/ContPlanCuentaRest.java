@@ -1,10 +1,12 @@
 package servicios;
 
 import datos.AppCodigo;
+import datos.ContPlanCuentaResponse;
 import datos.PadronResponse;
 import datos.Payload;
 import datos.ServicioResponse;
 import entidades.Acceso;
+import entidades.ContPlanCuenta;
 import entidades.Padron;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
@@ -23,6 +25,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
+import persistencia.ContPlanCuentaFacade;
 import persistencia.PadronFacade;
 import persistencia.UsuarioFacade;
 
@@ -32,17 +35,16 @@ import persistencia.UsuarioFacade;
  */
 
 @Stateless
-@Path("padron")
-public class PadronRest {
-
+@Path("contPlanCuenta")
+public class ContPlanCuentaRest {
     @Inject UsuarioFacade usuarioFacade;
     @Inject AccesoFacade accesoFacade;
-    @Inject PadronFacade padronFacade;
+    @Inject ContPlanCuentaFacade contPlanCuentaFacade;
  
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getPadron(  
+    public Response getContPlanCuenta(  
         @HeaderParam ("token") String token,  
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
@@ -77,21 +79,21 @@ public class PadronRest {
                 return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
             }
             
-            List<Padron> listaPadron = padronFacade.findAll();
+            List<ContPlanCuenta> listaContPlanCuenta = contPlanCuentaFacade.getPlanCuentaImputable();
             
             //valido que tenga campos disponibles
-            if(listaPadron.isEmpty()) {
-                respuesta.setControl(AppCodigo.ERROR, "No hay registros en el Padron");
+            if(listaContPlanCuenta.isEmpty()) {
+                respuesta.setControl(AppCodigo.ERROR, "No hay registros en plan cuentas");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
-            List<Payload> clientes = new ArrayList<>();
-            for(Padron p : listaPadron){
-                PadronResponse fp = new PadronResponse(p);
-                clientes.add(fp);
+            List<Payload> cuentas = new ArrayList<>();
+            for(ContPlanCuenta p : listaContPlanCuenta){
+                ContPlanCuentaResponse fp = new ContPlanCuentaResponse(p);
+                cuentas.add(fp);
             }
-            respuesta.setArraydatos(clientes);
-            respuesta.setControl(AppCodigo.OK, "Padron");
+            respuesta.setArraydatos(cuentas);
+            respuesta.setControl(AppCodigo.OK, "Cuentas Contables");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception e) {
             respuesta.setControl(AppCodigo.ERROR, e.getMessage());

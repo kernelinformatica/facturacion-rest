@@ -10,15 +10,15 @@ import java.util.List;
  *
  * @author FrancoSili
  */
-public class ModeloCabResponse {
+public class ModeloCabResponse implements Payload {
     private Integer idModeloCab;
-    private Integer idEmpresa; 
+    private EmpresaResponse empresa; 
     private String descripcion;
     private List<ModeloDetalleResponse> modeloDetalle;
 
     public ModeloCabResponse(ModeloCab s) {
         this.idModeloCab = s.getIdModeloCab();
-        this.idEmpresa = s.getIdEmpresa();
+        this.empresa = new EmpresaResponse(s.getIdEmpresa());
         this.descripcion = s.getDescripcion();
         this.modeloDetalle = new ArrayList<>();
     }
@@ -31,14 +31,15 @@ public class ModeloCabResponse {
         this.idModeloCab = idModeloCab;
     }
 
-    public Integer getIdEmpresa() {
-        return idEmpresa;
+    public EmpresaResponse getEmpresa() {
+        return empresa;
     }
 
-    public void setIdEmpresa(Integer idEmpresa) {
-        this.idEmpresa = idEmpresa;
+    public void setEmpresa(EmpresaResponse empresa) {
+        this.empresa = empresa;
     }
-
+    
+    
     public String getDescripcion() {
         return descripcion;
     }
@@ -61,6 +62,11 @@ public class ModeloCabResponse {
             ModeloDetalleResponse lr = new ModeloDetalleResponse(l);
             this.modeloDetalle.add(lr);
         }
+    }
+
+    @Override
+    public String getClassName() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
     
