@@ -1,6 +1,5 @@
 package datos;
 
-import entidades.Producto;
 import java.math.BigDecimal;
 
 /**
@@ -18,9 +17,16 @@ public class PendientesCancelarResponse implements Payload{
     private BigDecimal porCalc;
     private BigDecimal ivaPorc;
     private Integer deposito;
+    private Integer idFactDetalleImputada;
+    private Integer idFactCabImputada;
+    private BigDecimal descuento;
+    private BigDecimal cantBultos;
+    private String despacho;
+    private String observaciones;
+    private Integer itemImputada;
     private ProductoResponse producto;
 
-    public PendientesCancelarResponse(String comprobante, String numero, BigDecimal original, BigDecimal pendiente, BigDecimal precio, BigDecimal dolar, String moneda, BigDecimal porCalc, BigDecimal ivaPorc, Integer deposito, ProductoResponse producto) {
+    public PendientesCancelarResponse(String comprobante, String numero, BigDecimal original, BigDecimal pendiente, BigDecimal precio, BigDecimal dolar, String moneda, BigDecimal porCalc, BigDecimal ivaPorc, Integer deposito, Integer idFactDetalleImputada, Integer idFactCabImputada, BigDecimal descuento, BigDecimal cantBultos, String despacho, String observaciones, Integer itemImputada, ProductoResponse p) {
         this.comprobante = comprobante;
         this.numero = numero;
         this.original = original;
@@ -31,8 +37,17 @@ public class PendientesCancelarResponse implements Payload{
         this.porCalc = porCalc;
         this.ivaPorc = ivaPorc;
         this.deposito = deposito;
-        this.producto = producto;
+        this.idFactDetalleImputada = idFactDetalleImputada;
+        this.idFactCabImputada = idFactCabImputada;
+        this.descuento = descuento;
+        this.cantBultos = cantBultos;
+        this.despacho = despacho;
+        this.observaciones = observaciones;
+        this.itemImputada = itemImputada;
+        this.producto = p;
     }
+
+
 
     public ProductoResponse getProducto() {
         return producto;
@@ -121,6 +136,56 @@ public class PendientesCancelarResponse implements Payload{
     public void setPorCalc(BigDecimal porCalc) {
         this.porCalc = porCalc;
     }
+
+    public Integer getIdFactDetalleImputada() {
+        return idFactDetalleImputada;
+    }
+
+    public void setIdFactDetalleImputada(Integer idFactDetalleImputada) {
+        this.idFactDetalleImputada = idFactDetalleImputada;
+    }
+
+    public Integer getIdFactCabImputada() {
+        return idFactCabImputada;
+    }
+
+    public void setIdFactCabImputada(Integer idFactCabImputada) {
+        this.idFactCabImputada = idFactCabImputada;
+    }
+
+    public BigDecimal getDescuento() {
+        return descuento;
+    }
+
+    public void setDescuento(BigDecimal descuento) {
+        this.descuento = descuento;
+    }
+
+    public BigDecimal getCantBultos() {
+        return cantBultos;
+    }
+
+    public void setCantBultos(BigDecimal cantBultos) {
+        this.cantBultos = cantBultos;
+    }
+
+    public String getDespacho() {
+        return despacho;
+    }
+
+    public void setDespacho(String despacho) {
+        this.despacho = despacho;
+    }
+
+    public String getObservaciones() {
+        return observaciones;
+    }
+
+    public void setObservaciones(String observaciones) {
+        this.observaciones = observaciones;
+    }
+    
+    
 
     @Override
     public String getClassName() {

@@ -138,6 +138,13 @@ public class PendientesCancelarRest {
                             rs.getBigDecimal("porCalc"),
                             rs.getBigDecimal("ivaPorc"),
                             rs.getInt("deposito"),
+                            rs.getInt("idFactDetalleImputada"),
+                            rs.getInt("idFactCabImputada"),
+                            rs.getBigDecimal("descuento"),
+                            rs.getBigDecimal("cantBultos"),
+                            rs.getString("despacho"),
+                            rs.getString("observaciones"),
+                            rs.getInt("itemImputada"),
                             producto);
                     pendientes.add(pendientesCancelar);
                 }

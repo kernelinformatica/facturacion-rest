@@ -2,9 +2,9 @@ package servicios;
 
 import datos.AppCodigo;
 import datos.ServicioResponse;
-import datos.SisCotDolarResponse;
+import datos.SisSitIvaResponse;
 import entidades.Acceso;
-import entidades.SisCotDolar;
+import entidades.SisSitIVA;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
@@ -15,12 +15,13 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
-import persistencia.SisCotDolarFacade;
+import persistencia.SisSitIVAFacade;
 import persistencia.UsuarioFacade;
 
 /**
@@ -29,23 +30,24 @@ import persistencia.UsuarioFacade;
  */
 
 @Stateless
-@Path("buscaCotizacion")
-public class BuscaCotizacionRest {
+@Path("sisSitIva")
+public class SisSitIvaRest {
     @Inject UsuarioFacade usuarioFacade;
     @Inject AccesoFacade accesoFacade;
-    @Inject SisCotDolarFacade sisCotDolarFacade;
-
+    @Inject SisSitIVAFacade sisSitIVAFacade;
+    
     @GET
+    @Path("/{descCorta}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getCotizacion(  
-        @HeaderParam ("token") String token,    
-        @Context HttpServletRequest request
-    ) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+    public Response getSisSitIva(  
+        @HeaderParam ("token") String token, 
+        @PathParam("descCorta") String descCorta,
+        @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {
-            
-            if(token == null ||token.trim().isEmpty()) {
+            //valido que token no sea null
+            if(token == null || token.trim().isEmpty()) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, token vacio");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
@@ -74,17 +76,17 @@ public class BuscaCotizacionRest {
                 return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
             }
             
-            SisCotDolar cotizacion = sisCotDolarFacade.getLastCotizacion();
+            SisSitIVA sisSitIVA = sisSitIVAFacade.getByDescCorta(descCorta);
             
-            if(cotizacion == null) {
-                respuesta.setControl(AppCodigo.ERROR, "Error, no hay cotizacion disponible");
+            //Valido que la lista de SisFormaPago no este vacia.
+            if(sisSitIVA == null) {
+                respuesta.setControl(AppCodigo.ERROR, "No hay Situacion de IVA disponible");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
-            SisCotDolarResponse resp = new SisCotDolarResponse(cotizacion);
-            
-            respuesta.setDatos(resp);
-            respuesta.setControl(AppCodigo.OK, "Cotizacion");
+            SisSitIvaResponse res = new SisSitIvaResponse(sisSitIVA);
+            respuesta.setDatos(res);
+            respuesta.setControl(AppCodigo.OK, "Situacion de IVA");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception e) {
             respuesta.setControl(AppCodigo.ERROR, e.getMessage());
