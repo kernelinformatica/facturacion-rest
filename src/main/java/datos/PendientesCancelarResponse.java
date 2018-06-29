@@ -46,6 +46,26 @@ public class PendientesCancelarResponse implements Payload{
         this.itemImputada = itemImputada;
         this.producto = p;
     }
+    public PendientesCancelarResponse(ProductoResponse p) {
+        this.comprobante = "";
+        this.numero = "0";
+        this.original = new BigDecimal(0);
+        this.pendiente = new BigDecimal(0);
+        this.precio = p.getPrecioVentaProv();
+        this.dolar = new BigDecimal(0);
+        this.moneda = " ";
+        this.porCalc = new BigDecimal(0);
+        this.ivaPorc = p.getIVA().getPorcIVA();
+        this.deposito = 0;
+        this.idFactDetalleImputada = null;
+        this.idFactCabImputada = null;
+        this.descuento = new BigDecimal(0);
+        this.cantBultos = new BigDecimal(0);;
+        this.despacho = "";
+        this.observaciones = "";
+        this.itemImputada = 0;
+        this.producto = p;
+    }
 
 
 

@@ -21,6 +21,7 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -155,6 +156,70 @@ public class PendientesCancelarRest {
                 
             respuesta.setArraydatos(pendientes);
             respuesta.setControl(AppCodigo.OK, "Lista de Comprobantes Pendientes");
+            return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+        } catch (Exception e) {
+            respuesta.setControl(AppCodigo.ERROR, e.getMessage());
+            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+        }
+    }
+    
+    @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getProductos(  
+        @HeaderParam ("token") String token,  
+        @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+        ServicioResponse respuesta = new ServicioResponse();
+        try {
+            //valido que token no sea null
+            if(token == null || token.trim().isEmpty()) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, token vacio");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+
+            //Busco el token
+            Acceso userToken = accesoFacade.findByToken(token);
+
+            //valido que Acceso no sea null
+            if(userToken == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, Acceso nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+
+            //Busco el usuario
+            Usuario user = usuarioFacade.getByToken(userToken);
+
+            //valido que el Usuario no sea null
+            if(user == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, Usuario nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+
+            //valido vencimiento token
+            if(!accesoFacade.validarToken(userToken, user)) {
+                respuesta.setControl(AppCodigo.ERROR, "Credenciales incorrectas");
+                return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
+            }
+            
+            //Busco los productos de la empresa
+            List<Producto> productos = productoFacade.getProductosByEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa());
+            
+            //Valido que haya productos para esa empresa.
+            if(productos.isEmpty()) {
+                respuesta.setControl(AppCodigo.ERROR, "No hay Productos disponibles");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            
+            //busco los SubRubros de la empresa del usuario
+            List<Payload> productosResponse = new ArrayList<>();
+            for(Producto s : productos) {
+                ProductoResponse pr = new ProductoResponse(s);
+                pr.getModeloCab().agregarModeloDetalle(s.getIdModeloCab().getModeloDetalleCollection());
+                PendientesCancelarResponse sr = new PendientesCancelarResponse(pr);
+                productosResponse.add(sr);
+            }
+            respuesta.setArraydatos(productosResponse);
+            respuesta.setControl(AppCodigo.OK, "Lista de Productos");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception e) {
             respuesta.setControl(AppCodigo.ERROR, e.getMessage());
