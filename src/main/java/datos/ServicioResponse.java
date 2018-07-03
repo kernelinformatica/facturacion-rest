@@ -12,7 +12,8 @@ import java.util.List;
 public class ServicioResponse implements Serializable {
     private Control control;
     private Payload datos;
-    private List<Payload> arraydatos; 
+    private List<Payload> arraydatos;
+    private List<Payload> array;
 
     
 
@@ -64,5 +65,15 @@ public class ServicioResponse implements Serializable {
     public void setArraydatos(List<Payload> arraydatos) {
         this.arraydatos = arraydatos;
     }
+
+    public List<Payload> getArray() {
+        return array;
+    }
+
+    public void setArray(List<Payload> array) {
+        this.array = array;
+    }
+    
+    
 
 }

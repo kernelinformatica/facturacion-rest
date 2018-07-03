@@ -420,6 +420,12 @@ public class GrabaComprobanteRest {
                             loteNuevo.setNroLote(nroLote);
                             loteNuevo.setSerie(serie);
                             loteNuevo.setVigencia(vigencia);
+                            //Recorro produmo y si es el mismo producto le agreego el lote
+                            for(Produmo p : listaProdumo) {
+                                if(p.getIdProductos().equals(prod)) {
+                                    p.setNroLote(nroLote);
+                                }
+                            }                            
                             listaLotes.add(loteNuevo);
                             
                             //Le sumo uno al item
