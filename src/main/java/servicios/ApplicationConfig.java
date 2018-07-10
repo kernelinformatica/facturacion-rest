@@ -27,6 +27,7 @@ public class ApplicationConfig extends Application {
     private void addRestResourceClasses(Set<Class<?>> resources) {
         resources.add(servicios.BuscaComprobanteRest.class);
         resources.add(servicios.BuscaCotizacionRest.class);
+        resources.add(servicios.BuscaCteFechaRest.class);
         resources.add(servicios.BuscaCteTipoNro.class);
         resources.add(servicios.BuscaFormaPago.class);
         resources.add(servicios.BuscaModeloRest.class);
