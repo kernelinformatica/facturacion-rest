@@ -5,6 +5,7 @@ import datos.AppCodigo;
 import datos.ServicioResponse;
 import entidades.Acceso;
 import entidades.Usuario;
+import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
@@ -12,7 +13,6 @@ import javax.ejb.Stateless;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -21,11 +21,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import net.sf.jasperreports.engine.JasperPrint;
-import net.sf.jasperreports.engine.export.JRPdfExporter;
-import net.sf.jasperreports.export.SimpleExporterInput;
-import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
-import net.sf.jasperreports.export.SimplePdfExporterConfiguration;
 import persistencia.AccesoFacade;
 import persistencia.UsuarioFacade;
 import utils.Utils;
@@ -55,6 +50,7 @@ public class DescargarPdfRest {
             
             // Obtengo los atributos del body
             String nombreReporte = (String) Utils.getKeyFromJsonObject("nombreReporte", jsonBody, "String");
+            Integer idFactCab = (Integer) Utils.getKeyFromJsonObject("idFactCab", jsonBody, "Integer");
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -87,23 +83,19 @@ public class DescargarPdfRest {
             }
            
             //valido que tenga Rubros disponibles
-            if(nombreReporte == null) {
+            if(nombreReporte == null || idFactCab == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Algun campo esta vacio");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             } 
-
+                        
             HashMap hm = new HashMap();
-           // HttpServletResponse httpServletResponse = (HttpServletResponse) FacesContext.getCurrentInstance().getExternalContext().getResponse();
-            JasperPrint ret =  utils.rellenarReporte(nombreReporte, hm, user);
-            JRPdfExporter exporter = new JRPdfExporter();
-            SimpleExporterInput exporterInput = new SimpleExporterInput(ret);
-            //SimpleOutputStreamExporterOutput exporterOutput = new SimpleOutputStreamExporterOutput(httpServletResponse.getOutputStream());
-            SimplePdfExporterConfiguration configuration = new SimplePdfExporterConfiguration();
-            exporter.setExporterInput(exporterInput);
-            exporter.setConfiguration(configuration);
-            exporter.exportReport();             
-            respuesta.setControl(AppCodigo.OK, "PDF generado con exito");
-            return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+            hm.put("idFactCab", idFactCab);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            byte[] bytes = utils.generateJasperReportPDF(request, nombreReporte, hm, user, outputStream);
+            String nomeRelatorio= nombreReporte + ".pdf";
+            return Response.ok(bytes).type("application/pdf").header("Content-Disposition", "filename=\"" + nomeRelatorio + "\"").build();
+            //respuesta.setControl(AppCodigo.OK, "PDF generado con exito");
+            //return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception e) {
             respuesta.setControl(AppCodigo.ERROR, e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();

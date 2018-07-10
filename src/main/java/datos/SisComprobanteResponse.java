@@ -9,14 +9,14 @@ import entidades.SisComprobante;
 public class SisComprobanteResponse implements Payload{
     private Integer idSisComprobantes;
     private String descripcion;
-    private String modulo;
     private String imputacion;
+    private SisModuloResponse modulo;
 
     public SisComprobanteResponse(SisComprobante s) {
        this.idSisComprobantes = s.getIdSisComprobantes();
        this.descripcion = s.getDescripcion();
-       this.modulo = s.getModulo();
        this.imputacion = s.getImputacion();
+       this.modulo = new SisModuloResponse(s.getIdSisModulos());
     }
     
     public Integer getIdSisComprobantes() {
@@ -35,14 +35,6 @@ public class SisComprobanteResponse implements Payload{
         this.descripcion = descripcion;
     }
 
-    public String getModulo() {
-        return modulo;
-    }
-
-    public void setModulo(String modulo) {
-        this.modulo = modulo;
-    }
-
     public String getImputacion() {
         return imputacion;
     }
@@ -50,6 +42,16 @@ public class SisComprobanteResponse implements Payload{
     public void setImputacion(String imputacion) {
         this.imputacion = imputacion;
     }
+
+    public SisModuloResponse getModulo() {
+        return modulo;
+    }
+
+    public void setModulo(SisModuloResponse modulo) {
+        this.modulo = modulo;
+    }
+    
+    
 
     @Override
     public String getClassName() {

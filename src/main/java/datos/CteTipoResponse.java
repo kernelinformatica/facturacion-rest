@@ -1,6 +1,10 @@
 package datos;
 
+import entidades.CteNumerador;
 import entidades.CteTipo;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  *
@@ -16,6 +20,7 @@ public class CteTipoResponse implements Payload {
     String surenu;
     String observaciones;
     SisComprobanteResponse comprobante;
+    List<CteNumeradorResponse> numerador;
     
     public CteTipoResponse(CteTipo c) {
         this.idCteTipo = c.getIdCteTipo();
@@ -27,6 +32,7 @@ public class CteTipoResponse implements Payload {
         this.surenu = c.getSurenu();
         this.observaciones = c.getObservaciones();
         this.comprobante = new SisComprobanteResponse(c.getIdSisComprobante());
+        this.numerador = new ArrayList<>();
     }
 
     public Integer getIdCteTipo() {
@@ -101,9 +107,28 @@ public class CteTipoResponse implements Payload {
     public void setComprobante(SisComprobanteResponse comprobante) {
         this.comprobante = comprobante;
     }
+
+    public List<CteNumeradorResponse> getNumerador() {
+        return numerador;
+    }
+
+    public void setNumerador(List<CteNumeradorResponse> numerador) {
+        this.numerador = numerador;
+    }
+    
+    public void agregarNumeradores(Collection<CteNumerador> cteNumeradorCollection) {
+        for(CteNumerador c : cteNumeradorCollection) {
+            CteNumeradorResponse cte = new CteNumeradorResponse(c);
+            cte.agregarNumero(c.getCteNumeroCollection());
+            this.numerador.add(cte);
+        }
+    }
+    
     
     @Override
     public String getClassName() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+
+ 
 }

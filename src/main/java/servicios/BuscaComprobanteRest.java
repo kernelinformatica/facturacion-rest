@@ -57,7 +57,7 @@ public class BuscaComprobanteRest {
             JsonObject jsonBody = Utils.getJsonObjectFromRequest(request);
             
             // Obtengo los atributos del body
-            String comprobanteModulo = (String) Utils.getKeyFromJsonObject("comprobanteModulo", jsonBody, "String");
+            Integer comprobanteModulo = (Integer) Utils.getKeyFromJsonObject("comprobanteModulo", jsonBody, "Integer");
             Integer comprobanteTipo = (Integer) Utils.getKeyFromJsonObject("comprobanteTipo", jsonBody, "Integer");
             BigDecimal comprobanteNumero = (BigDecimal) Utils.getKeyFromJsonObject("comprobanteNumero", jsonBody, "BigDecimal");
             Date fechaDesde = (Date) Utils.getKeyFromJsonObject("fechaDesde", jsonBody, "Date");
@@ -115,7 +115,7 @@ public class BuscaComprobanteRest {
             
             //Seteo los parametros para la cabecera 
             callableStatement.setInt(1,user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
-            callableStatement.setString(2,comprobanteModulo);
+            callableStatement.setInt(2,comprobanteModulo);
             callableStatement.setInt(3, comprobanteTipo);
             callableStatement.setLong(4,comprobanteNumero.longValue());
             
@@ -132,7 +132,7 @@ public class BuscaComprobanteRest {
            
             //Seteo los parametros para los detalle
             callableStatementDetalle.setInt(1,user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
-            callableStatementDetalle.setString(2,comprobanteModulo);
+            callableStatementDetalle.setInt(2,comprobanteModulo);
             callableStatementDetalle.setInt(3, comprobanteTipo);
             callableStatementDetalle.setLong(4,comprobanteNumero.longValue());
             
@@ -149,7 +149,9 @@ public class BuscaComprobanteRest {
             
             //Reccorro los resultados para la cabecera
             ResultSet rs = callableStatement.executeQuery();
-            List<Payload> comprobantesCab = new ArrayList<>();
+            List<FactCabResponse> factCabResponses = new ArrayList<>();
+            
+            List<FactDetalleResponse> factDetResponses = new ArrayList<>();
             while (rs.next()) {
                 FactCabResponse factCab = new FactCabResponse(
                         rs.getInt("idFactCab"),
@@ -163,12 +165,11 @@ public class BuscaComprobanteRest {
                         rs.getString("moneda"),
                         rs.getString("imputada"),
                         rs.getString("modulo"));
-                comprobantesCab.add(factCab);
+                factCabResponses.add(factCab);
             }
             
             //Recorro los resultados para los detalles
             ResultSet rsd = callableStatementDetalle.executeQuery();
-            List<Payload> comprobantesDet = new ArrayList<>();
             while (rsd.next()) {
                 FactDetalleResponse factDet = new FactDetalleResponse(
                         rsd.getString("comprobante"),
@@ -184,11 +185,20 @@ public class BuscaComprobanteRest {
                         rsd.getBigDecimal("porCalc"),
                         rsd.getBigDecimal("ivaPorc"),
                         rsd.getInt("deposito"));
-                comprobantesDet.add(factDet);
+                factDetResponses.add(factDet);
             }
             
-            respuesta.setArraydatos(comprobantesCab);
-            respuesta.setArray(comprobantesDet);
+            List<Payload> comprobantes = new ArrayList<>();
+            for(FactCabResponse c : factCabResponses) {
+                for(FactDetalleResponse d : factDetResponses) {
+                    if(c.getNumero() == d.getNumero()) {
+                        c.getDetalle().add(d);
+                    }
+                }
+                comprobantes.add(c);
+            }
+            
+            respuesta.setArraydatos(comprobantes);
             respuesta.setControl(AppCodigo.OK, "Comprobantes");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception e) {

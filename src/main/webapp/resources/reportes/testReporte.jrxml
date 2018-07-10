@@ -1,32 +1,104 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.3.0.final using JasperReports Library version 6.3.0  -->
-<!-- 2018-06-07T11:23:25 -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="testReporte" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="4806e2f6-ab00-41d0-b74f-73434a7c5917">
+<!-- 2018-07-05T11:21:43 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="testReporte" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="4806e2f6-ab00-41d0-b74f-73434a7c5917">
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
+	<parameter name="idFactCab" class="java.lang.Integer"/>
+	<parameter name="pathImagen" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[]]>
+		<![CDATA[Select 
+FactCab.numero as numeroComprobante,
+FactCab.cuit as cuitCliente,
+FactCab.fechaEmision as fechaEmisionComprobante,
+FactCab.nombre as nombreCilente,
+FactCab.cai as caiComprobante,
+FactCab.fechaVto as fechaVencimientoComprobante,
+CteTipo.codigoAfip as codigoAfip,
+CteTipo.descCorta as descripcionCortaCteTipo,
+CteTipo.descripcion as descripcionCteTipo,
+Empresas.prefijoEmpresa as prefijoEmpresa,
+Empresas.nombre as nombreEmpresa,
+Empresas.descripcion as descripcionEmpresa,
+Empresas.domicilio as domicilioEmpresa,
+Empresas.cuit as cuitEmpresa,
+Empresas.iibb as ingBrutosEmpresa
+From FactCab
+inner join CteTipo on FactCab.idCteTipo = CteTipo.idCteTipo
+inner join Empresas on CteTipo.idEmpresa = Empresas.idEmpresa
+where FactCab.idFactCab =  $P{idFactCab} ]]>
 	</queryString>
+	<field name="numeroComprobante" class="java.lang.String"/>
+	<field name="cuitCliente" class="java.lang.String"/>
+	<field name="fechaEmisionComprobante" class="java.sql.Date"/>
+	<field name="nombreCilente" class="java.lang.String"/>
+	<field name="caiComprobante" class="java.lang.String"/>
+	<field name="fechaVencimientoComprobante" class="java.sql.Date"/>
+	<field name="codigoAfip" class="java.lang.Integer"/>
+	<field name="descripcionCortaCteTipo" class="java.lang.String"/>
+	<field name="descripcionCteTipo" class="java.lang.String"/>
+	<field name="nombreEmpresa" class="java.lang.String"/>
+	<field name="descripcionEmpresa" class="java.lang.String"/>
+	<field name="domicilioEmpresa" class="java.lang.String"/>
+	<field name="cuitEmpresa" class="java.lang.String"/>
+	<field name="ingBrutosEmpresa" class="java.lang.String"/>
+	<field name="prefijoEmpresa" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
 	<title>
-		<band height="79" splitType="Stretch">
+		<band height="114" splitType="Stretch">
+			<image>
+				<reportElement x="0" y="0" width="114" height="114" uuid="ca4e86c7-4774-4cf5-85b2-739690ef4284">
+					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+				</reportElement>
+				<imageExpression><![CDATA[$P{pathImagen} +"/"+$F{prefijoEmpresa}+".png"]]></imageExpression>
+			</image>
+			<textField>
+				<reportElement x="114" y="0" width="116" height="20" uuid="656c8afa-03d7-401f-b0fb-c10a36205161"/>
+				<textFieldExpression><![CDATA[$F{nombreEmpresa}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="114" y="20" width="116" height="20" uuid="e32d1f7e-f1f6-40e8-b7d6-71ef2b3566f8"/>
+				<textFieldExpression><![CDATA[$F{descripcionEmpresa}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="114" y="40" width="116" height="20" uuid="c4ad6e9b-b5b1-496c-a3e4-317aabf5d63d"/>
+				<textFieldExpression><![CDATA[$F{domicilioEmpresa}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="240" y="0" width="80" height="30" uuid="abd8d794-c5e7-4b1d-ad03-bd5bc2eb1f06"/>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression><![CDATA[$F{descripcionCortaCteTipo}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="240" y="30" width="80" height="30" uuid="ce474066-9813-4320-8c1f-6459d77cb9bc"/>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression><![CDATA[$F{codigoAfip}]]></textFieldExpression>
+			</textField>
 			<staticText>
-				<reportElement x="0" y="10" width="550" height="30" uuid="0818dcce-6951-4fa5-9674-fc82b040a452"/>
-				<textElement textAlignment="Center">
-					<font size="18"/>
-				</textElement>
-				<text><![CDATA[Este es un reporte de prueba]]></text>
+				<reportElement x="240" y="60" width="80" height="54" uuid="a7b10765-cd32-4131-a63e-9c9ed62b9815"/>
+				<textElement textAlignment="Center"/>
+				<text><![CDATA[DOCUMENTO NO VALIDO COMO FACTURA]]></text>
 			</staticText>
 		</band>
 	</title>
 	<pageHeader>
-		<band height="35" splitType="Stretch"/>
+		<band height="61" splitType="Stretch"/>
 	</pageHeader>
 	<columnHeader>
-		<band height="61" splitType="Stretch"/>
+		<band height="92" splitType="Stretch"/>
 	</columnHeader>
 	<detail>
-		<band height="125" splitType="Stretch"/>
+		<band height="74" splitType="Stretch"/>
 	</detail>
 	<columnFooter>
 		<band height="45" splitType="Stretch"/>
