@@ -9,12 +9,12 @@ import entidades.SisTipoOperacion;
 public class SisTipoOperacionResponse implements Payload {
     private Integer idSisTipoOperacion;
     private String descripcion;
-    private String modulo;    
+    private SisModuloResponse modulo;    
     
     public SisTipoOperacionResponse(SisTipoOperacion s) {
         this.idSisTipoOperacion = s.getIdSisTipoOperacion();
         this.descripcion = s.getDescripcion();
-        this.modulo = s.getModulo();
+        this.modulo = new SisModuloResponse(s.getIdSisModulos());
     }
     
     public Integer getIdSisTipoOperacion() {
@@ -33,11 +33,11 @@ public class SisTipoOperacionResponse implements Payload {
         this.descripcion = descripcion;
     }
 
-    public String getModulo() {
+    public SisModuloResponse getModulo() {
         return modulo;
     }
 
-    public void setModulo(String modulo) {
+    public void setModulo(SisModuloResponse modulo) {
         this.modulo = modulo;
     }
 

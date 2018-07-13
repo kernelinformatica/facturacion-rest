@@ -40,7 +40,7 @@ import utils.Utils;
  */
 
 @Stateless
-@Path("buscarPendientes")
+@Path("buscaPendientes")
 public class PendientesCancelarRest {
     @Inject UsuarioFacade usuarioFacade;
     @Inject AccesoFacade accesoFacade;
