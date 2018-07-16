@@ -45,6 +45,4 @@ public class AccesoResponse {
     public void setFechaHasta(Date fechaHasta) {
         this.fechaHasta = fechaHasta;
     }
-    
-    
 }
