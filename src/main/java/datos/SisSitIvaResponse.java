@@ -10,11 +10,11 @@ public class SisSitIvaResponse implements Payload {
 
     private Integer idSisSitIVA;
     private String descripcion;
-    private String desCorta;
+    private String descCorta;
     private String letra;
     
     public SisSitIvaResponse(SisSitIVA s) {
-        this.desCorta = s.getDesCorta();
+        this.descCorta = s.getDesCorta();
         this.descripcion = s.getDescripcion();
         this.idSisSitIVA = s.getIdSisSitIVA();
         this.letra = s.getLetra();
@@ -36,12 +36,12 @@ public class SisSitIvaResponse implements Payload {
         this.descripcion = descripcion;
     }
 
-    public String getDesCorta() {
-        return desCorta;
+    public String getDescCorta() {
+        return descCorta;
     }
 
-    public void setDesCorta(String desCorta) {
-        this.desCorta = desCorta;
+    public void setDescCorta(String descCorta) {
+        this.descCorta = descCorta;
     }
 
     public String getLetra() {

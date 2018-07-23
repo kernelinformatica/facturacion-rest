@@ -20,13 +20,14 @@ public class PendientesCancelarResponse implements Payload{
     private Integer idFactDetalleImputada;
     private Integer idFactCabImputada;
     private BigDecimal descuento;
+    private String tipoDescuento;
     private BigDecimal cantBultos;
     private String despacho;
     private String observaciones;
     private Integer itemImputada;
     private ProductoResponse producto;
 
-    public PendientesCancelarResponse(String comprobante, String numero, BigDecimal original, BigDecimal pendiente, BigDecimal precio, BigDecimal dolar, String moneda, BigDecimal porCalc, BigDecimal ivaPorc, Integer deposito, Integer idFactDetalleImputada, Integer idFactCabImputada, BigDecimal descuento, BigDecimal cantBultos, String despacho, String observaciones, Integer itemImputada, ProductoResponse p) {
+    public PendientesCancelarResponse(String comprobante, String numero, BigDecimal original, BigDecimal pendiente, BigDecimal precio, BigDecimal dolar, String moneda, BigDecimal porCalc, BigDecimal ivaPorc, Integer deposito, Integer idFactDetalleImputada, Integer idFactCabImputada, BigDecimal descuento, String tipoDescuento, BigDecimal cantBultos, String despacho, String observaciones, Integer itemImputada, ProductoResponse p) {
         this.comprobante = comprobante;
         this.numero = numero;
         this.original = original;
@@ -40,6 +41,7 @@ public class PendientesCancelarResponse implements Payload{
         this.idFactDetalleImputada = idFactDetalleImputada;
         this.idFactCabImputada = idFactCabImputada;
         this.descuento = descuento;
+        this.tipoDescuento = tipoDescuento;
         this.cantBultos = cantBultos;
         this.despacho = despacho;
         this.observaciones = observaciones;
@@ -60,6 +62,7 @@ public class PendientesCancelarResponse implements Payload{
         this.idFactDetalleImputada = null;
         this.idFactCabImputada = null;
         this.descuento = new BigDecimal(0);
+        this.tipoDescuento = "%";
         this.cantBultos = new BigDecimal(0);;
         this.despacho = "";
         this.observaciones = "";
@@ -204,6 +207,23 @@ public class PendientesCancelarResponse implements Payload{
     public void setObservaciones(String observaciones) {
         this.observaciones = observaciones;
     }
+
+    public String getTipoDescuento() {
+        return tipoDescuento;
+    }
+
+    public void setTipoDescuento(String tipoDescuento) {
+        this.tipoDescuento = tipoDescuento;
+    }
+
+    public Integer getItemImputada() {
+        return itemImputada;
+    }
+
+    public void setItemImputada(Integer itemImputada) {
+        this.itemImputada = itemImputada;
+    }
+    
     
     
 

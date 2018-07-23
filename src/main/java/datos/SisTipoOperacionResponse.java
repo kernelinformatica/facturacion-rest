@@ -9,11 +9,13 @@ import entidades.SisTipoOperacion;
 public class SisTipoOperacionResponse implements Payload {
     private Integer idSisTipoOperacion;
     private String descripcion;
+    private boolean canje;
     private SisModuloResponse modulo;    
     
     public SisTipoOperacionResponse(SisTipoOperacion s) {
         this.idSisTipoOperacion = s.getIdSisTipoOperacion();
         this.descripcion = s.getDescripcion();
+        this.canje = s.getCanje();
         this.modulo = new SisModuloResponse(s.getIdSisModulos());
     }
     
@@ -40,6 +42,16 @@ public class SisTipoOperacionResponse implements Payload {
     public void setModulo(SisModuloResponse modulo) {
         this.modulo = modulo;
     }
+
+    public boolean isCanje() {
+        return canje;
+    }
+
+    public void setCanje(boolean canje) {
+        this.canje = canje;
+    }
+    
+    
 
     @Override
     public String getClassName() {

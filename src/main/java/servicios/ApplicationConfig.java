@@ -30,6 +30,8 @@ public class ApplicationConfig extends Application {
         resources.add(servicios.BuscaCteFechaRest.class);
         resources.add(servicios.BuscaCteTipoNro.class);
         resources.add(servicios.BuscaFormaPago.class);
+        resources.add(servicios.BuscaLote.class);
+        resources.add(servicios.BuscaLotes.class);
         resources.add(servicios.BuscaModeloRest.class);
         resources.add(servicios.BuscaProductosRest.class);
         resources.add(servicios.CalculoImportesSubtotales.class);
@@ -48,6 +50,7 @@ public class ApplicationConfig extends Application {
         resources.add(servicios.ProductoRest.class);
         resources.add(servicios.ProveedoresRest.class);
         resources.add(servicios.RubroRest.class);
+        resources.add(servicios.SisCanjeRest.class);
         resources.add(servicios.SisComprobanteRest.class);
         resources.add(servicios.SisEstadoRest.class);
         resources.add(servicios.SisFormaPagoRest.class);

@@ -142,6 +142,7 @@ public class PendientesCancelarRest {
                             rs.getInt("idFactDetalleImputada"),
                             rs.getInt("idFactCabImputada"),
                             rs.getBigDecimal("descuento"),
+                            rs.getString("tipoDescuento"),
                             rs.getBigDecimal("cantBultos"),
                             rs.getString("despacho"),
                             rs.getString("observaciones"),

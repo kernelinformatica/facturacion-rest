@@ -106,13 +106,14 @@ public class BuscaFormaPago {
                 }
             }
             
+            List<ListaPrecio> listaVigente = new ArrayList<>();
             //Filtro por fechas
             if(fecha != null) {
                 for(ListaPrecio l : listaPrecios) {
                     if((l.getVigenciaDesde().before(fecha) && l.getVigenciaHasta().after(fecha)) || l.getVigenciaDesde().equals(fecha) || l.getVigenciaHasta().equals(fecha)){
-                        continue;
+                        listaVigente.add(l);
                     } else {
-                        listaPrecios.remove(l);
+                        continue;
                     }
                     //Corto el bucle para que no rompa si no hay mas registros en la lista
                     if(listaPrecios.isEmpty()) {
@@ -131,9 +132,13 @@ public class BuscaFormaPago {
             if(todas && idPadronDesde != null && idPadronHasta != null) {
                 for(ListaPrecio l : listaPrecios) {
                     if((l.getIdPadronCliente() >= idPadronDesde && l.getIdPadronCliente() <= idPadronHasta) || l.getIdPadronCliente() == 0) {
-                        continue;
+                        if(listaVigente.contains(l)) {
+                            continue;
+                        } else {
+                            listaVigente.add(l);
+                        }
                     } else {
-                        listaPrecios.remove(l);
+                        listaVigente.remove(l);
                     }
                     //Corto el bucle para que no rompa si no hay mas registros en la lista
                     if(listaPrecios.isEmpty()) {
@@ -152,9 +157,13 @@ public class BuscaFormaPago {
             if(todas && idPadronDesde == null && idPadronHasta == null) {
                 for(ListaPrecio l : listaPrecios) {
                     if((l.getIdPadronCliente() == 0)) {
-                        continue;
+                        if(listaVigente.contains(l)) {
+                            continue;
+                        } else {
+                            listaVigente.add(l);
+                        }
                     } else {
-                        listaPrecios.remove(l);
+                        listaVigente.remove(l);
                     }
                     //Corto el bucle para que no rompa si no hay mas registros en la lista
                     if(listaPrecios.isEmpty()) {
@@ -164,14 +173,14 @@ public class BuscaFormaPago {
             }
             
             //Si la lista esta vacia devuelvo respuesta
-            if(listaPrecios.isEmpty()) {
+            if(listaVigente.isEmpty()) {
                 respuesta.setControl(AppCodigo.ERROR, "No existen listas de precios disponibles con esos parametros");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
             //Armo el array de la respuesta con las formas de pago
             List<Payload> listaFormaPago = new ArrayList<>();
-            for(ListaPrecio l : listaPrecios) {
+            for(ListaPrecio l : listaVigente) {
                 for(FormaPago f : l.getFormaPagoCollection()) {
                     FormaPagoResponse formaPagoResponse = new FormaPagoResponse(f);
                     listaFormaPago.add(formaPagoResponse);
