@@ -6,7 +6,6 @@ import datos.ListaPrecioDetResponse;
 import datos.Payload;
 import datos.ServicioResponse;
 import entidades.Acceso;
-import entidades.ListaPrecio;
 import entidades.ListaPrecioDet;
 import entidades.Producto;
 import entidades.Usuario;
@@ -36,6 +35,10 @@ import persistencia.SisMonedasFacade;
 import persistencia.UsuarioFacade;
 import utils.Utils;
 
+/**
+ *
+ * @author Franco Sili
+ */
 
 @Stateless
 @Path("filtroListaPrecios")

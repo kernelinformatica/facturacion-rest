@@ -35,6 +35,11 @@ import persistencia.SisFormaPagoFacade;
 import persistencia.UsuarioFacade;
 import utils.Utils;
 
+/**
+ *
+ * @author Franco Sili
+ */
+
 @Stateless
 @Path("formaPago")
 public class FormaPagoRest {

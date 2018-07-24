@@ -6,7 +6,6 @@ import datos.Payload;
 import datos.ProductoResponse;
 import datos.ServicioResponse;
 import entidades.Acceso;
-import entidades.ModeloDetalle;
 import entidades.Producto;
 import entidades.SisIVA;
 import entidades.SisUnidad;

@@ -3,10 +3,8 @@ package servicios;
 import datos.AppCodigo;
 import datos.Payload;
 import datos.ServicioResponse;
-import datos.SisIVAResponse;
 import datos.SisMonedasResponse;
 import entidades.Acceso;
-import entidades.SisIVA;
 import entidades.SisMonedas;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
@@ -25,7 +23,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
-import persistencia.SisIVAFacade;
 import persistencia.SisMonedasFacade;
 import persistencia.UsuarioFacade;
 

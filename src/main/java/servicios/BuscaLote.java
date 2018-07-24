@@ -2,8 +2,6 @@ package servicios;
 
 import com.google.gson.JsonObject;
 import datos.AppCodigo;
-import datos.FactCabResponse;
-import datos.FactDetalleResponse;
 import datos.LoteResponse;
 import datos.Payload;
 import datos.ServicioResponse;

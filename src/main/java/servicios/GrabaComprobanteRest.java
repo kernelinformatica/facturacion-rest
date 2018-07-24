@@ -9,6 +9,7 @@ import entidades.CteTipo;
 import entidades.Deposito;
 import entidades.FactCab;
 import entidades.FactDetalle;
+import entidades.FactFormaPago;
 import entidades.FactImputa;
 import entidades.FactPie;
 import entidades.FormaPago;
@@ -21,6 +22,7 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import javax.ejb.Stateless;
@@ -39,6 +41,7 @@ import persistencia.CteTipoFacade;
 import persistencia.DepositoFacade;
 import persistencia.FactCabFacade;
 import persistencia.FactDetalleFacade;
+import persistencia.FactFormaPagoFacade;
 import persistencia.FactImputaFacade;
 import persistencia.FactPieFacade;
 import persistencia.FormaPagoFacade;
@@ -69,6 +72,7 @@ public class GrabaComprobanteRest {
     @Inject ProductoFacade productoFacade;
     @Inject ProdumoFacade produmoFacade;
     @Inject LoteFacade loteFacade;
+    @Inject FactFormaPagoFacade factFormaPagoFacade;
           
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -117,6 +121,7 @@ public class GrabaComprobanteRest {
             List<JsonElement> grillaArticulos = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("grillaArticulos", jsonBody, "ArrayList");          
             List<JsonElement> grillaSubTotales = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("grillaSubTotales", jsonBody, "ArrayList");
             List<JsonElement> grillaTrazabilidad = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("grillaTrazabilidad", jsonBody, "ArrayList");
+            List<JsonElement> grillaFormaPago = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("grillaFormaPago", jsonBody, "ArrayList");
             String relComprobante = (String) Utils.getKeyFromJsonObject("relComprobante", jsonBody, "String");
             Integer relPuntoVenta = (Integer) Utils.getKeyFromJsonObject("relPuntoVenta", jsonBody, "Integer");
             Integer relNumero = (Integer) Utils.getKeyFromJsonObject("relNumero", jsonBody, "Integer");
@@ -253,6 +258,7 @@ public class GrabaComprobanteRest {
                     List<Produmo> listaProdumo = new ArrayList<>();
                     List<FactPie> listaPie = new ArrayList<>();
                     List<Lote> listaLotes = new ArrayList<>();
+                    List<FactFormaPago> listaFormaPago = new ArrayList<>();
                     //Contador para factDetalle
                     int item = 0;
                     //Recorro el array de grillaArticulos y creo facDetalle para cada articulo
@@ -278,7 +284,6 @@ public class GrabaComprobanteRest {
                         if(idProducto == null || articulo == null || pendiente == null || precio == null || porCalc == null ||
                            ivaPorc == null || cantidadBulto == null || despacho== null || trazable== null || idDeposito== null ||
                            observacionDetalle  == null) {
-                            //factCabFacade.deleteFactCab(factCab);
                             respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, algun campo esta vacio");
                             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                         }
@@ -286,7 +291,6 @@ public class GrabaComprobanteRest {
                         //Busco el deposito por id, si no encuentro alguno desarmo la transaccion.
                         Deposito deposito = depositoFacade.find(idDeposito);
                         if(deposito == null) {
-                            //factCabFacade.deleteFactCab(factCab);
                             respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, el deposito con id " + idDeposito + " no existe");
                             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                         }
@@ -294,7 +298,6 @@ public class GrabaComprobanteRest {
                         //Busco el producto 
                         Producto producto = productoFacade.find(idProducto);
                         if(producto == null) {
-                            //factCabFacade.deleteFactCab(factCab);
                             respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, el producto con id " + idProducto + " no existe");
                             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                         }
@@ -358,7 +361,39 @@ public class GrabaComprobanteRest {
                         item++;
                     }
                     
-                    //Termina el recorrido de la Grilla de articulos
+                    //Termina el recorrido de la Grilla de articulos y empiezo con la de factFormaPago
+                    if(factFormaPago && grillaFormaPago != null) {
+                        for(JsonElement je : grillaFormaPago) {
+                            Integer plazo = (Integer) Utils.getKeyFromJsonObject("plazo", je.getAsJsonObject(), "Integer"); 
+                            BigDecimal interes = (BigDecimal) Utils.getKeyFromJsonObject("interes", je.getAsJsonObject(), "BigDecimal");
+                            BigDecimal monto = (BigDecimal) Utils.getKeyFromJsonObject("monto", je.getAsJsonObject(), "BigDecimal");
+                            String detalle = (String) Utils.getKeyFromJsonObject("detalle", je.getAsJsonObject(), "String");
+                            String observacionesFormaPago = (String) Utils.getKeyFromJsonObject("observaciones", je.getAsJsonObject(), "String");
+                            
+                            //Pregunto si son nulos 
+                            if(observacionesFormaPago == null || monto == null || interes == null || plazo == null) {
+                                respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta Forma de Pago, algun campo de la grilla es nulo");
+                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                            }
+                            
+                            //Creo FacForma de pago
+                            FactFormaPago factFPago = new FactFormaPago();
+                            factFPago.setDetalle(observacionesFormaPago);
+                            factFPago.setDiasPago(plazo);
+                            //creo la fecha con la cantidad de dias de plazo
+                            Calendar calendar = Calendar.getInstance();	
+                            calendar.setTime(fechaEmision);	
+                            calendar.add(Calendar.DAY_OF_YEAR, plazo);
+                            //seteo la fecha 
+                            factFPago.setFechaPago(calendar.getTime());
+                            factFPago.setIdFormaPago(formaPago);
+                            factFPago.setImporte(monto);
+                            factFPago.setPorcentaje(interes);
+                            factFPago.setIdFactCab(factCab);
+                            listaFormaPago.add(factFPago);
+                        }                        
+                    }
+                    
                     //Empiezo con la grilla de SubTotales para grabar FactPie
                     if(factPie) {
                         for(JsonElement je : grillaSubTotales) {
@@ -370,7 +405,6 @@ public class GrabaComprobanteRest {
 
                             //Pregunto por los que no pueden ser Null
                             if(cuenta == null || descripcionPie == null ||importe == null || totalComprobante == null) {
-                                //factCabFacade.deleteFactCab(factCab);
                                 respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, algun campo de la grilla es nulo");
                                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                             }
@@ -432,7 +466,7 @@ public class GrabaComprobanteRest {
                             itemTrazabilidad ++;
                         }
                     }
-                    return this.persistirObjetos(factCab, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes);
+                    return this.persistirObjetos(factCab, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago);
                 } else {
                     respuesta.setControl(AppCodigo.OK, "No se graban detalles");
                     return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
@@ -443,7 +477,7 @@ public class GrabaComprobanteRest {
         }
     }
     
-    public Response persistirObjetos(FactCab factCab, List<FactDetalle> factDetalle, List<FactImputa> factImputa, List<Produmo> produmo, List<FactPie> factPie, List<Lote> listaLotes) {
+    public Response persistirObjetos(FactCab factCab, List<FactDetalle> factDetalle, List<FactImputa> factImputa, List<Produmo> produmo, List<FactPie> factPie, List<Lote> listaLotes, List<FactFormaPago> factFormaPago) {
         ServicioResponse respuesta = new ServicioResponse();
         try {
             //Comienzo con la transaccion de FactCab
@@ -509,6 +543,18 @@ public class GrabaComprobanteRest {
                     //si la trnsaccion fallo devuelvo el mensaje
                     if(!transaccion6) {
                         respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el lote con el articulo: " + l.getIdproductos().getDescripcion());
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                }
+            }
+            if(!factFormaPago.isEmpty()) {
+                //Comienzo con la transaccion de Lotes
+                for(FactFormaPago f : factFormaPago) {
+                    boolean transaccion7;
+                    transaccion7 = factFormaPagoFacade.setFactFormaPagoNuevo(f);
+                    //si la trnsaccion fallo devuelvo el mensaje
+                    if(!transaccion7) {
+                        respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta la forma de pago: " + f.getDetalle());
                         return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                     }
                 }

@@ -2,12 +2,10 @@ package servicios;
 
 import datos.AppCodigo;
 import datos.ContPlanCuentaResponse;
-import datos.PadronResponse;
 import datos.Payload;
 import datos.ServicioResponse;
 import entidades.Acceso;
 import entidades.ContPlanCuenta;
-import entidades.Padron;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
@@ -26,7 +24,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
 import persistencia.ContPlanCuentaFacade;
-import persistencia.PadronFacade;
 import persistencia.UsuarioFacade;
 
 /**
