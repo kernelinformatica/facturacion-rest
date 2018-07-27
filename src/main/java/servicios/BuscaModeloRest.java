@@ -131,60 +131,28 @@ public class BuscaModeloRest {
                 // / dividir
                 // n                
                 for(ModeloDetalle p : producto.getIdModeloCab().getModeloDetalleCollection()) {
-                    BigDecimal total = new BigDecimal(BigInteger.ZERO);
-                    BigDecimal cien = new BigDecimal(100);
-                //De acuerdo al operador tengo que realizar distintas operaciones.
-                    if(p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(1).getTipo())) {
-                        switch (p.getOperador()) {
-                            case "+":
-                                total = total.add(precio.add(new BigDecimal(cantidad)));
-                                break;
-                            case "%":
-                                total = total.add(precio.multiply(new BigDecimal(cantidad)).divide(cien));
-                                break;
-                            case "-":
-                                total = total.add(precio.subtract(new BigDecimal(cantidad)));
-                                break;
-                            case "*":
-                                total = total.add(precio.multiply(new BigDecimal(cantidad)));
-                                break;
-                            case "/":
-                                total = total.add(precio.divide(new BigDecimal(cantidad)));
-                                break;
-                            case "n":
-                                total = precio;
-                                break;
-                            default:
-                                break;
-                        }
-                    } else if (p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(2).getTipo())) {
-                        BigDecimal porcentaje = new BigDecimal(BigInteger.ZERO);
-                        total = total.add(precio.multiply(new BigDecimal(cantidad)));
-                        if(p.getValor().equals(new BigDecimal(BigInteger.ZERO))) {
-                            porcentaje = porcentaje.add(producto.getIdIVA().getPorcIVA().divide(new BigDecimal(100)));
-                            total = total.multiply(porcentaje);
-                        } else {
-                            porcentaje = porcentaje.add(p.getValor().divide(cien));
-                            total = total.multiply(porcentaje);
-                        }
-                    } else if (p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(3).getTipo())) {
-                        total = total.add(precio.multiply(new BigDecimal(cantidad)));
-                        if(p.getValor().equals(new BigDecimal(BigInteger.ZERO))) {
+                    if(p.getIdSisTipoModelo().getIdSisTipoModelo() == 1) {
+                        continue;
+                    } else {
+                        BigDecimal total = new BigDecimal(BigInteger.ZERO);
+                        BigDecimal cien = new BigDecimal(100);
+                        //De acuerdo al operador tengo que realizar distintas operaciones.
+                        if(p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(1).getTipo())) {
                             switch (p.getOperador()) {
                                 case "+":
-                                    total = total.add(producto.getIdIVA().getPorcIVA());
+                                    total = total.add(precio.add(new BigDecimal(cantidad)));
                                     break;
                                 case "%":
-                                    total = total.multiply(producto.getIdIVA().getPorcIVA().divide(cien));
+                                    total = total.add(precio.multiply(new BigDecimal(cantidad)).divide(cien));
                                     break;
                                 case "-":
-                                    total = total.subtract(producto.getIdIVA().getPorcIVA());
+                                    total = total.add(precio.subtract(new BigDecimal(cantidad)));
                                     break;
                                 case "*":
-                                    total = total.multiply(producto.getIdIVA().getPorcIVA());
+                                    total = total.add(precio.multiply(new BigDecimal(cantidad)));
                                     break;
                                 case "/":
-                                    total = total.divide(producto.getIdIVA().getPorcIVA());
+                                    total = total.add(precio.divide(new BigDecimal(cantidad)));
                                     break;
                                 case "n":
                                     total = precio;
@@ -192,34 +160,70 @@ public class BuscaModeloRest {
                                 default:
                                     break;
                             }
-                        } else {
-                            switch (p.getOperador()) {
-                                case "+":
-                                    total = total.add(p.getValor());
-                                    break;
-                                case "%":
-                                    total = total.multiply(p.getValor().divide(cien));
-                                    break;
-                                case "-":
-                                    total = total.subtract(p.getValor());
-                                    break;
-                                case "*":
-                                    total = total.multiply(p.getValor());
-                                    break;
-                                case "/":
-                                    total = total.divide(p.getValor());
-                                    break;
-                                case "n":
-                                    total = precio;
-                                    break;
-                                default:
-                                    break;
+                        } else if (p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(2).getTipo())) {
+                            BigDecimal porcentaje = new BigDecimal(BigInteger.ZERO);
+                            total = total.add(precio.multiply(new BigDecimal(cantidad)));
+                            if(p.getValor().equals(new BigDecimal(BigInteger.ZERO))) {
+                                porcentaje = porcentaje.add(producto.getIdIVA().getPorcIVA().divide(new BigDecimal(100)));
+                                total = total.multiply(porcentaje);
+                            } else {
+                                porcentaje = porcentaje.add(p.getValor().divide(cien));
+                                total = total.multiply(porcentaje);
+                            }
+                        } else if (p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(3).getTipo())) {
+                            total = total.add(precio.multiply(new BigDecimal(cantidad)));
+                            if(p.getValor().equals(new BigDecimal(BigInteger.ZERO))) {
+                                switch (p.getOperador()) {
+                                    case "+":
+                                        total = total.add(producto.getIdIVA().getPorcIVA());
+                                        break;
+                                    case "%":
+                                        total = total.multiply(producto.getIdIVA().getPorcIVA().divide(cien));
+                                        break;
+                                    case "-":
+                                        total = total.subtract(producto.getIdIVA().getPorcIVA());
+                                        break;
+                                    case "*":
+                                        total = total.multiply(producto.getIdIVA().getPorcIVA());
+                                        break;
+                                    case "/":
+                                        total = total.divide(producto.getIdIVA().getPorcIVA());
+                                        break;
+                                    case "n":
+                                        total = precio;
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            } else {
+                                switch (p.getOperador()) {
+                                    case "+":
+                                        total = total.add(p.getValor());
+                                        break;
+                                    case "%":
+                                        total = total.multiply(p.getValor().divide(cien));
+                                        break;
+                                    case "-":
+                                        total = total.subtract(p.getValor());
+                                        break;
+                                    case "*":
+                                        total = total.multiply(p.getValor());
+                                        break;
+                                    case "/":
+                                        total = total.divide(p.getValor());
+                                        break;
+                                    case "n":
+                                        total = precio;
+                                        break;
+                                    default:
+                                        break;
+                                }
                             }
                         }
+                        ModeloDetalleResponse modeloResponse = new ModeloDetalleResponse(p, total);
+                        modelos.add(modeloResponse);
                     }
-                    ModeloDetalleResponse modeloResponse = new ModeloDetalleResponse(p, total);
-                    modelos.add(modeloResponse);
-                } 
+                }
             }           
             List<FacturaResponse> listaFacturas = new ArrayList<>();
             List<Payload> lista = new ArrayList<>();
@@ -260,7 +264,7 @@ public class BuscaModeloRest {
             //System.out.println(map);
             respuesta.setArraydatos(lista);
             respuesta.setControl(AppCodigo.OK, "Lista de Modelos");
-            return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+            return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();
         } catch (Exception ex) { 
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();

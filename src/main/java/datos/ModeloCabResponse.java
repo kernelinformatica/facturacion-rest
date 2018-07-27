@@ -63,6 +63,17 @@ public class ModeloCabResponse implements Payload {
             this.modeloDetalle.add(lr);
         }
     }
+    
+    public void agregarModeloDetalleTipo(Collection<ModeloDetalle> lista, Integer idSisTipoModelo) {
+        for(ModeloDetalle l : lista) {
+            if(l.getIdSisTipoModelo().getIdSisTipoModelo().equals(idSisTipoModelo)) {
+                ModeloDetalleResponse lr = new ModeloDetalleResponse(l);
+                this.modeloDetalle.add(lr);
+            } else {
+                continue;
+            }
+        }
+    }
 
     @Override
     public String getClassName() {

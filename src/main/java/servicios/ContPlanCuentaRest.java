@@ -91,7 +91,7 @@ public class ContPlanCuentaRest {
             }
             respuesta.setArraydatos(cuentas);
             respuesta.setControl(AppCodigo.OK, "Cuentas Contables");
-            return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+            return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();
         } catch (Exception e) {
             respuesta.setControl(AppCodigo.ERROR, e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();

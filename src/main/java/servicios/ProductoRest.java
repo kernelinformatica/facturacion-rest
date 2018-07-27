@@ -390,7 +390,7 @@ public class ProductoRest {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             respuesta.setControl(AppCodigo.OK, "Producto editado con exito");
-            return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+            return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();
         } catch (Exception ex) { 
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
@@ -457,7 +457,7 @@ public class ProductoRest {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             respuesta.setControl(AppCodigo.OK, "Producto borrado con exito");
-            return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+            return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();
         } catch (Exception e) {
             respuesta.setControl(AppCodigo.ERROR, e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();

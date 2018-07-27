@@ -147,7 +147,7 @@ public class CalculoImportesSubtotales {
 
             respuesta.setDatos(subTotal);
             respuesta.setControl(AppCodigo.OK, "Subtotales");
-            return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+            return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();
         } catch (Exception ex) { 
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();

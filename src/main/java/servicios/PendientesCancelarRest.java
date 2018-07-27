@@ -26,6 +26,7 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -168,7 +169,8 @@ public class PendientesCancelarRest {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response getProductos(  
-        @HeaderParam ("token") String token,  
+        @HeaderParam ("token") String token,
+        @QueryParam ("idSisTipoModelo") Integer idSisTipoModelo,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {
@@ -202,6 +204,11 @@ public class PendientesCancelarRest {
                 return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
             }
             
+            if(idSisTipoModelo == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, idSisTipoModel nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            
             //Busco los productos de la empresa
             List<Producto> productos = productoFacade.getProductosByEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa());
             
@@ -215,7 +222,7 @@ public class PendientesCancelarRest {
             List<Payload> productosResponse = new ArrayList<>();
             for(Producto s : productos) {
                 ProductoResponse pr = new ProductoResponse(s);
-                pr.getModeloCab().agregarModeloDetalle(s.getIdModeloCab().getModeloDetalleCollection());
+                pr.getModeloCab().agregarModeloDetalleTipo(s.getIdModeloCab().getModeloDetalleCollection(),idSisTipoModelo);
                 PendientesCancelarResponse sr = new PendientesCancelarResponse(pr);
                 productosResponse.add(sr);
             }

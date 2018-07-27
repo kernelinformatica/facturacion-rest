@@ -2,6 +2,10 @@
 package datos;
 
 import entidades.FormaPago;
+import entidades.FormaPagoDet;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  *
@@ -13,6 +17,7 @@ public class FormaPagoResponse implements Payload {
     private boolean editar;
     private ListaPreciosResponse listaPrecio;
     private SisFormaPagoResponse tipo;
+    private List<FormaPagoDetResponse> formaPagoDet;
 
     public FormaPagoResponse(FormaPago f) {
         this.idFormaPago = f.getIdFormaPago();
@@ -20,6 +25,7 @@ public class FormaPagoResponse implements Payload {
         this.tipo = new SisFormaPagoResponse(f.getTipo());
         this.listaPrecio = new ListaPreciosResponse(f.getIdListaPrecios());
         this.editar = true;
+        this.formaPagoDet = new ArrayList<>();
     }
     
     public int getIdFormaPago() {
@@ -63,6 +69,22 @@ public class FormaPagoResponse implements Payload {
         this.listaPrecio = listaPrecio;
     }
 
+    public List<FormaPagoDetResponse> getFormaPagoDet() {
+        return formaPagoDet;
+    }
+
+    public void setFormaPagoDet(List<FormaPagoDetResponse> formaPagoDet) {
+        this.formaPagoDet = formaPagoDet;
+    }
+    
+    public void agregarDetalles(Collection<FormaPagoDet> formaPagos) {
+        for(FormaPagoDet f : formaPagos) {
+            FormaPagoDetResponse re = new FormaPagoDetResponse(f);
+            this.formaPagoDet.add(re);
+        }
+    }
+
+    
     @Override
     public String getClassName() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.

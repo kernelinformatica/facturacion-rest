@@ -85,7 +85,7 @@ public class BuscaCotizacionRest {
             
             respuesta.setDatos(resp);
             respuesta.setControl(AppCodigo.OK, "Cotizacion");
-            return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+            return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();
         } catch (Exception e) {
             respuesta.setControl(AppCodigo.ERROR, e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();

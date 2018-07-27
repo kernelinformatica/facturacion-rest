@@ -183,13 +183,14 @@ public class BuscaFormaPago {
             for(ListaPrecio l : listaVigente) {
                 for(FormaPago f : l.getFormaPagoCollection()) {
                     FormaPagoResponse formaPagoResponse = new FormaPagoResponse(f);
+                    formaPagoResponse.agregarDetalles(f.getFormaPagoDetCollection());
                     listaFormaPago.add(formaPagoResponse);
                 } 
             }
 
             respuesta.setArraydatos(listaFormaPago);
             respuesta.setControl(AppCodigo.OK, "Formas de Pago");
-            return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+            return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();
         } catch (Exception e) {
             respuesta.setControl(AppCodigo.ERROR, e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();

@@ -15,6 +15,7 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import javax.ejb.Stateless;
@@ -99,6 +100,7 @@ public class BuscaLotes {
             }
             
             //Armo la lista de lotes
+            List<LoteResponse> lotesResponse = new ArrayList<>();
             List<Payload> lotes = new ArrayList<>();
             for(JsonElement j : productos) { 
                 //Obtengo los atributos del body
@@ -153,17 +155,18 @@ public class BuscaLotes {
                             rs.getBigDecimal("stock"),
                             rs.getBigDecimal("ingresos"),
                             rs.getBigDecimal("egresos"));
-                    lotes.add(lote);
+                    lotesResponse.add(lote);
                 }
             }
-            if(lotes.isEmpty()) {
+            if(lotesResponse.isEmpty()) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, no hay lotes con esos parametros");
-                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                return Response.status(Response.Status.NO_CONTENT).entity(respuesta.toJson()).build();
             }
-            
+            Collections.sort(lotesResponse, (o1, o2) -> o1.getFechaVto().compareTo(o2.getFechaVto()));
+            lotes.addAll(lotesResponse);
             respuesta.setArraydatos(lotes);
             respuesta.setControl(AppCodigo.OK, "Lotes");
-            return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+            return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();
         } catch (Exception e) {
             respuesta.setControl(AppCodigo.ERROR, e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
