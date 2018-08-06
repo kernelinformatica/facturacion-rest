@@ -1,6 +1,7 @@
 package datos;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 /**
  *
@@ -9,7 +10,7 @@ import java.math.BigDecimal;
 public class FactDetalleResponse implements Payload{
     private String comprobante;
     private long numero;
-    private String fechaEmision;
+    private Date fechaEmision;
     private String codProducto;
     private String articulo;
     private BigDecimal original;
@@ -21,7 +22,7 @@ public class FactDetalleResponse implements Payload{
     private BigDecimal ivaPorc;
     private int deposito;
 
-    public FactDetalleResponse(String comprobante, long numero, String fechaEmision, String codProducto, String articulo, BigDecimal original, BigDecimal pendiente, BigDecimal precio, BigDecimal dolar, String moneda, BigDecimal porCalc, BigDecimal ivaPorc, int deposito) {
+    public FactDetalleResponse(String comprobante, long numero, Date fechaEmision, String codProducto, String articulo, BigDecimal original, BigDecimal pendiente, BigDecimal precio, BigDecimal dolar, String moneda, BigDecimal porCalc, BigDecimal ivaPorc, int deposito) {
         this.comprobante = comprobante;
         this.numero = numero;
         this.fechaEmision = fechaEmision;
@@ -54,11 +55,11 @@ public class FactDetalleResponse implements Payload{
         this.numero = numero;
     }
 
-    public String getFechaEmision() {
+    public Date getFechaEmision() {
         return fechaEmision;
     }
 
-    public void setFechaEmision(String fechaEmision) {
+    public void setFechaEmision(Date fechaEmision) {
         this.fechaEmision = fechaEmision;
     }
 

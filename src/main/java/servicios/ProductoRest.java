@@ -112,7 +112,7 @@ public class ProductoRest {
             }
             respuesta.setArraydatos(productosResponse);
             respuesta.setControl(AppCodigo.OK, "Lista de Productos");
-            return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+            return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();
         } catch (Exception e) {
             respuesta.setControl(AppCodigo.ERROR, e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
@@ -251,7 +251,7 @@ public class ProductoRest {
                 respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Producto, clave primaria repetida");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            respuesta.setControl(AppCodigo.OK, "Producto creado con exito");
+            respuesta.setControl(AppCodigo.CREADO, "Producto creado con exito");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception ex) { 
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
@@ -389,7 +389,7 @@ public class ProductoRest {
                 respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Producto, clave primaria repetida");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            respuesta.setControl(AppCodigo.OK, "Producto editado con exito");
+            respuesta.setControl(AppCodigo.GUARDADO, "Producto editado con exito");
             return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();
         } catch (Exception ex) { 
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
@@ -456,7 +456,7 @@ public class ProductoRest {
                 respuesta.setControl(AppCodigo.ERROR, "No se pudo borrar el Producto");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            respuesta.setControl(AppCodigo.OK, "Producto borrado con exito");
+            respuesta.setControl(AppCodigo.BORRADO, "Producto borrado con exito");
             return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();
         } catch (Exception e) {
             respuesta.setControl(AppCodigo.ERROR, e.getMessage());

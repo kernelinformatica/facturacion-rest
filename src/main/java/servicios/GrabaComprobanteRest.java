@@ -468,8 +468,8 @@ public class GrabaComprobanteRest {
                     }
                     return this.persistirObjetos(factCab, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago);
                 } else {
-                    respuesta.setControl(AppCodigo.OK, "No se graban detalles");
-                    return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+                    respuesta.setControl(AppCodigo.ERROR, "No se graban detalles");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
         } catch (Exception ex) { 
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
@@ -579,7 +579,7 @@ public class GrabaComprobanteRest {
                     i++;
                 }
             }
-        respuesta.setControl(AppCodigo.OK, "Comprobante creado con exito, con detalles");
+        respuesta.setControl(AppCodigo.CREADO, "Comprobante creado con exito, con detalles");
         return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
     }
 }

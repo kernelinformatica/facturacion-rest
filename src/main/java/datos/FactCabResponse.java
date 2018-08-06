@@ -37,7 +37,7 @@ public class FactCabResponse implements Payload{
     private String comprobante;
     private String moneda;
     private String imputada;
-    private String fechaEmi;
+    private Date fechaEmi;
     private List<FactDetalleResponse> detalle;
     
 //    FactCabResponse(FactCab f) {
@@ -64,7 +64,7 @@ public class FactCabResponse implements Payload{
 //        this.idmoneda = new SisMonedasResponse(f.getIdmoneda());
 //    }
 
-    public FactCabResponse(Integer idFactCab, String comprobante,long numero, String fechaEmision, Integer idPadron, String nombre, String cuit, BigDecimal cotDolar, String moneda, String imputada, String modulo) {
+    public FactCabResponse(Integer idFactCab, String comprobante,long numero, Date fechaEmision, Integer idPadron, String nombre, String cuit, BigDecimal cotDolar, String moneda, String imputada, String modulo) {
         this.idFactCab = idFactCab;
         this.comprobante = comprobante;
         this.numero = numero;
@@ -271,11 +271,11 @@ public class FactCabResponse implements Payload{
         this.comprobante = comprobante;
     }
 
-    public String getFechaEmi() {
+    public Date getFechaEmi() {
         return fechaEmi;
     }
 
-    public void setFechaEmi(String fechaEmi) {
+    public void setFechaEmi(Date fechaEmi) {
         this.fechaEmi = fechaEmi;
     }
 

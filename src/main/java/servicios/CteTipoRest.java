@@ -25,6 +25,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -53,6 +54,8 @@ public class CteTipoRest {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getComprobantes(  
         @HeaderParam ("token") String token,  
+        @QueryParam("sisModulo") Integer sisModulo,
+        @QueryParam("sisComprobante") Integer sisComprobante, 
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {
@@ -94,9 +97,49 @@ public class CteTipoRest {
             
             //busco los tipos de comprobantes de la empresa del usuario
             List<Payload> cteTipos = new ArrayList<>();
-            for(CteTipo p : user.getIdPerfil().getIdSucursal().getIdEmpresa().getCteTipoCollection()){
-                CteTipoResponse pr = new CteTipoResponse(p);
-                cteTipos.add(pr);
+            
+            if(sisModulo == null && sisComprobante == null) {
+                for(CteTipo p : user.getIdPerfil().getIdSucursal().getIdEmpresa().getCteTipoCollection()){
+                    CteTipoResponse pr = new CteTipoResponse(p);
+                    cteTipos.add(pr);
+                }
+            } else if(sisModulo != null && sisComprobante == null) {
+                List<CteTipo> cteTipoList = cteTipoFacade.getByModulo(user.getIdPerfil().getIdSucursal().getIdEmpresa(), sisModulo);           
+                //valido que tenga comprobantes disponibles
+                if(cteTipoList.isEmpty()) {
+                    respuesta.setControl(AppCodigo.ERROR, "No hay Tipos de Comprobantes disponibles");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                for(CteTipo p : cteTipoList){
+                    CteTipoResponse pr = new CteTipoResponse(p);
+                    cteTipos.add(pr);
+                }
+            } else if(sisModulo == null && sisComprobante != null) {
+                SisComprobante sisComprobanteEncontrado = sisComprobanteFacade.find(sisComprobante);
+            
+                if(sisComprobanteEncontrado == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no existe el sis comprobante");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                
+                List<CteTipo> cteTipo = cteTipoFacade.getBySisComprobanteEmpresa(sisComprobanteEncontrado, user.getIdPerfil().getIdSucursal().getIdEmpresa());
+
+                if(cteTipo == null || cteTipo.isEmpty()) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no hay cte tipo disponibles para ese sis comprobante");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                for(CteTipo c : cteTipo) {
+                    if(c.getCteNumeradorCollection().isEmpty()) {
+                        respuesta.setControl(AppCodigo.ERROR, "Error, no hay coleccion de numeradores para el cteTipo: " + c.getDescripcion());
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                    CteTipoResponse cteTipoResponse = new CteTipoResponse(c);
+                    cteTipoResponse.agregarNumeradores(c.getCteNumeradorCollection());
+                    cteTipos.add(cteTipoResponse);
+                }
+            } else {
+                respuesta.setControl(AppCodigo.ERROR, "No hay Tipos de Comprobantes disponibles");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             respuesta.setArraydatos(cteTipos);
             respuesta.setControl(AppCodigo.OK, "Lista de Tipos de Comprobantes");
@@ -349,74 +392,4 @@ public class CteTipoRest {
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
         } 
     }    
-    
-    
-    @GET
-    @Path("/{modulo}")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getComprobantesFiltrados(
-        @PathParam("modulo") String modulo,
-        @HeaderParam ("token") String token,  
-        @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
-        ServicioResponse respuesta = new ServicioResponse();
-        try {
-            //valido que token no sea null
-            if(token == null || token.trim().isEmpty()) {
-                respuesta.setControl(AppCodigo.ERROR, "Error, token vacio");
-                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-            }
-
-            //Busco el token
-            Acceso userToken = accesoFacade.findByToken(token);
-
-            //valido que Acceso no sea null
-            if(userToken == null) {
-                respuesta.setControl(AppCodigo.ERROR, "Error, Acceso nulo");
-                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-            }
-
-            //Busco el usuario
-            Usuario user = usuarioFacade.getByToken(userToken);
-
-            //valido que el Usuario no sea null
-            if(user == null) {
-                respuesta.setControl(AppCodigo.ERROR, "Error, Usuario nulo");
-                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-            }
-
-            //valido vencimiento token
-            if(!accesoFacade.validarToken(userToken, user)) {
-                respuesta.setControl(AppCodigo.ERROR, "Credenciales incorrectas");
-                return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
-            }
-            
-            //valido que el Usuario no sea null
-            if(modulo == null) {
-                respuesta.setControl(AppCodigo.ERROR, "Error, modulo vacio");
-                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-            }
-            
-            List<CteTipo> cteTipoList = cteTipoFacade.getByModulo(user.getIdPerfil().getIdSucursal().getIdEmpresa(), modulo);
-            
-            //valido que tenga comprobantes disponibles
-            if(cteTipoList.isEmpty()) {
-                respuesta.setControl(AppCodigo.ERROR, "No hay Tipos de Comprobantes disponibles");
-                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-            }
-            
-            //busco los tipos de comprobantes de la empresa del usuario
-            List<Payload> cteTipos = new ArrayList<>();
-            for(CteTipo p : cteTipoList){
-                CteTipoResponse pr = new CteTipoResponse(p);
-                cteTipos.add(pr);
-            }
-            respuesta.setArraydatos(cteTipos);
-            respuesta.setControl(AppCodigo.OK, "Lista de Tipos de Comprobantes");
-            return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();
-        } catch (Exception e) {
-            respuesta.setControl(AppCodigo.ERROR, e.getMessage());
-            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-        }
-    }
 }

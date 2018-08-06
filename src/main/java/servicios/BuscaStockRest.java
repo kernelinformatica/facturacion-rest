@@ -1,0 +1,193 @@
+package servicios;
+
+import com.google.gson.JsonObject;
+import datos.AppCodigo;
+import datos.BuscaProductosResponse;
+import datos.Payload;
+import datos.ServicioResponse;
+import datos.StockGeneralResponse;
+import datos.StockResponse;
+import entidades.Acceso;
+import entidades.Usuario;
+import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.security.NoSuchAlgorithmException;
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import persistencia.AccesoFacade;
+import persistencia.UsuarioFacade;
+import utils.Utils;
+
+/**
+ *
+ * @author FrancoSili
+ */
+
+@Stateless
+@Path("buscaStock")
+public class BuscaStockRest {
+    @Inject UsuarioFacade usuarioFacade;
+    @Inject AccesoFacade accesoFacade;
+    @Inject Utils utils; 
+    
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getStock(
+        @QueryParam ("general") String general,
+        @HeaderParam ("token") String token,  
+        @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+        ServicioResponse respuesta = new ServicioResponse();
+        try {  
+            
+            // Obtengo el body de la request
+            JsonObject jsonBody = Utils.getJsonObjectFromRequest(request);
+            
+            // Obtengo los atributos del body
+            Date fechaHasta = (Date)Utils.getKeyFromJsonObject("fechaHasta", jsonBody, "Date");
+            Integer idProductoDesde = (Integer) Utils.getKeyFromJsonObject("idProductoDesde", jsonBody, "Integer");
+            Integer idProductoHasta = (Integer) Utils.getKeyFromJsonObject("idProductoHasta", jsonBody, "Integer");
+            Integer idProducto = (Integer) Utils.getKeyFromJsonObject("idProducto", jsonBody, "Integer");
+            Integer idDeposito = (Integer) Utils.getKeyFromJsonObject("idDeposito", jsonBody, "Integer");
+            Integer idCteTipo = (Integer) Utils.getKeyFromJsonObject("idCteTipo", jsonBody, "Integer");
+            Integer idRubro= (Integer) Utils.getKeyFromJsonObject("idRubro", jsonBody, "Integer");
+            Integer idSubRubro = (Integer) Utils.getKeyFromJsonObject("idSubRubro", jsonBody, "Integer");
+            Integer tipoEstado = (Integer) Utils.getKeyFromJsonObject("tipoEstado", jsonBody, "Integer");
+
+
+            //valido que token no sea null
+            if(token == null || token.trim().isEmpty()) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, token vacio");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+
+            //Busco el token
+            Acceso userToken = accesoFacade.findByToken(token);
+
+            //valido que Acceso no sea null
+            if(userToken == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, Acceso nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+
+            //Busco el usuario
+            Usuario user = usuarioFacade.getByToken(userToken);
+
+            //valido que el Usuario no sea null
+            if(user == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, Usuario nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+
+            //valido vencimiento token
+            if(!accesoFacade.validarToken(userToken, user)) {
+                respuesta.setControl(AppCodigo.ERROR, "Credenciales incorrectas");
+                return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
+            }
+            
+            List<Payload> stock = new ArrayList<>();
+            if(general == null) {
+            //seteo el nombre del store
+            String noombreSP = "call s_buscaStock(?,?,?,?,?,?)";
+
+            //invoco al store
+            CallableStatement callableStatement = this.utils.procedimientoAlmacenado(user, noombreSP);
+            
+            //valido que el Procedimiento Almacenado no sea null
+            if(callableStatement == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, no existe el procedimiento");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+                       
+            //Parseo las fechas a sql.date
+            java.sql.Date sqlFechaHasta = new java.sql.Date(fechaHasta.getTime());
+            //Seteo los parametros del SP
+            callableStatement.setInt(1,user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
+            callableStatement.setDate(2, sqlFechaHasta);
+            callableStatement.setInt(3,idProducto);
+            callableStatement.setInt(4, idDeposito);
+            callableStatement.setInt(5, idCteTipo);
+            callableStatement.setInt(6, tipoEstado);
+            ResultSet rs = callableStatement.executeQuery();           
+                while (rs.next()) {
+                    StockResponse st = new StockResponse(
+                            rs.getString("comprobante"),
+                            rs.getBigDecimal("numero"),
+                            rs.getDate("fechaEmision"),
+                            rs.getBigDecimal("ingresos"),
+                            rs.getBigDecimal("egresos"),
+                            rs.getBigDecimal("pendiente"),
+                            rs.getString("deposito"),
+                            rs.getBoolean("trazable"),
+                            rs.getString("rubro"),
+                            rs.getString("subRubro"),
+                            rs.getInt("idFactCab")
+                            );
+                    stock.add(st);
+                }
+            } else if(general.equals("general")){
+                 //seteo el nombre del store
+            String noombreSP = "call s_buscaStockGral(?,?,?,?,?,?,?,?)";
+
+            //invoco al store
+            CallableStatement callableStatement = this.utils.procedimientoAlmacenado(user, noombreSP);
+            
+            //valido que el Procedimiento Almacenado no sea null
+            if(callableStatement == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, no existe el procedimiento");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+                       
+            //Parseo las fechas a sql.date
+            java.sql.Date sqlFechaHasta = new java.sql.Date(fechaHasta.getTime());
+            //Seteo los parametros del SP
+            callableStatement.setInt(1,user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
+            callableStatement.setDate(2, sqlFechaHasta);
+            callableStatement.setInt(3,idProductoDesde);
+            callableStatement.setInt(4,idProductoHasta);
+            callableStatement.setInt(5, idDeposito);
+            callableStatement.setInt(6, idRubro);
+            callableStatement.setInt(7, idSubRubro);
+            callableStatement.setInt(8, idCteTipo);
+            ResultSet rs = callableStatement.executeQuery();
+                while (rs.next()) {
+                    StockGeneralResponse st = new StockGeneralResponse(
+                            rs.getBigDecimal("ingresos"),
+                            rs.getBigDecimal("egresos"),
+                            rs.getString("deposito"),
+                            rs.getBoolean("trazable"),
+                            rs.getString("rubro"),
+                            rs.getString("subRubro"),
+                            rs.getString("codProducto"),
+                            rs.getString("descripcion"));
+                    stock.add(st);
+                }
+            } else {
+                respuesta.setControl(AppCodigo.ERROR, "Error, no existe el servicio");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            respuesta.setArraydatos(stock);
+            respuesta.setControl(AppCodigo.OK, "Stock");
+            return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();
+        } catch (Exception e) {
+            respuesta.setControl(AppCodigo.ERROR, e.getMessage());
+            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+        }
+    }
+}

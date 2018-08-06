@@ -156,7 +156,7 @@ public class BuscaComprobanteRest {
                         rs.getInt("idFactCab"),
                         rs.getString("comprobante"),
                         rs.getLong("numero"),
-                        rs.getDate("fechaEmision").toString(),
+                        rs.getDate("fechaEmision"),
                         rs.getInt("codigoPad"),
                         rs.getString("nombre"),
                         rs.getString("cuit"),
@@ -173,7 +173,7 @@ public class BuscaComprobanteRest {
                 FactDetalleResponse factDet = new FactDetalleResponse(
                         rsd.getString("comprobante"),
                         rsd.getLong("numero"),
-                        rsd.getDate("fechaEmision").toString(),
+                        rsd.getDate("fechaEmision"),
                         rsd.getString("codProducto"),
                         rsd.getString("articulo"),
                         rsd.getBigDecimal("original"),
