@@ -64,6 +64,18 @@ public class ModeloCabResponse implements Payload {
         }
     }
     
+    public void agregarModeloDetalleImputacion(Collection<ModeloDetalle> lista, String cuentaContable) {
+        for(ModeloDetalle l : lista) {            
+            ModeloDetalleResponse lr = new ModeloDetalleResponse(l);
+            if(l.getCtaContable().equals(cuentaContable)){
+                lr.setPrioritario(true);
+            } else {
+                lr.setPrioritario(false);
+            }
+            this.modeloDetalle.add(lr);
+        }
+    }
+    
     public void agregarModeloDetalleTipo(Collection<ModeloDetalle> lista, Integer idSisTipoModelo) {
         for(ModeloDetalle l : lista) {
             if(l.getIdSisTipoModelo().getIdSisTipoModelo().equals(idSisTipoModelo)) {

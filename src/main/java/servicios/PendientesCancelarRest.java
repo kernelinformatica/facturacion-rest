@@ -98,7 +98,13 @@ public class PendientesCancelarRest {
                 respuesta.setControl(AppCodigo.ERROR, "Credenciales incorrectas");
                 return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
             }
-                  
+            
+            //valido que el Usuario no sea null
+            if(cteTipo == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Debe seleccionar un Tipo de Comprobante");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            
             //seteo el nombre del store
             String noombreSP = "call s_comprobantesPendientes(?,?,?,?,?,?,?,?)";
             
@@ -128,7 +134,7 @@ public class PendientesCancelarRest {
                         break;
                     }
                     ProductoResponse producto = new ProductoResponse(prod);
-                    producto.getModeloCab().agregarModeloDetalle(prod.getIdModeloCab().getModeloDetalleCollection());
+                    producto.getModeloCab().agregarModeloDetalleImputacion(prod.getIdModeloCab().getModeloDetalleCollection(),rs.getString("imputacion") );
                     PendientesCancelarResponse pendientesCancelar = new PendientesCancelarResponse(
                             rs.getString("comprobante"),
                             rs.getString("numero"),
@@ -151,6 +157,9 @@ public class PendientesCancelarRest {
                             producto);
                     pendientes.add(pendientesCancelar);
                 }
+            //Cierro la conexion    
+            callableStatement.getConnection().close();
+            
             if(pendientes.isEmpty()) {
                 respuesta.setControl(AppCodigo.ERROR, "No hay Comprobantes Pendientes");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
