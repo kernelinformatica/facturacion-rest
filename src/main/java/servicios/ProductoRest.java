@@ -6,6 +6,7 @@ import datos.Payload;
 import datos.ProductoResponse;
 import datos.ServicioResponse;
 import entidades.Acceso;
+import entidades.ModeloCab;
 import entidades.Producto;
 import entidades.SisIVA;
 import entidades.SisUnidad;
@@ -32,6 +33,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
+import persistencia.ModeloCabFacade;
 import persistencia.ProductoFacade;
 import persistencia.SisIVAFacade;
 import persistencia.SisUnidadFacade;
@@ -52,6 +54,7 @@ public class ProductoRest {
     @Inject SubRubroFacade subRubroFacade;
     @Inject SisUnidadFacade sisUnidadFacade;
     @Inject SisIVAFacade sisIVAFacade;
+    @Inject ModeloCabFacade modeloCabFacade;
     
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
@@ -136,7 +139,7 @@ public class ProductoRest {
             String codigoBarra = (String) Utils.getKeyFromJsonObject("codigoBarra", jsonBody, "String");
             String descripcionCorta = (String) Utils.getKeyFromJsonObject("descripcionCorta", jsonBody, "String");
             String descripcion = (String) Utils.getKeyFromJsonObject("descripcion", jsonBody, "String");
-            String modeloImputacion = (String) Utils.getKeyFromJsonObject("modeloImputacion", jsonBody, "String");
+            Integer modeloImputacion = (Integer) Utils.getKeyFromJsonObject("modeloImputacion", jsonBody, "Integer");
             boolean aptoCanje = (boolean) Utils.getKeyFromJsonObject("aptoCanje", jsonBody, "boolean");
             boolean stock = (boolean) Utils.getKeyFromJsonObject("stock", jsonBody, "boolean");
             boolean trazable = (boolean) Utils.getKeyFromJsonObject("trazable", jsonBody, "boolean");
@@ -199,6 +202,7 @@ public class ProductoRest {
             SisUnidad sisUniudadCompra = sisUnidadFacade.find(idUnidadCompra);
             SisUnidad sisUnidadVenta = sisUnidadFacade.find(idUnidadVenta);
             SisIVA sisIVA = sisIVAFacade.find(idIva);
+            ModeloCab modeloCab = modeloCabFacade.find(modeloImputacion);
             
             //Pregunto si existe el SubRubro
             if(subrubro == null) {
@@ -224,13 +228,19 @@ public class ProductoRest {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
+            //Pregunto si existe el SubRubro
+            if(modeloCab == null) {
+                respuesta.setControl(AppCodigo.ERROR, "No existe el modelo de imputacion");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            
             boolean transaccion;
             Producto producto = new Producto();
             producto.setCodProducto(codProducto);
             producto.setCodigoBarra(codigoBarra);
             producto.setDescripcionCorta(descripcionCorta);
             producto.setDescripcion(descripcion);
-            producto.setModeloImputacion(modeloImputacion);
+            producto.setIdModeloCab(modeloCab);
             producto.setAptoCanje(aptoCanje);
             producto.setStock(stock);
             producto.setTraReceta(traReceta);
@@ -277,7 +287,7 @@ public class ProductoRest {
             String codigoBarra = (String) Utils.getKeyFromJsonObject("codigoBarra", jsonBody, "String");
             String descripcionCorta = (String) Utils.getKeyFromJsonObject("descripcionCorta", jsonBody, "String");
             String descripcion = (String) Utils.getKeyFromJsonObject("descripcion", jsonBody, "String");
-            String modeloImputacion = (String) Utils.getKeyFromJsonObject("modeloImputacion", jsonBody, "String");
+            Integer modeloImputacion = (Integer) Utils.getKeyFromJsonObject("modeloImputacion", jsonBody, "Integer");
             boolean aptoCanje = (boolean) Utils.getKeyFromJsonObject("aptoCanje", jsonBody, "boolean");
             boolean stock = (boolean) Utils.getKeyFromJsonObject("stock", jsonBody, "boolean");
             boolean trazable = (boolean) Utils.getKeyFromJsonObject("trazable", jsonBody, "boolean");
@@ -332,8 +342,9 @@ public class ProductoRest {
             SubRubro subrubro = subRubroFacade.find(idSubRubro);
             SisUnidad sisUniudadCompra = sisUnidadFacade.find(idUnidadCompra);
             SisUnidad sisUnidadVenta = sisUnidadFacade.find(idUnidadVenta);
-            SisIVA sisIVA = sisIVAFacade.find(idIva);
-            
+            SisIVA sisIVA = sisIVAFacade.find(idIva); 
+            ModeloCab modeloCab = modeloCabFacade.find(modeloImputacion);
+                        
             //Pregunto si existe el SubRubro
             if(subrubro == null) {
                 respuesta.setControl(AppCodigo.ERROR, "No existe el SubRubro");
@@ -358,6 +369,13 @@ public class ProductoRest {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
+            //Pregunto si existe el SubRubro
+            if(modeloCab == null) {
+                respuesta.setControl(AppCodigo.ERROR, "No existe el modelo de imputacion");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            
+            
             //Pregunto si existe el Producto
             if(producto == null) {
                 respuesta.setControl(AppCodigo.ERROR, "No existe el Producto");
@@ -369,7 +387,7 @@ public class ProductoRest {
             producto.setCodigoBarra(codigoBarra);
             producto.setDescripcionCorta(descripcionCorta);
             producto.setDescripcion(descripcion);
-            producto.setModeloImputacion(modeloImputacion);
+            producto.setIdModeloCab(modeloCab);
             producto.setAptoCanje(aptoCanje);
             producto.setStock(stock);
             producto.setTraReceta(traReceta);

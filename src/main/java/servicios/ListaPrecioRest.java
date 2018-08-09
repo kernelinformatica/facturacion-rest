@@ -270,6 +270,9 @@ public class ListaPrecioRest {
             Date vigenciaDesde = (Date) Utils.getKeyFromJsonObject("vigenciaDesde", jsonBody, "Date");
             Date vigenciaHasta = (Date) Utils.getKeyFromJsonObject("vigenciaHasta", jsonBody, "Date");            
             String condiciones = (String) Utils.getKeyFromJsonObject("condiciones", jsonBody, "String");
+            Integer idPadronCliente = (Integer) Utils.getKeyFromJsonObject("idPadronCliente", jsonBody, "Integer");
+            Integer idPadronRepresentante = (Integer) Utils.getKeyFromJsonObject("idPadronRepresentante", jsonBody, "Integer");
+            BigDecimal porc1 = (BigDecimal) Utils.getKeyFromJsonObject("porc1", jsonBody, "BigDecimal");
             List<JsonElement> preciosDet = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("preciosDet", jsonBody, "ArrayList");           
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -326,6 +329,9 @@ public class ListaPrecioRest {
             listaPrecio.setVigenciaDesde(vigenciaDesde);
             listaPrecio.setVigenciaHasta(vigenciaHasta);                       
             listaPrecio.setCondiciones(condiciones);
+            listaPrecio.setIdPadronCliente(idPadronCliente);
+            listaPrecio.setIdPadronRepresentante(idPadronRepresentante);
+            listaPrecio.setPorc1(porc1);
             listaPrecio.getListaPrecioDetCollection().clear();
             transaccion = listaPrecioFacade.editListaPrecio(listaPrecio);
             if(!transaccion) {

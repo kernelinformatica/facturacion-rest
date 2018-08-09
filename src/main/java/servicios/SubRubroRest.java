@@ -25,6 +25,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -51,7 +52,8 @@ public class SubRubroRest {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response getSubRubros(  
-        @HeaderParam ("token") String token,  
+        @HeaderParam ("token") String token,
+        @QueryParam("idRubro") Integer idRubro,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {
@@ -93,10 +95,24 @@ public class SubRubroRest {
             
             //busco los SubRubros de la empresa del usuario
             List<Payload> subRubros = new ArrayList<>();
-            for(Rubro p : user.getIdPerfil().getIdSucursal().getIdEmpresa().getRubroCollection()){
-                for(SubRubro sr : p.getSubRubroCollection()) {
-                    SubRubroResponse pr = new SubRubroResponse(sr);
-                    subRubros.add(pr);
+            if(idRubro != null) {
+                Rubro rubro = rubroFacade.find(idRubro);            
+                //valido que el rubro no sea null
+                if(rubro == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no existe el rubro");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                for(SubRubro p : rubro.getSubRubroCollection()){{
+                        SubRubroResponse pr = new SubRubroResponse(p);
+                        subRubros.add(pr);
+                    }
+                }
+            } else {
+                for(Rubro p : user.getIdPerfil().getIdSucursal().getIdEmpresa().getRubroCollection()){
+                    for(SubRubro sr : p.getSubRubroCollection()) {
+                        SubRubroResponse pr = new SubRubroResponse(sr);
+                        subRubros.add(pr);
+                    }
                 }
             }
             respuesta.setArraydatos(subRubros);
@@ -328,5 +344,5 @@ public class SubRubroRest {
             respuesta.setControl(AppCodigo.ERROR, e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
         } 
-    }    
+    } 
 }
