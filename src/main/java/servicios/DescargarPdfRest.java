@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import datos.AppCodigo;
 import datos.ServicioResponse;
 import entidades.Acceso;
+import entidades.FactCab;
 import entidades.Usuario;
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
@@ -21,6 +22,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
+import persistencia.FactCabFacade;
 import persistencia.UsuarioFacade;
 import utils.Utils;
 
@@ -35,6 +37,7 @@ public class DescargarPdfRest {
     @Inject UsuarioFacade usuarioFacade;
     @Inject AccesoFacade accesoFacade;
     @Inject Utils utils;
+    @Inject FactCabFacade factCabFacade;
     
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -48,7 +51,6 @@ public class DescargarPdfRest {
             JsonObject jsonBody = Utils.getJsonObjectFromRequest(request);
             
             // Obtengo los atributos del body
-            String nombreReporte = (String) Utils.getKeyFromJsonObject("nombreReporte", jsonBody, "String");
             Integer idFactCab = (Integer) Utils.getKeyFromJsonObject("idFactCab", jsonBody, "Integer");
             
             //valido que token no sea null
@@ -82,19 +84,31 @@ public class DescargarPdfRest {
             }
            
             //valido que tenga Rubros disponibles
-            if(nombreReporte == null || idFactCab == null) {
-                respuesta.setControl(AppCodigo.ERROR, "Algun campo esta vacio");
+            if(idFactCab == null) {
+                respuesta.setControl(AppCodigo.ERROR, "IdFacCab esta vacio");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-            } 
-                        
+            }
+            
+            FactCab factCab = factCabFacade.find(idFactCab);
+            
+            if(factCab == null) {
+                respuesta.setControl(AppCodigo.ERROR, "No existe ese comprobante");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            
+            String nombreReporte = factCab.getIdCteTipo().getIdReportes().getNombre();
+            
+             if(nombreReporte == null) {
+                respuesta.setControl(AppCodigo.ERROR, "El comprobante nro: "+factCab.getNumero()+" no tiene un reporte asociado");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            
             HashMap hm = new HashMap();
             hm.put("idFactCab", idFactCab);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             byte[] bytes = utils.generateJasperReportPDF(request, nombreReporte, hm, user, outputStream);
             String nomeRelatorio= nombreReporte + ".pdf";
             return Response.ok(bytes).type("application/pdf").header("Content-Disposition", "filename=\"" + nomeRelatorio + "\"").build();
-            //respuesta.setControl(AppCodigo.OK, "PDF generado con exito");
-            //return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception e) {
             respuesta.setControl(AppCodigo.ERROR, e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
