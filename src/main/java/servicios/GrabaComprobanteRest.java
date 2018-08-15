@@ -279,6 +279,7 @@ public class GrabaComprobanteRest {
                         String imputacion = (String) Utils.getKeyFromJsonObject("imputacion", j.getAsJsonObject(), "String");
                         Integer idFactCabImputa = (Integer) Utils.getKeyFromJsonObject("idFactCabImputa", j.getAsJsonObject(), "Integer");
                         Integer itemImputada = (Integer) Utils.getKeyFromJsonObject("itemImputada", j.getAsJsonObject(), "Integer");
+                         BigDecimal importe = (BigDecimal) Utils.getKeyFromJsonObject("importe", j.getAsJsonObject(), "BigDecimal");
 
                         //Pregunto por los campos que son NOTNULL
                         if(idProducto == null || articulo == null || pendiente == null || precio == null || porCalc == null ||
@@ -319,6 +320,8 @@ public class GrabaComprobanteRest {
                         factDetalle.setPorcCalc(porCalc);
                         factDetalle.setPrecio(precio);
                         factDetalle.setTrazable(trazable);
+                        factDetalle.setImporte(importe);
+                        factDetalle.setCodProducto(producto.getCodProducto());
                         listaDetalles.add(factDetalle);
                         
                         //Empiezo la transaccion para la grabacion de FactImputa

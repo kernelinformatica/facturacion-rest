@@ -99,7 +99,7 @@ public class BuscaFormaPago {
             } else {
                 //valido que la lista no venga vacia o nula 
                 if(listaPrecioFacade.getByActivaEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa(), activa).isEmpty() || listaPrecioFacade.getByActivaEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa(), activa) == null) {
-                    respuesta.setControl(AppCodigo.ERROR, "No existen listas de precios disponibles con esos parametros");
+                    respuesta.setControl(AppCodigo.ERROR, "No existen condiciones de pagos disponibles");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 } else {
                     listaPrecios.addAll(listaPrecioFacade.getByActivaEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa(), activa));
@@ -123,8 +123,8 @@ public class BuscaFormaPago {
             }
             
             //Si la lista esta vacia devuelvo respuesta
-            if(listaPrecios.isEmpty()) {
-                respuesta.setControl(AppCodigo.ERROR, "No existen listas de precios disponibles con esos parametros");
+            if(listaVigente.isEmpty()) {
+                respuesta.setControl(AppCodigo.ERROR, "No existen condiciones de pagos disponibles con la fecha ingresada");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
@@ -148,8 +148,8 @@ public class BuscaFormaPago {
             }
             
             //Si la lista esta vacia devuelvo respuesta
-            if(listaPrecios.isEmpty()) {
-                respuesta.setControl(AppCodigo.ERROR, "No existen listas de precios disponibles con esos parametros");
+            if(listaVigente.isEmpty()) {
+                respuesta.setControl(AppCodigo.ERROR, "No existen condiciones de pagos disponibles para el cliente ingresado");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
@@ -174,7 +174,7 @@ public class BuscaFormaPago {
             
             //Si la lista esta vacia devuelvo respuesta
             if(listaVigente.isEmpty()) {
-                respuesta.setControl(AppCodigo.ERROR, "No existen listas de precios disponibles con esos parametros");
+                respuesta.setControl(AppCodigo.ERROR, "No existen condiciones de pagos con cliente igual 0");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
@@ -186,6 +186,12 @@ public class BuscaFormaPago {
                     formaPagoResponse.agregarDetalles(f.getFormaPagoDetCollection());
                     listaFormaPago.add(formaPagoResponse);
                 } 
+            }
+            
+            //Si la lista esta vacia devuelvo respuesta
+            if(listaFormaPago.isEmpty()) {
+                respuesta.setControl(AppCodigo.ERROR, "No existen condiciones de pagos");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
 
             respuesta.setArraydatos(listaFormaPago);

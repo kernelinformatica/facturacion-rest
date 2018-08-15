@@ -49,7 +49,7 @@ public class CteNumeradorResponse implements Payload {
         //agrego ctenumero a la lista de numeros y le sumo uno mas a punto de venta
         for(CteNumero c : numero) {
             CteNumeroResponse cteNumero = new CteNumeroResponse(c);
-            cteNumero.setPtoVenta(cteNumero.getPtoVenta() + 1);
+            cteNumero.setNumero(cteNumero.getNumero()+ 1);
             this.numero.add(cteNumero);
         }
     }
