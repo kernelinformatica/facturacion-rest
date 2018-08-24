@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.3.0.final using JasperReports Library version 6.3.0  -->
-<!-- 2018-08-14T13:37:09 -->
+<!-- 2018-08-24T11:51:21 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="testReporte" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" isFloatColumnFooter="true" whenResourceMissingType="Empty" uuid="4806e2f6-ab00-41d0-b74f-73434a7c5917">
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
@@ -15,8 +15,8 @@
 	<parameter name="pathImagen" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[Select 
-SUBSTRING(LPAD(FactCab.numero,12,'0'),-4) as prefijoComprobante,
-SUBSTRING(LPAD(FactCab.numero,12,'0'),5) as numeroComprobante,
+LPAD(SUBSTRING(FactCab.numero,1,length(FactCab.numero)-8),4,'0') as prefijoComprobante,
+SUBSTRING(FactCab.numero,-8) as numeroComprobante,
 FactCab.cuit as cuitCliente,
 FactCab.fechaEmision as fechaEmisionComprobante,
 FactCab.nombre as nombreCilente,
@@ -25,6 +25,11 @@ FactCab.fechaVto as fechaVencimientoComprobante,
 FactCab.sitIVA as situacionIva,
 FactCab.idListaPrecios as listaPrecios,
 FactCab.letra as letra,
+FactDetalle.detalle as detalleProducto,
+FactDetalle.cantidad as cantidad,
+FactDetalle.precio as precio,
+FactDetalle.codProducto as codigoProducto,
+FactDetalle.importe as importe,
 CteTipo.codigoAfip as codigoAfip,
 CteTipo.descCorta as descripcionCortaCteTipo,
 CteTipo.descripcion as descripcionCteTipo,
@@ -35,11 +40,6 @@ Empresas.descripcion as descripcionEmpresa,
 Empresas.domicilio as domicilioEmpresa,
 Empresas.cuit as cuitEmpresa,
 Empresas.iibb as ingBrutosEmpresa,
-FactDetalle.detalle as detalleProducto,
-FactDetalle.cantidad as cantidad,
-FactDetalle.precio as precio,
-FactDetalle.codProducto as codigoProducto,
-FactDetalle.importe as importe,
 SisMonedas.descripcion as moneda
 From FactCab
 inner join CteTipo on FactCab.idCteTipo = CteTipo.idCteTipo
@@ -371,21 +371,18 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 		</band>
 	</detail>
 	<lastPageFooter>
-		<band height="82" splitType="Prevent">
+		<band height="181" splitType="Prevent">
 			<line>
-				<reportElement x="-1" y="0" width="557" height="1" uuid="3ce4ea5a-da1f-4075-933e-88d5ef634cea"/>
+				<reportElement x="-1" y="92" width="1" height="80" uuid="3f2ddd50-6022-4aa8-a106-5160af31bf08"/>
 			</line>
 			<line>
-				<reportElement x="-1" y="1" width="1" height="80" uuid="3f2ddd50-6022-4aa8-a106-5160af31bf08"/>
+				<reportElement x="555" y="92" width="1" height="80" uuid="e24f3369-7578-4849-9286-0e12bcb9ef26"/>
 			</line>
 			<line>
-				<reportElement x="555" y="1" width="1" height="80" uuid="e24f3369-7578-4849-9286-0e12bcb9ef26"/>
-			</line>
-			<line>
-				<reportElement x="-1" y="81" width="557" height="1" uuid="ff310959-9f01-42ca-a084-0e0039e4752d"/>
+				<reportElement x="-1" y="172" width="557" height="1" uuid="ff310959-9f01-42ca-a084-0e0039e4752d"/>
 			</line>
 			<subreport>
-				<reportElement x="1" y="1" width="553" height="80" uuid="240ddc4e-4ee6-4cb0-a268-43a15a3dd27d"/>
+				<reportElement x="1" y="92" width="553" height="80" uuid="240ddc4e-4ee6-4cb0-a268-43a15a3dd27d"/>
 				<subreportParameter name="idFactCab">
 					<subreportParameterExpression><![CDATA[$P{idFactCab}]]></subreportParameterExpression>
 				</subreportParameter>
@@ -397,6 +394,42 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<subreportExpression><![CDATA[$P{pathImagen} +"/"+"subTotales.jasper"]]></subreportExpression>
+			</subreport>
+			<line>
+				<reportElement x="-1" y="91" width="557" height="1" uuid="a5b7a62b-e2ea-40bb-aba6-702713dde34b"/>
+			</line>
+			<line>
+				<reportElement x="-1" y="90" width="557" height="1" uuid="3ce4ea5a-da1f-4075-933e-88d5ef634cea"/>
+			</line>
+			<line>
+				<reportElement x="0" y="3" width="555" height="1" uuid="1ee24042-93ec-4e2b-af06-8e1d9594b730"/>
+			</line>
+			<line>
+				<reportElement x="-1" y="3" width="1" height="87" uuid="b90d0b39-a6cd-4ed1-b4b4-d98dfa56b9d9"/>
+			</line>
+			<line>
+				<reportElement x="555" y="3" width="1" height="87" uuid="d34d6e0f-833e-44bd-9fb3-0b7367580b1b"/>
+			</line>
+			<staticText>
+				<reportElement x="0" y="4" width="99" height="16" uuid="6c5abce2-f8e1-453f-a920-64c06b643e74"/>
+				<textElement>
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Forma de Pago:]]></text>
+			</staticText>
+			<subreport>
+				<reportElement x="0" y="20" width="555" height="69" uuid="8ac3eb89-c9ae-48ca-9113-ce676e1c69ba"/>
+				<subreportParameter name="idFactCab">
+					<subreportParameterExpression><![CDATA[$P{idFactCab}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="bruto">
+					<subreportParameterExpression><![CDATA[$V{bruto}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="moneda">
+					<subreportParameterExpression><![CDATA[$F{moneda}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{pathImagen} +"/"+"formaPago.jasper"]]></subreportExpression>
 			</subreport>
 		</band>
 	</lastPageFooter>

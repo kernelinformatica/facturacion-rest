@@ -92,13 +92,13 @@ public class CteTipoRest {
             //Armo la respuesta de cteTipos
             List<Payload> cteTipos = new ArrayList<>();
             //devuelvo todos los cteTipo
-            if(sisModulo == null && sisComprobante == null) {
+            if(sisModulo == null && sisComprobante == null && idCteTipo == null) {
                 for(CteTipo p : user.getIdPerfil().getIdSucursal().getIdEmpresa().getCteTipoCollection()){
                     CteTipoResponse pr = new CteTipoResponse(p);
                     cteTipos.add(pr);
                 }
             //Devuelvo cteTipo por modulo
-            } else if(sisModulo != null && sisComprobante == null) {
+            } else if(sisModulo != null && sisComprobante == null && idCteTipo == null ) {
                 List<CteTipo> cteTipoList = cteTipoFacade.getByModulo(user.getIdPerfil().getIdSucursal().getIdEmpresa(), sisModulo);           
                 //valido que tenga comprobantes disponibles
                 if(cteTipoList.isEmpty()) {
@@ -139,7 +139,24 @@ public class CteTipoRest {
                 }
                 //Agrego los numeradores a la coleccion en cteTipoResponse y le sumo uno al punto de venta
                 cteTipoResponse.agregarNumeradores(cteTipo.getCteNumeradorCollection());
-                cteTipos.add(cteTipoResponse);                      
+                cteTipos.add(cteTipoResponse); 
+            //Devuelvo el comprobante anterior para los relacionados
+            } else if(sisModulo != null && sisComprobante == null && idCteTipo != null) {
+                CteTipo cteTipo = cteTipoFacade.find(idCteTipo);                
+                if(cteTipo == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no existe ese tipo de comprobamte");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                List<CteTipo> cteTipoAnteriores = cteTipoFacade.getComprobanteAnterior(cteTipo,sisModulo);
+                if(cteTipoAnteriores.isEmpty()) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no hay comprobantes anteriores");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                for(CteTipo c : cteTipoAnteriores) {
+                    CteTipoResponse cteTip = new CteTipoResponse(c);
+                    cteTipos.add(cteTip);
+                }
+                
             } else {
                 respuesta.setControl(AppCodigo.ERROR, "No hay Tipos de Comprobantes disponibles");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();

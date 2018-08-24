@@ -160,7 +160,7 @@ public class BuscaLotes {
             }
             if(lotesResponse.isEmpty()) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, no hay lotes con esos parametros");
-                return Response.status(Response.Status.NO_CONTENT).entity(respuesta.toJson()).build();
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             Collections.sort(lotesResponse, (o1, o2) -> o1.getFechaVto().compareTo(o2.getFechaVto()));
             lotes.addAll(lotesResponse);

@@ -6,6 +6,7 @@ import datos.LoteResponse;
 import datos.Payload;
 import datos.ServicioResponse;
 import entidades.Acceso;
+import entidades.Producto;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
@@ -28,6 +29,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
+import persistencia.ProductoFacade;
 import persistencia.UsuarioFacade;
 import utils.Utils;
 
@@ -42,6 +44,7 @@ public class BuscaLote {
     @Inject UsuarioFacade usuarioFacade;
     @Inject AccesoFacade accesoFacade;
     @Inject Utils utils;
+    @Inject ProductoFacade productoFacade;
     
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -61,7 +64,7 @@ public class BuscaLote {
             Date fechaVtoDesde = (Date) Utils.getKeyFromJsonObject("fechaVtoDesde", jsonBody, "Date");
             Date fechaVtoHasta = (Date) Utils.getKeyFromJsonObject("fechaVtoHasta", jsonBody, "Date");
             Integer vigencia = (Integer) Utils.getKeyFromJsonObject("vigencia", jsonBody, "Integer");           
-            Integer idProducto = (Integer) Utils.getKeyFromJsonObject("idProducto", jsonBody, "Integer");
+            String codProducto = (String) Utils.getKeyFromJsonObject("codProducto", jsonBody, "String");
             Integer idPadron = (Integer) Utils.getKeyFromJsonObject("idPadron", jsonBody, "Integer");
             Integer idCteTipo = (Integer) Utils.getKeyFromJsonObject("idCteTipo", jsonBody, "Integer");
             BigDecimal facNumero = (BigDecimal) Utils.getKeyFromJsonObject("facNumero", jsonBody, "BigDecimal");
@@ -96,6 +99,18 @@ public class BuscaLote {
                 respuesta.setControl(AppCodigo.ERROR, "Credenciales incorrectas");
                 return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
             }
+            //Declaro una variable auxiliar para el idProducto
+            int idProd;
+            if(codProducto != null ) {
+                Producto prod = productoFacade.getByCodigoProdEmpresa(codProducto, user.getIdPerfil().getIdSucursal().getIdEmpresa()); 
+                if(prod == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no existe el producto");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                idProd = prod.getIdProductos();
+            } else {
+                idProd = 0;
+            }
                   
             //seteo el nombre del store cabecera
             String nombreSP = "call s_buscaLotes(?,?,?,?,?,?,?,?,?,?,?)";
@@ -122,7 +137,7 @@ public class BuscaLote {
             callableStatement.setDate(4, sqlFechaDesde);
             callableStatement.setDate(5, sqlFechaHasta);
             callableStatement.setInt(6, vigencia);
-            callableStatement.setInt(7, idProducto);
+            callableStatement.setInt(7, idProd);
             callableStatement.setInt(8, idPadron);
             callableStatement.setInt(9, idCteTipo);
             callableStatement.setBigDecimal(10, facNumero);

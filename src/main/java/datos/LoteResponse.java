@@ -23,7 +23,7 @@ public class LoteResponse implements Payload {
     private BigDecimal ingresos;
     private BigDecimal egresos;
     private String receta;
-    private int cantindad; 
+    private int cantidad; 
 
     public LoteResponse(String nroLote, int item, String serie, Date fechaElab, Date fechaVto, boolean vigencia, String comprobante, BigDecimal numero, String codProducto, String descripcionProd, BigDecimal stock, BigDecimal ingresos, BigDecimal egresos) {
         this.nroLote = nroLote;
@@ -40,7 +40,7 @@ public class LoteResponse implements Payload {
         this.ingresos = ingresos;
         this.egresos = egresos;
         this.receta = "";
-        this.cantindad = 0;
+        this.cantidad = 0;
     }
 
     
@@ -157,12 +157,12 @@ public class LoteResponse implements Payload {
         this.receta = receta;
     }
 
-    public int getCantindad() {
-        return cantindad;
+    public int getCantidad() {
+        return cantidad;
     }
 
-    public void setCantindad(int cantindad) {
-        this.cantindad = cantindad;
+    public void setCantidad(int cantidad) {
+        this.cantidad = cantidad;
     }
     
     

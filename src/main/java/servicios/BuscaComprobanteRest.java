@@ -190,7 +190,7 @@ public class BuscaComprobanteRest {
             List<Payload> comprobantes = new ArrayList<>();
             for(FactCabResponse c : factCabResponses) {
                 for(FactDetalleResponse d : factDetResponses) {
-                    if(c.getNumero() == d.getNumero()) {
+                    if(c.getNumero() == d.getNumero() && (c.getComprobante() == null ? d.getComprobante() == null : c.getComprobante().equals(d.getComprobante()))) {
                         c.getDetalle().add(d);
                     }
                 }

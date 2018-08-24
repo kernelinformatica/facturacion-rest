@@ -379,6 +379,9 @@ public class GrabaComprobanteRest {
                                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                             }
                             
+                            if(monto.equals(BigDecimal.ZERO)) {
+                                continue;
+                            }
                             //Creo FacForma de pago
                             FactFormaPago factFPago = new FactFormaPago();
                             factFPago.setDetalle(observacionesFormaPago);
