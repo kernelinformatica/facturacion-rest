@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.3.0.final using JasperReports Library version 6.3.0  -->
-<!-- 2018-08-24T11:51:21 -->
+<!-- 2018-08-29T10:12:33 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="testReporte" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" isFloatColumnFooter="true" whenResourceMissingType="Empty" uuid="4806e2f6-ab00-41d0-b74f-73434a7c5917">
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
@@ -411,14 +411,16 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 				<reportElement x="555" y="3" width="1" height="87" uuid="d34d6e0f-833e-44bd-9fb3-0b7367580b1b"/>
 			</line>
 			<staticText>
-				<reportElement x="0" y="4" width="99" height="16" uuid="6c5abce2-f8e1-453f-a920-64c06b643e74"/>
+				<reportElement x="0" y="4" width="99" height="14" uuid="6c5abce2-f8e1-453f-a920-64c06b643e74">
+					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+				</reportElement>
 				<textElement>
-					<font size="12" isBold="true"/>
+					<font size="11" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Forma de Pago:]]></text>
 			</staticText>
 			<subreport>
-				<reportElement x="0" y="20" width="555" height="69" uuid="8ac3eb89-c9ae-48ca-9113-ce676e1c69ba"/>
+				<reportElement x="0" y="18" width="555" height="71" uuid="8ac3eb89-c9ae-48ca-9113-ce676e1c69ba"/>
 				<subreportParameter name="idFactCab">
 					<subreportParameterExpression><![CDATA[$P{idFactCab}]]></subreportParameterExpression>
 				</subreportParameter>

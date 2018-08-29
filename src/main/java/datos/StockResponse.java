@@ -19,6 +19,8 @@ public class StockResponse implements Payload {
     private String rubro;
     private String subRubro;
     private Integer idFactCab;
+    private BigDecimal stock;
+    private BigDecimal virtual;
 
 
     public StockResponse(String comprobante, BigDecimal numero, Date fechaEmision, BigDecimal ingresos, BigDecimal egresos, BigDecimal pendiente, String deposito, Boolean trazable, String rubro, String subRubro, Integer idFactCab) {
@@ -122,6 +124,24 @@ public class StockResponse implements Payload {
     public void setIdFactCab(Integer idFactCab) {
         this.idFactCab = idFactCab;
     }
+
+    public BigDecimal getStock() {
+        return stock;
+    }
+
+    public void setStock(BigDecimal stock) {
+        this.stock = stock;
+    }
+
+    public BigDecimal getVirtual() {
+        return virtual;
+    }
+
+    public void setVirtual(BigDecimal virtual) {
+        this.virtual = virtual;
+    }
+    
+    
    
     @Override
     public String getClassName() {

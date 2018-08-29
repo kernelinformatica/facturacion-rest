@@ -303,6 +303,11 @@ public class GrabaComprobanteRest {
                             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                         }
                         
+                        //Si la cantidad es igual a 0 no guarda ese articulo
+                        if(pendiente.equals(BigDecimal.ZERO)) {
+                            continue;
+                        }
+                        
                         //Creo el factDetalle nuevo y seteo los valores
                         FactDetalle factDetalle = new FactDetalle();
                         factDetalle.setDetalle(articulo);

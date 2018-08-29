@@ -2,7 +2,6 @@ package servicios;
 
 import com.google.gson.JsonObject;
 import datos.AppCodigo;
-import datos.BuscaProductosResponse;
 import datos.Payload;
 import datos.ServicioResponse;
 import datos.StockGeneralResponse;
@@ -11,11 +10,13 @@ import entidades.Acceso;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.security.NoSuchAlgorithmException;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import javax.ejb.Stateless;
@@ -25,8 +26,8 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -47,10 +48,11 @@ public class BuscaStockRest {
     @Inject Utils utils; 
     
     @POST
+    @Path("/{tipo}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response getStock(
-        @QueryParam ("general") String general,
+        @PathParam ("tipo") String tipo,
         @HeaderParam ("token") String token,  
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
@@ -102,7 +104,7 @@ public class BuscaStockRest {
             }
             
             List<Payload> stock = new ArrayList<>();
-            if(general == null) {
+            if(tipo != null && tipo.equals("producto")) {
             //seteo el nombre del store
             String noombreSP = "call s_buscaStock(?,?,?,?,?,?)";
 
@@ -124,7 +126,8 @@ public class BuscaStockRest {
             callableStatement.setInt(4, idDeposito);
             callableStatement.setInt(5, idCteTipo);
             callableStatement.setInt(6, tipoEstado);
-            ResultSet rs = callableStatement.executeQuery();           
+            ResultSet rs = callableStatement.executeQuery();
+            List<StockResponse> sr = new ArrayList<>();
                 while (rs.next()) {
                     StockResponse st = new StockResponse(
                             rs.getString("comprobante"),
@@ -139,9 +142,24 @@ public class BuscaStockRest {
                             rs.getString("subRubro"),
                             rs.getInt("idFactCab")
                             );
-                    stock.add(st);
+                    sr.add(st);
                 }
-            } else if(general.equals("general")){
+                if(!sr.isEmpty()) {
+                    BigDecimal st = new BigDecimal(0);
+                    //Recorro el array desde el ultimo registro al primero para calcular el stock fisico
+                    for(int i = sr.size() -1; i >= 0; i--) {
+                        //sumo los ingresos al stock
+                        st = st.add(sr.get(i).getIngresos());
+                        //sumo los egresos negativos al stock
+                        st = st.add(sr.get(i).getEgresos().negate());
+                        //Le seteo el stock fisico
+                        sr.get(i).setStock(st);
+                        //Seteo el stock virtual
+                        sr.get(i).setVirtual(st.add(sr.get(i).getPendiente()));
+                    }
+                    stock.addAll(sr);
+                }
+            } else if(tipo != null && tipo.equals("general")){
                  //seteo el nombre del store
             String noombreSP = "call s_buscaStockGral(?,?,?,?,?,?,?,?)";
 
