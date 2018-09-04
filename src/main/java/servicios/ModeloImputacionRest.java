@@ -318,6 +318,7 @@ public class ModeloImputacionRest {
                     respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, el tipo de modelo con id " + sisTipoModelo + " no existe");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
+                
                 ModeloDetalle modeloDetalle = new ModeloDetalle();
                 modeloDetalle.setCtaContable(ctaContable);
                 modeloDetalle.setDescripcion(descripcionDetalle);
@@ -329,6 +330,7 @@ public class ModeloImputacionRest {
                 modeloDetalle.setPrioritario(prioritario);
                 modeloDetalle.setValor(valor);
                 transaccion2 = modeloDetalleFacade.setModeloDetalleNuevo(modeloDetalle);
+                
                 if(!transaccion2) {
                     modeloCabFacade.deleteModeloCab(modeloCab);
                     respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Detalle, clave primaria repetida");

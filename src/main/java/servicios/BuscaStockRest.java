@@ -188,7 +188,6 @@ public class BuscaStockRest {
                     StockGeneralResponse st = new StockGeneralResponse(
                             rs.getBigDecimal("ingresos"),
                             rs.getBigDecimal("egresos"),
-                            rs.getString("deposito"),
                             rs.getBoolean("trazable"),
                             rs.getString("rubro"),
                             rs.getString("subRubro"),

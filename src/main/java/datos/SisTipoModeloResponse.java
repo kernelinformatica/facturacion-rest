@@ -6,7 +6,7 @@ import entidades.SisTipoModelo;
  *
  * @author FrancoSili
  */
-public class SisTipoModeloResponse {
+public class SisTipoModeloResponse implements Payload{
     private int idTipoModelo;
     private String descripcion;
 
@@ -29,6 +29,11 @@ public class SisTipoModeloResponse {
 
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
+    }
+
+    @Override
+    public String getClassName() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
 }

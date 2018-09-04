@@ -15,6 +15,9 @@ public class ModeloDetalleResponse implements Payload {
     private String dh;
     private Boolean prioritario;
     private BigDecimal totalModelo;
+    private BigDecimal valor;
+    private String operador;
+    private SisTipoModeloResponse tipoModelo;
 
     public ModeloDetalleResponse(ModeloDetalle s) {
         this.idModeloDetalle = s.getIdModeloDetalle();
@@ -23,6 +26,9 @@ public class ModeloDetalleResponse implements Payload {
         this.descripcion = s.getDescripcion();
         this.dh = s.getDh();
         this.prioritario = s.getPrioritario();
+        this.valor = s.getValor();
+        this.operador = s.getOperador();
+        this.tipoModelo = new SisTipoModeloResponse(s.getIdSisTipoModelo());
     }
     
     public ModeloDetalleResponse(ModeloDetalle s, BigDecimal total) {
@@ -94,6 +100,30 @@ public class ModeloDetalleResponse implements Payload {
     @Override
     public String getClassName() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public BigDecimal getValor() {
+        return valor;
+    }
+
+    public void setValor(BigDecimal valor) {
+        this.valor = valor;
+    }
+
+    public String getOperador() {
+        return operador;
+    }
+
+    public void setOperador(String operador) {
+        this.operador = operador;
+    }
+
+    public SisTipoModeloResponse getTipoModelo() {
+        return tipoModelo;
+    }
+
+    public void setTipoModelo(SisTipoModeloResponse tipoModelo) {
+        this.tipoModelo = tipoModelo;
     }
     
     

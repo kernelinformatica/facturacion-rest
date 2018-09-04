@@ -16,10 +16,9 @@ public class StockGeneralResponse implements Payload {
     private String codProducto;
     private String descripcion;
     
-    public StockGeneralResponse(BigDecimal ingresos, BigDecimal egresos, String deposito, boolean trazable, String rubro, String subRubro, String codProducto, String descripcion) {
+    public StockGeneralResponse(BigDecimal ingresos, BigDecimal egresos, boolean trazable, String rubro, String subRubro, String codProducto, String descripcion) {
         this.ingresos = ingresos;
         this.egresos = egresos;
-        this.deposito = deposito;
         this.trazable = trazable;
         this.rubro = rubro;
         this.subRubro = subRubro;

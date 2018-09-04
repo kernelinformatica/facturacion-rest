@@ -23,9 +23,10 @@ public class LoteResponse implements Payload {
     private BigDecimal ingresos;
     private BigDecimal egresos;
     private String receta;
-    private int cantidad; 
+    private int cantidad;
+    private BigDecimal stockNegativo;
 
-    public LoteResponse(String nroLote, int item, String serie, Date fechaElab, Date fechaVto, boolean vigencia, String comprobante, BigDecimal numero, String codProducto, String descripcionProd, BigDecimal stock, BigDecimal ingresos, BigDecimal egresos) {
+    public LoteResponse(String nroLote, int item, String serie, Date fechaElab, Date fechaVto, boolean vigencia, String comprobante, BigDecimal numero, String codProducto, String descripcionProd, BigDecimal stock, BigDecimal ingresos, BigDecimal egresos, BigDecimal stockNegativo) {
         this.nroLote = nroLote;
         this.item = item;
         this.serie = serie;
@@ -41,6 +42,7 @@ public class LoteResponse implements Payload {
         this.egresos = egresos;
         this.receta = "";
         this.cantidad = 0;
+        this.stockNegativo = stockNegativo;
     }
 
     
@@ -164,10 +166,15 @@ public class LoteResponse implements Payload {
     public void setCantidad(int cantidad) {
         this.cantidad = cantidad;
     }
-    
-    
-    
 
+    public BigDecimal getStockNegativo() {
+        return stockNegativo;
+    }
+
+    public void setStockNegativo(BigDecimal stockNegativo) {
+        this.stockNegativo = stockNegativo;
+    }
+    
     @Override
     public String getClassName() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.

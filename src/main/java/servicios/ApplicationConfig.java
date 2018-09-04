@@ -59,6 +59,7 @@ public class ApplicationConfig extends Application {
         resources.add(servicios.SisModuloRest.class);
         resources.add(servicios.SisMonedaRest.class);
         resources.add(servicios.SisSitIvaRest.class);
+        resources.add(servicios.SisTipoModeloRest.class);
         resources.add(servicios.SisTipoOperacionRest.class);
         resources.add(servicios.SisUnidadRest.class);
         resources.add(servicios.SubRubroRest.class);
