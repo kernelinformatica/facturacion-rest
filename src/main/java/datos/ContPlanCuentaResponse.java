@@ -14,6 +14,11 @@ public class ContPlanCuentaResponse implements Payload {
         this.planCuentas = p.getPlanCuentas();
         this.planDescripcion = p.getPlanDescripcion();
     }
+
+    public ContPlanCuentaResponse(Integer parseInt, String descripcion) {
+        this.planCuentas = parseInt;
+        this.planDescripcion = descripcion;
+    }
     
 
     public Integer getPlanCuentas() {

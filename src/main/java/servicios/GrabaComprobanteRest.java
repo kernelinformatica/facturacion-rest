@@ -377,7 +377,7 @@ public class GrabaComprobanteRest {
                             BigDecimal monto = (BigDecimal) Utils.getKeyFromJsonObject("monto", je.getAsJsonObject(), "BigDecimal");
                             String detalle = (String) Utils.getKeyFromJsonObject("detalle", je.getAsJsonObject(), "String");
                             String observacionesFormaPago = (String) Utils.getKeyFromJsonObject("observaciones", je.getAsJsonObject(), "String");
-                            
+                            String cuentaContable = (String) Utils.getKeyFromJsonObject("cuentaContable", je.getAsJsonObject(), "String");
                             //Pregunto si son nulos 
                             if(observacionesFormaPago == null || monto == null || interes == null || plazo == null) {
                                 respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta Forma de Pago, algun campo de la grilla es nulo");
@@ -400,6 +400,7 @@ public class GrabaComprobanteRest {
                             factFPago.setIdFormaPago(formaPago);
                             factFPago.setImporte(monto);
                             factFPago.setPorcentaje(interes);
+                            factFPago.setCtaContable(cuentaContable);
                             factFPago.setIdFactCab(factCab);
                             listaFormaPago.add(factFPago);
                         }                        

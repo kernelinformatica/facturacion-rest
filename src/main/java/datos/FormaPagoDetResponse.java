@@ -12,12 +12,14 @@ public class FormaPagoDetResponse implements Payload{
     private int cantDias;
     private BigDecimal porcentaje;
     private String detalle;
+    private String ctaContable;
 
     public FormaPagoDetResponse(FormaPagoDet f) {
         this.idFormaPagoDet = f.getIdFormaPagoDet();
         this.cantDias = f.getCantDias();
         this.porcentaje = f.getPorcentaje();
         this.detalle = f.getDetalle();
+        this.ctaContable = f.getCtaContable();
     }
 
     public Integer getIdFormaPagoDet() {
@@ -51,6 +53,15 @@ public class FormaPagoDetResponse implements Payload{
     public void setDetalle(String detalle) {
         this.detalle = detalle;
     }
+
+    public String getCtaContable() {
+        return ctaContable;
+    }
+
+    public void setCtaContable(String ctaContable) {
+        this.ctaContable = ctaContable;
+    }
+    
     
     
     

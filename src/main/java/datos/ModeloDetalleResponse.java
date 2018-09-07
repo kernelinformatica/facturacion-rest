@@ -1,5 +1,6 @@
 package datos;
 
+import entidades.ContPlanCuenta;
 import entidades.ModeloDetalle;
 import java.math.BigDecimal;
 
@@ -18,6 +19,7 @@ public class ModeloDetalleResponse implements Payload {
     private BigDecimal valor;
     private String operador;
     private SisTipoModeloResponse tipoModelo;
+    private ContPlanCuentaResponse planCuenta;
 
     public ModeloDetalleResponse(ModeloDetalle s) {
         this.idModeloDetalle = s.getIdModeloDetalle();
@@ -40,7 +42,20 @@ public class ModeloDetalleResponse implements Payload {
         this.prioritario = s.getPrioritario();
         this.totalModelo = total;
     }
-
+    
+//    public ModeloDetalleResponse(ModeloDetalle s, ContPlanCuentaResponse planCuenta) {
+//        this.idModeloDetalle = s.getIdModeloDetalle();
+//        this.ctaContable = s.getCtaContable();
+//        this.orden = s.getOrden();
+//        this.descripcion = s.getDescripcion();
+//        this.dh = s.getDh();
+//        this.prioritario = s.getPrioritario();
+//        this.valor = s.getValor();
+//        this.operador = s.getOperador();
+//        this.tipoModelo = new SisTipoModeloResponse(s.getIdSisTipoModelo());
+//        this.planCuenta = planCuenta;
+//    }
+    
     public Integer getIdModeloDetalle() {
         return idModeloDetalle;
     }
@@ -125,6 +140,13 @@ public class ModeloDetalleResponse implements Payload {
     public void setTipoModelo(SisTipoModeloResponse tipoModelo) {
         this.tipoModelo = tipoModelo;
     }
-    
+
+    public ContPlanCuentaResponse getPlanCuenta() {
+        return planCuenta;
+    }
+
+    public void setPlanCuenta(ContPlanCuentaResponse planCuenta) {
+        this.planCuenta = planCuenta;
+    }
     
 }

@@ -3,10 +3,13 @@ package servicios;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import datos.AppCodigo;
+import datos.ContPlanCuentaResponse;
 import datos.ModeloCabResponse;
+import datos.ModeloDetalleResponse;
 import datos.Payload;
 import datos.ServicioResponse;
 import entidades.Acceso;
+import entidades.ContPlanCuenta;
 import entidades.ModeloCab;
 import entidades.ModeloDetalle;
 import entidades.SisTipoModelo;
@@ -32,6 +35,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
+import persistencia.ContPlanCuentaFacade;
 import persistencia.ModeloCabFacade;
 import persistencia.ModeloDetalleFacade;
 import persistencia.SisTipoModeloFacade;
@@ -50,6 +54,7 @@ public class ModeloImputacionRest {
     @Inject ModeloDetalleFacade modeloDetalleFacade;
     @Inject SisTipoModeloFacade sisTipoModeloFacade;
     @Inject ModeloCabFacade modeloCabFacade; 
+    @Inject ContPlanCuentaFacade  contPlanCuentaFacade;
     
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
@@ -94,15 +99,35 @@ public class ModeloImputacionRest {
                 respuesta.setControl(AppCodigo.ERROR, "No hay Modelos de Imputacion disponibles");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            
+
             //busco los SubRubros de la empresa del usuario
-            List<Payload> modeloCabResponse = new ArrayList<>();
+            List<ModeloCabResponse> modeloCabResponse = new ArrayList<>();
+            List<Payload> modeloCabRespons = new ArrayList<>();
             for(ModeloCab s : user.getIdPerfil().getIdSucursal().getIdEmpresa().getModeloCabCollection()) {
                 ModeloCabResponse mcr = new ModeloCabResponse(s);
                 mcr.agregarModeloDetalle(s.getModeloDetalleCollection());
                 modeloCabResponse.add(mcr);
             }
-            respuesta.setArraydatos(modeloCabResponse);
+            
+            if(!modeloCabResponse.isEmpty()) {
+                for(ModeloCabResponse modeloCab : modeloCabResponse) {
+                    for(ModeloDetalleResponse modeloDetalle : modeloCab.getModeloDetalle()) {
+                        if(modeloDetalle.getCtaContable() == null) {
+                            continue;
+                        }
+                        ContPlanCuenta cont = contPlanCuentaFacade.getCuentaContable(Integer.parseInt(modeloDetalle.getCtaContable()));
+                        if(cont != null){
+                            modeloDetalle.setPlanCuenta(new ContPlanCuentaResponse(cont));
+                        } else {
+                            ContPlanCuentaResponse conta = new ContPlanCuentaResponse(Integer.parseInt(modeloDetalle.getCtaContable()),modeloDetalle.getDescripcion());
+                            modeloDetalle.setPlanCuenta(conta);
+                        }
+                    }
+                    modeloCabRespons.add(modeloCab);
+                }
+            }
+            
+            respuesta.setArraydatos(modeloCabRespons);
             respuesta.setControl(AppCodigo.OK, "Modelos de Imputacion");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception e) {

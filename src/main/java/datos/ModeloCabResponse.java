@@ -63,7 +63,7 @@ public class ModeloCabResponse implements Payload {
             this.modeloDetalle.add(lr);
         }
     }
-    
+        
     public void agregarModeloDetalleImputacion(Collection<ModeloDetalle> lista, String cuentaContable) {
         for(ModeloDetalle l : lista) {            
             ModeloDetalleResponse lr = new ModeloDetalleResponse(l);
@@ -85,12 +85,10 @@ public class ModeloCabResponse implements Payload {
                 continue;
             }
         }
-    }
+    }   
 
     @Override
     public String getClassName() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-    
-    
 }
