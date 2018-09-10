@@ -327,17 +327,16 @@ public class FormaPagoRest {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
 
+            boolean transaccion;
             formaPago.setTipo(sisFormaPago);
             formaPago.setDescripcion(descripcion);
             formaPago.setIdListaPrecios(listaPrecio);
             formaPago.getFormaPagoDetCollection().clear();
-            boolean transaccion;
             transaccion = formaPagoFacade.editFormaPago(formaPago);
             if(!transaccion) {
                 respuesta.setControl(AppCodigo.ERROR, "No se pudo editar la Forma de Pago");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            List<FormaPagoDet> formas = new ArrayList<>();
             for(JsonElement j : formaPagoDet) {
                 //Obtengo los atributos del body
                 Integer cantDias = (Integer) Utils.getKeyFromJsonObject("cantDias", j.getAsJsonObject(), "Integer");                  
@@ -356,19 +355,13 @@ public class FormaPagoRest {
                 formaPagoDetalles.setDetalle(detalle);
                 formaPagoDetalles.setIdFormaPago(formaPago);
                 formaPagoDetalles.setPorcentaje(porcentaje);
-                formas.add(formaPagoDetalles);
-                
-            }
-            if(!formas.isEmpty()) {
-                for(FormaPagoDet f : formas) {
-                    boolean transaccion2;
-                    transaccion2 = formaPagoDetFacade.editFormaPagoDet(f);
-                    if(!transaccion2) {
-                        respuesta.setControl(AppCodigo.ERROR, "No se pudo editar el detalle:" + f.getDetalle());
-                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                    }
-                }
-            }                        
+                boolean transaccion2;
+                transaccion2 = formaPagoDetFacade.editFormaPagoDet(formaPagoDetalles);
+                if(!transaccion2) {
+                    respuesta.setControl(AppCodigo.ERROR, "No se pudo editar el detalle:" + formaPagoDetalles.getDetalle());
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }                
+            }                     
             respuesta.setControl(AppCodigo.OK, "Forma de Pago editada con exito");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception ex) { 
