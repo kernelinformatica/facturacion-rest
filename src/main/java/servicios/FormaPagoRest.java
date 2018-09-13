@@ -2,10 +2,13 @@ package servicios;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import datos.AppCodigo;
+import datos.ContPlanCuentaResponse;
+import datos.FormaPagoDetResponse;
 import datos.FormaPagoResponse;
 import datos.Payload;
 import datos.ServicioResponse;
 import entidades.Acceso;
+import entidades.ContPlanCuenta;
 import entidades.FormaPago;
 import entidades.FormaPagoDet;
 import entidades.ListaPrecio;
@@ -32,6 +35,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
+import persistencia.ContPlanCuentaFacade;
 import persistencia.FormaPagoDetFacade;
 import persistencia.FormaPagoFacade;
 import persistencia.ListaPrecioFacade;
@@ -53,6 +57,7 @@ public class FormaPagoRest {
     @Inject FormaPagoFacade formaPagoFacade;
     @Inject ListaPrecioFacade listaPrecioFacade;
     @Inject FormaPagoDetFacade formaPagoDetFacade;
+    @Inject ContPlanCuentaFacade contPlanCuentaFacade;
     
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
@@ -109,12 +114,26 @@ public class FormaPagoRest {
                     if(!p.getIdListaPrecios().getListaPrecioDetCollection().isEmpty()) {
                         fp.getListaPrecio().agregarListaPrecioDet(p.getIdListaPrecios().getListaPrecioDetCollection());                        
                     }
-    //                //Seteo editable en false si la coleccion de FactCab es distinta de vacia
-    //                if(!p.getFactCabCollection().isEmpty()){
-    //                    fp.setEditar(false);
-    //                }
+                    //Seteo editable en false si la coleccion de FactCab es distinta de vacia
+                    if(!p.getFactCabCollection().isEmpty()){
+                        fp.setEditar(false);
+                    }                  
                     if(!p.getFormaPagoDetCollection().isEmpty()) {
-                        fp.agregarDetalles(p.getFormaPagoDetCollection());
+                        for(FormaPagoDet d : p.getFormaPagoDetCollection()) {
+                            FormaPagoDetResponse fpd = new FormaPagoDetResponse(d);
+                            if(d.getCtaContable() == null) {
+                                continue;
+                            }
+                            ContPlanCuenta cont = contPlanCuentaFacade.getCuentaContable(Integer.parseInt(d.getCtaContable()));
+                            if(cont != null){
+                                fpd.setPlanCuenta(new ContPlanCuentaResponse(cont));
+                            } else {
+                                ContPlanCuentaResponse conta = new ContPlanCuentaResponse(Integer.parseInt(d.getCtaContable()),d.getDetalle());
+                                fpd.setPlanCuenta(conta);
+                            }
+                            fp.setFormaPagoDet(new ArrayList<>());
+                            fp.getFormaPagoDet().add(fpd);
+                        }
                     }
                     formaPagos.add(fp);
                 }
@@ -211,40 +230,36 @@ public class FormaPagoRest {
                 respuesta.setControl(AppCodigo.ERROR, "No se crear la Forma de Pago");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            List<FormaPagoDet> formas = new ArrayList<>();
-            for(JsonElement j : formaPagoDet) {
-                //Obtengo los atributos del body
-                Integer cantDias = (Integer) Utils.getKeyFromJsonObject("cantDias", j.getAsJsonObject(), "Integer");                  
-                BigDecimal porcentaje = (BigDecimal) Utils.getKeyFromJsonObject("porcentaje", j.getAsJsonObject(), "BigDecimal");
-                String detalle = (String) Utils.getKeyFromJsonObject("detalle", j.getAsJsonObject(), "String");
-                String ctaContable = (String) Utils.getKeyFromJsonObject("ctaContable", j.getAsJsonObject(), "String");
-                
-                if(cantDias == null || porcentaje == null || detalle == null ) {
-                    respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta, algun campo esta vacio");
-                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                }
-                
-                FormaPagoDet formaPagoDetalles = new FormaPagoDet();
-                formaPagoDetalles.setCantDias(cantDias);
-                formaPagoDetalles.setCtaContable(ctaContable);
-                formaPagoDetalles.setDetalle(detalle);
-                formaPagoDetalles.setIdFormaPago(formaPago);
-                formaPagoDetalles.setPorcentaje(porcentaje);
-                formas.add(formaPagoDetalles);
-                
-            }
-            if(!formas.isEmpty()) {
-                for(FormaPagoDet f : formas) {
-                    boolean transaccion2;
-                    transaccion2 = formaPagoDetFacade.setFormaPagoDetNuevo(f);
-                    if(!transaccion2) {
-                        respuesta.setControl(AppCodigo.ERROR, "No se pudo crear el detalle:" + f.getDetalle());
+            if(formaPagoDet != null) {
+                for(JsonElement j : formaPagoDet) {
+                    //Obtengo los atributos del body
+                    Integer cantDias = (Integer) Utils.getKeyFromJsonObject("cantDias", j.getAsJsonObject(), "Integer");                  
+                    BigDecimal porcentaje = (BigDecimal) Utils.getKeyFromJsonObject("porcentaje", j.getAsJsonObject(), "BigDecimal");
+                    String detalle = (String) Utils.getKeyFromJsonObject("detalle", j.getAsJsonObject(), "String");
+                    String ctaContable = (String) Utils.getKeyFromJsonObject("ctaContable", j.getAsJsonObject(), "String");
+
+                    if(cantDias == null || porcentaje == null || detalle == null ) {
+                        respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta, algun campo esta vacio");
                         return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                     }
+
+                    FormaPagoDet formaPagoDetalles = new FormaPagoDet();
+                    formaPagoDetalles.setCantDias(cantDias);
+                    formaPagoDetalles.setCtaContable(ctaContable);
+                    formaPagoDetalles.setDetalle(detalle);
+                    formaPagoDetalles.setIdFormaPago(formaPago);
+                    formaPagoDetalles.setPorcentaje(porcentaje);
+                    boolean transaccion2;
+                    transaccion2 = formaPagoDetFacade.setFormaPagoDetNuevo(formaPagoDetalles);
+                    if(!transaccion2) {
+                        respuesta.setControl(AppCodigo.ERROR, "No se pudo crear el detalle:" + formaPagoDetalles.getDetalle());
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }                
                 }
             }
-            respuesta.setControl(AppCodigo.OK, "Forma de Pago creada con exito");
+            respuesta.setControl(AppCodigo.CREADO, "Forma de Pago creada con exito");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+        
         } catch (Exception ex) { 
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
@@ -337,32 +352,34 @@ public class FormaPagoRest {
                 respuesta.setControl(AppCodigo.ERROR, "No se pudo editar la Forma de Pago");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            for(JsonElement j : formaPagoDet) {
-                //Obtengo los atributos del body
-                Integer cantDias = (Integer) Utils.getKeyFromJsonObject("cantDias", j.getAsJsonObject(), "Integer");                  
-                BigDecimal porcentaje = (BigDecimal) Utils.getKeyFromJsonObject("porcentaje", j.getAsJsonObject(), "BigDecimal");
-                String detalle = (String) Utils.getKeyFromJsonObject("detalle", j.getAsJsonObject(), "String");
-                String ctaContable = (String) Utils.getKeyFromJsonObject("ctaContable", j.getAsJsonObject(), "String");
-                
-                if(cantDias == null || porcentaje == null || detalle == null ) {
-                    respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta, algun campo esta vacio");
-                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            if(formaPagoDet != null) {
+                for(JsonElement j : formaPagoDet) {
+                    //Obtengo los atributos del body
+                    Integer cantDias = (Integer) Utils.getKeyFromJsonObject("cantDias", j.getAsJsonObject(), "Integer");                  
+                    BigDecimal porcentaje = (BigDecimal) Utils.getKeyFromJsonObject("porcentaje", j.getAsJsonObject(), "BigDecimal");
+                    String detalle = (String) Utils.getKeyFromJsonObject("detalle", j.getAsJsonObject(), "String");
+                    String ctaContable = (String) Utils.getKeyFromJsonObject("ctaContable", j.getAsJsonObject(), "String");
+
+                    if(cantDias == null || porcentaje == null || detalle == null ) {
+                        respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta, algun campo esta vacio");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+
+                    FormaPagoDet formaPagoDetalles = new FormaPagoDet();
+                    formaPagoDetalles.setCantDias(cantDias);
+                    formaPagoDetalles.setCtaContable(ctaContable);
+                    formaPagoDetalles.setDetalle(detalle);
+                    formaPagoDetalles.setIdFormaPago(formaPago);
+                    formaPagoDetalles.setPorcentaje(porcentaje);
+                    boolean transaccion2;
+                    transaccion2 = formaPagoDetFacade.editFormaPagoDet(formaPagoDetalles);
+                    if(!transaccion2) {
+                        respuesta.setControl(AppCodigo.ERROR, "No se pudo editar el detalle:" + formaPagoDetalles.getDetalle());
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }                
                 }
-                
-                FormaPagoDet formaPagoDetalles = new FormaPagoDet();
-                formaPagoDetalles.setCantDias(cantDias);
-                formaPagoDetalles.setCtaContable(ctaContable);
-                formaPagoDetalles.setDetalle(detalle);
-                formaPagoDetalles.setIdFormaPago(formaPago);
-                formaPagoDetalles.setPorcentaje(porcentaje);
-                boolean transaccion2;
-                transaccion2 = formaPagoDetFacade.editFormaPagoDet(formaPagoDetalles);
-                if(!transaccion2) {
-                    respuesta.setControl(AppCodigo.ERROR, "No se pudo editar el detalle:" + formaPagoDetalles.getDetalle());
-                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                }                
-            }                     
-            respuesta.setControl(AppCodigo.OK, "Forma de Pago editada con exito");
+            }
+            respuesta.setControl(AppCodigo.GUARDADO, "Forma de Pago editada con exito");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception ex) { 
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
@@ -430,7 +447,7 @@ public class FormaPagoRest {
                 respuesta.setControl(AppCodigo.ERROR, "No se pudo borrar la Forma de Pago");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            respuesta.setControl(AppCodigo.OK, "Forma de Pago borrada con exito");
+            respuesta.setControl(AppCodigo.BORRADO, "Forma de Pago borrada con exito");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception e) {
             respuesta.setControl(AppCodigo.ERROR, e.getMessage());

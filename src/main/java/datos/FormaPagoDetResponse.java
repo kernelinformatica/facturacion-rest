@@ -13,6 +13,7 @@ public class FormaPagoDetResponse implements Payload{
     private BigDecimal porcentaje;
     private String detalle;
     private String ctaContable;
+    private ContPlanCuentaResponse planCuenta;
 
     public FormaPagoDetResponse(FormaPagoDet f) {
         this.idFormaPagoDet = f.getIdFormaPagoDet();
@@ -60,6 +61,14 @@ public class FormaPagoDetResponse implements Payload{
 
     public void setCtaContable(String ctaContable) {
         this.ctaContable = ctaContable;
+    }
+
+    public ContPlanCuentaResponse getPlanCuenta() {
+        return planCuenta;
+    }
+
+    public void setPlanCuenta(ContPlanCuentaResponse planCuenta) {
+        this.planCuenta = planCuenta;
     }
     
     
