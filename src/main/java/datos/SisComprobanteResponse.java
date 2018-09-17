@@ -10,12 +10,14 @@ public class SisComprobanteResponse implements Payload{
     private Integer idSisComprobantes;
     private String descripcion;
     private String imputacion;
+    private Integer orden;
     private SisModuloResponse modulo;
 
     public SisComprobanteResponse(SisComprobante s) {
        this.idSisComprobantes = s.getIdSisComprobantes();
        this.descripcion = s.getDescripcion();
        this.imputacion = s.getImputacion();
+       this.orden = s.getOrden();
        this.modulo = new SisModuloResponse(s.getIdSisModulos());
     }
     
@@ -49,6 +51,14 @@ public class SisComprobanteResponse implements Payload{
 
     public void setModulo(SisModuloResponse modulo) {
         this.modulo = modulo;
+    }
+
+    public Integer getOrden() {
+        return orden;
+    }
+
+    public void setOrden(Integer orden) {
+        this.orden = orden;
     }
     
     

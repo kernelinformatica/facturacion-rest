@@ -15,6 +15,8 @@ public class ListaPrecioDetResponse implements Payload {
     private BigDecimal cotaInf;   
     private BigDecimal cotaSup;    
     private String observaciones;      
+    private BigDecimal cotaInfPorce;   
+    private BigDecimal cotaSupPorce;
     private ProductoResponse idProducto;
 
     public ListaPrecioDetResponse(ListaPrecioDet l) {
@@ -23,6 +25,8 @@ public class ListaPrecioDetResponse implements Payload {
         this.cotaInf = l.getCotaInf();
         this.cotaSup = l.getCotaSup();
         this.observaciones = l.getObservaciones();
+        this.cotaInfPorce = l.getCotaInfPorc();
+        this.cotaSupPorce = l.getCotaSupPorc();
         this.idProducto = new ProductoResponse(l.getIdProductos());
     }
     
@@ -82,6 +86,23 @@ public class ListaPrecioDetResponse implements Payload {
         this.idProducto = idProducto;
     }
 
+    public BigDecimal getCotaInfPorce() {
+        return cotaInfPorce;
+    }
+
+    public void setCotaInfPorce(BigDecimal cotaInfPorce) {
+        this.cotaInfPorce = cotaInfPorce;
+    }
+
+    public BigDecimal getCotaSupPorce() {
+        return cotaSupPorce;
+    }
+
+    public void setCotaSupPorce(BigDecimal cotaSupPorce) {
+        this.cotaSupPorce = cotaSupPorce;
+    }
+
+    
     @Override
     public String getClassName() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.

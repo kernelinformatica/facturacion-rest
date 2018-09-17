@@ -12,6 +12,7 @@ import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -105,10 +106,13 @@ public class CteTipoRest {
                     respuesta.setControl(AppCodigo.ERROR, "No hay Tipos de Comprobantes disponibles");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
+                //Ordeno la lista
+                Collections.sort(cteTipoList, (o1, o2) -> o1.getIdSisComprobante().getOrden().compareTo(o2.getIdSisComprobante().getOrden()));
+                //Armo la respuesta
                 for(CteTipo p : cteTipoList){
                     CteTipoResponse pr = new CteTipoResponse(p);
                     cteTipos.add(pr);
-                }
+                }                
             //Devuelvo cteTipo por comprobante
             } else if(sisModulo == null && sisComprobante != null && idCteTipo == null) {
                 SisComprobante sisComprobanteEncontrado = sisComprobanteFacade.find(sisComprobante);            

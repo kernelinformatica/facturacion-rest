@@ -219,6 +219,8 @@ public class ListaPrecioRest {
                 BigDecimal precio = (BigDecimal) Utils.getKeyFromJsonObject("precio", j.getAsJsonObject(), "BigDecimal");
                 BigDecimal cotaInf = (BigDecimal) Utils.getKeyFromJsonObject("cotaInf", j.getAsJsonObject(), "BigDecimal");
                 BigDecimal cotaSup = (BigDecimal) Utils.getKeyFromJsonObject("cotaSup", j.getAsJsonObject(), "BigDecimal");
+                BigDecimal cotaInfPorc = (BigDecimal) Utils.getKeyFromJsonObject("cotaInfPorc", j.getAsJsonObject(), "BigDecimal");
+                BigDecimal cotaSupPorc = (BigDecimal) Utils.getKeyFromJsonObject("cotaSupPorc", j.getAsJsonObject(), "BigDecimal");
                 String observaciones = (String) Utils.getKeyFromJsonObject("observaciones", j.getAsJsonObject(), "String");
                 Integer idProducto = (Integer) Utils.getKeyFromJsonObject("idProducto", j.getAsJsonObject(), "Integer"); 
                 if(precio == null || cotaInf == null || cotaSup == null || idProducto == 0) {
@@ -237,6 +239,8 @@ public class ListaPrecioRest {
                 listaPrecioDet.setCotaSup(cotaSup);
                 listaPrecioDet.setObservaciones(observaciones);
                 listaPrecioDet.setIdProductos(producto);
+                listaPrecioDet.setCotaInfPorc(cotaInfPorc);
+                listaPrecioDet.setCotaSupPorc(cotaSupPorc);
                 transaccion2 = listaPrecioDetFacade.setListaPrecioDetNuevo(listaPrecioDet);
                 if(!transaccion2) {
                     listaPrecioFacade.deleteListaPrecio(listaPrecio);
