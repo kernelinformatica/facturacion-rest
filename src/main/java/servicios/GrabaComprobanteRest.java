@@ -205,7 +205,7 @@ public class GrabaComprobanteRest {
             }
             
             //Pregunto si la sumatoria de pendientes es igual a 0
-            if(sumatoriaPendientes.equals(BigDecimal.ZERO)) {
+            if(sumatoriaPendientes.compareTo(BigDecimal.ZERO) == 0) {
                 respuesta.setControl(AppCodigo.ERROR, "La sumatoria de Pendientes es igual a 0");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
@@ -304,7 +304,7 @@ public class GrabaComprobanteRest {
                         }
                         
                         //Si la cantidad es igual a 0 no guarda ese articulo
-                        if(pendiente.equals(BigDecimal.ZERO)) {
+                        if(pendiente.compareTo(BigDecimal.ZERO) == 0) {
                             continue;
                         }
                         
@@ -384,7 +384,7 @@ public class GrabaComprobanteRest {
                                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                             }
                             
-                            if(monto.equals(BigDecimal.ZERO)) {
+                            if(monto.compareTo(BigDecimal.ZERO) == 0) {
                                 continue;
                             }
                             //Creo FacForma de pago

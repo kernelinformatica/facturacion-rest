@@ -173,7 +173,7 @@ public class ListaPrecioRest {
             }
 
             //Me fijo que  descripcion, idRubro e idEmpresa no sean nulos
-            if(codLista == 0 || idPadronCliente == 0 || idPadronRepresentante == 0 || porc1 == null || condiciones == null || idMoneda == 0) {
+            if(codLista == null || idPadronCliente == null || idPadronRepresentante == null || porc1 == null || condiciones == null || idMoneda == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, algun campo esta en nulo");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
@@ -309,7 +309,7 @@ public class ListaPrecioRest {
             }
 
             //Me fijo que  descripcion, idRubro e idEmpresa no sean nulos
-            if(condiciones == null || idLista == 0) {
+            if(condiciones == null || idLista == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, algun campo esta en nulo");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }

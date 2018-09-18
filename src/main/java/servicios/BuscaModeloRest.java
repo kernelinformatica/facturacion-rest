@@ -14,6 +14,7 @@ import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.MathContext;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -134,7 +135,7 @@ public class BuscaModeloRest {
                     if(p.getIdSisTipoModelo().getIdSisTipoModelo() == 1) {
                         continue;
                     } else {
-                        BigDecimal total = new BigDecimal(BigInteger.ZERO);
+                        BigDecimal total = BigDecimal.ZERO;
                         BigDecimal cien = new BigDecimal(100);
                         //De acuerdo al operador tengo que realizar distintas operaciones.
                         if(p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(1).getTipo())) {
@@ -161,9 +162,9 @@ public class BuscaModeloRest {
                                     break;
                             }
                         } else if (p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(2).getTipo())) {
-                            BigDecimal porcentaje = new BigDecimal(BigInteger.ZERO);
+                            BigDecimal porcentaje = BigDecimal.ZERO;
                             total = total.add(precio.multiply(new BigDecimal(cantidad)));
-                            if(p.getValor().equals(new BigDecimal(BigInteger.ZERO))) {
+                            if(p.getValor().compareTo(BigDecimal.ZERO) == 0) {
                                 porcentaje = porcentaje.add(producto.getIdIVA().getPorcIVA().divide(new BigDecimal(100)));
                                 total = total.multiply(porcentaje);
                             } else {
@@ -172,7 +173,7 @@ public class BuscaModeloRest {
                             }
                         } else if (p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(3).getTipo())) {
                             total = total.add(precio.multiply(new BigDecimal(cantidad)));
-                            if(p.getValor().equals(new BigDecimal(BigInteger.ZERO))) {
+                            if(p.getValor().compareTo(BigDecimal.ZERO) == 0) {
                                 switch (p.getOperador()) {
                                     case "+":
                                         total = total.add(producto.getIdIVA().getPorcIVA());
@@ -247,7 +248,7 @@ public class BuscaModeloRest {
             }
             //Recorro el map
             for (Map.Entry<String,  List<FacturaResponse>> entry : map.entrySet()) {
-                BigDecimal total = new BigDecimal(BigInteger.ZERO);
+                BigDecimal total = BigDecimal.ZERO;
                 String descripcion = "";
                 String cuentaContable = "";
                 //Recorro la lista dentro del Map
