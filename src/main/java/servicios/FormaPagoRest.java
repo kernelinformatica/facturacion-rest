@@ -115,7 +115,7 @@ public class FormaPagoRest {
                         fp.getListaPrecio().agregarListaPrecioDet(p.getIdListaPrecios().getListaPrecioDetCollection());                        
                     }
                     //Seteo editable en false si la coleccion de FactCab es distinta de vacia
-                    if(!p.getFactCabCollection().isEmpty()){
+                    if(!p.getFactFormaPagoCollection().isEmpty()){
                         fp.setEditar(false);
                     }                  
                     if(!p.getFormaPagoDetCollection().isEmpty()) {
@@ -131,7 +131,6 @@ public class FormaPagoRest {
                                 ContPlanCuentaResponse conta = new ContPlanCuentaResponse(Integer.parseInt(d.getCtaContable()),d.getDetalle());
                                 fpd.setPlanCuenta(conta);
                             }
-                            fp.setFormaPagoDet(new ArrayList<>());
                             fp.getFormaPagoDet().add(fpd);
                         }
                     }

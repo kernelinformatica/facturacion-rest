@@ -12,6 +12,7 @@ import entidades.Acceso;
 import entidades.ContPlanCuenta;
 import entidades.ModeloCab;
 import entidades.ModeloDetalle;
+import entidades.SisModulo;
 import entidades.SisTipoModelo;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
@@ -38,6 +39,7 @@ import persistencia.AccesoFacade;
 import persistencia.ContPlanCuentaFacade;
 import persistencia.ModeloCabFacade;
 import persistencia.ModeloDetalleFacade;
+import persistencia.SisModuloFacade;
 import persistencia.SisTipoModeloFacade;
 import persistencia.UsuarioFacade;
 import utils.Utils;
@@ -55,6 +57,7 @@ public class ModeloImputacionRest {
     @Inject SisTipoModeloFacade sisTipoModeloFacade;
     @Inject ModeloCabFacade modeloCabFacade; 
     @Inject ContPlanCuentaFacade  contPlanCuentaFacade;
+    @Inject SisModuloFacade sisModuloFacade;
     
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
@@ -212,6 +215,7 @@ public class ModeloImputacionRest {
                 BigDecimal valor = (BigDecimal) Utils.getKeyFromJsonObject("valor", j.getAsJsonObject(), "BigDecimal");
                 String operador = (String) Utils.getKeyFromJsonObject("operador", j.getAsJsonObject(), "String");
                 Integer idSisTipoModelo = (Integer) Utils.getKeyFromJsonObject("idSisTipoModelo", j.getAsJsonObject(), "Integer");
+                Integer modulo = (Integer) Utils.getKeyFromJsonObject("modulo", j.getAsJsonObject(), "Integer");
                 
                 if(idSisTipoModelo == null) {
                     respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, algun campo esta vacio");
@@ -225,6 +229,18 @@ public class ModeloImputacionRest {
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
                 
+                if(modulo == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, modulo nulo");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+            
+                SisModulo mod = sisModuloFacade.find(modulo);
+            
+                if(mod == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no existe el modulo");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                
                 modeloDetalle.setCtaContable(ctaContable);
                 modeloDetalle.setDescripcion(descripcionDetalle);
                 modeloDetalle.setDh(dh);
@@ -234,6 +250,7 @@ public class ModeloImputacionRest {
                 modeloDetalle.setOrden(orden);
                 modeloDetalle.setPrioritario(prioritario);
                 modeloDetalle.setValor(valor);
+                modeloDetalle.setIdSisModulo(mod);
                 transaccion2 = modeloDetalleFacade.setModeloDetalleNuevo(modeloDetalle);
                 if(!transaccion2) {
                     modeloCabFacade.deleteModeloCab(modeloCab);
@@ -331,6 +348,7 @@ public class ModeloImputacionRest {
                 BigDecimal valor = (BigDecimal) Utils.getKeyFromJsonObject("valor", j.getAsJsonObject(), "BigDecimal");
                 String operador = (String) Utils.getKeyFromJsonObject("operador", j.getAsJsonObject(), "String");
                 Integer idSisTipoModelo = (Integer) Utils.getKeyFromJsonObject("idSisTipoModelo", j.getAsJsonObject(), "Integer");
+                Integer modulo = (Integer) Utils.getKeyFromJsonObject("modulo", j.getAsJsonObject(), "Integer");
                 
                 if(idSisTipoModelo == null) {
                     respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, algun campo esta vacio");
@@ -344,6 +362,18 @@ public class ModeloImputacionRest {
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
                 
+                if(modulo == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, modulo nulo");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+            
+                SisModulo mod = sisModuloFacade.find(modulo);
+            
+                if(mod == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no existe el modulo");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                
                 ModeloDetalle modeloDetalle = new ModeloDetalle();
                 modeloDetalle.setCtaContable(ctaContable);
                 modeloDetalle.setDescripcion(descripcionDetalle);
@@ -354,6 +384,7 @@ public class ModeloImputacionRest {
                 modeloDetalle.setOrden(orden);
                 modeloDetalle.setPrioritario(prioritario);
                 modeloDetalle.setValor(valor);
+                modeloDetalle.setIdSisModulo(mod);
                 transaccion2 = modeloDetalleFacade.setModeloDetalleNuevo(modeloDetalle);
                 
                 if(!transaccion2) {

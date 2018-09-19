@@ -13,6 +13,7 @@ import entidades.FactFormaPago;
 import entidades.FactImputa;
 import entidades.FactPie;
 import entidades.FormaPago;
+import entidades.FormaPagoDet;
 import entidades.Lote;
 import entidades.Producto;
 import entidades.Produmo;
@@ -44,6 +45,7 @@ import persistencia.FactDetalleFacade;
 import persistencia.FactFormaPagoFacade;
 import persistencia.FactImputaFacade;
 import persistencia.FactPieFacade;
+import persistencia.FormaPagoDetFacade;
 import persistencia.FormaPagoFacade;
 import persistencia.LoteFacade;
 import persistencia.ProductoFacade;
@@ -73,6 +75,7 @@ public class GrabaComprobanteRest {
     @Inject ProdumoFacade produmoFacade;
     @Inject LoteFacade loteFacade;
     @Inject FactFormaPagoFacade factFormaPagoFacade;
+    @Inject FormaPagoDetFacade formaPagoDetFacade;
           
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -95,8 +98,7 @@ public class GrabaComprobanteRest {
             String cai = (String) Utils.getKeyFromJsonObject("cai", jsonBody, "String");
             Date caiVto = (Date) Utils.getKeyFromJsonObject("caiVto", jsonBody, "Date");
             String codBarra =(String) Utils.getKeyFromJsonObject("codBarra", jsonBody, "String");
-            Integer idPadron = (Integer) Utils.getKeyFromJsonObject("idPadron", jsonBody, "Integer");
-            Integer idFormaPago = (Integer) Utils.getKeyFromJsonObject("idFormaPago", jsonBody, "Integer");
+            Integer idPadron = (Integer) Utils.getKeyFromJsonObject("idPadron", jsonBody, "Integer");            
             String productoCanje = (String) Utils.getKeyFromJsonObject("productoCanje", jsonBody, "String");
             BigDecimal precioReferenciaCanje = (BigDecimal) Utils.getKeyFromJsonObject("precioReferenciaCanje", jsonBody, "BigDecimal");
             BigDecimal interesCanje = (BigDecimal) Utils.getKeyFromJsonObject("interesCanje", jsonBody, "BigDecimal");
@@ -160,7 +162,7 @@ public class GrabaComprobanteRest {
 
             //Me fijo que  los campos que tienen el atributo NotNull no sean nulos
             if(idCteTipo == null || letra == null || numero == null || fechaEmision == null || 
-               fechaVencimiento == null || idPadron == null || idFormaPago == null || 
+               fechaVencimiento == null || idPadron == null || 
                productoCanje == null || precioReferenciaCanje == null || interesCanje == null || 
                idMoneda == null ||nombre == null || cuit == null || sisSitIva == null || 
                codigoPostal == null || cotDolar== null) {
@@ -176,14 +178,7 @@ public class GrabaComprobanteRest {
                 respuesta.setControl(AppCodigo.ERROR, "No existe el tipo de Comprobante");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            
-            FormaPago formaPago = formaPagoFacade.find(idFormaPago);
-            //Pregunto si existe la forma de pago
-            if(formaPago == null) {
-                respuesta.setControl(AppCodigo.ERROR, "No existe la Forma de Pago");
-                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-            }
-            
+                       
             SisMonedas sisMonedas = sisMonedasFacade.find(idMoneda);
             //Pregunto si existe SisMonedas
             if(sisMonedas == null) {
@@ -224,7 +219,6 @@ public class GrabaComprobanteRest {
                 factCab.setFechaEmision(fechaEmision);
                 factCab.setFechaVto(caiVto);
                 factCab.setIdCteTipo(cteTipo);
-                factCab.setIdFormaPago(formaPago);
                 factCab.setIdListaPrecios(listaPrecio);
                 factCab.setIdPadron(idPadron);
                 factCab.setIdProductoCanje(productoCanje);
@@ -378,6 +372,7 @@ public class GrabaComprobanteRest {
                             String detalle = (String) Utils.getKeyFromJsonObject("detalle", je.getAsJsonObject(), "String");
                             String observacionesFormaPago = (String) Utils.getKeyFromJsonObject("observaciones", je.getAsJsonObject(), "String");
                             String cuentaContable = (String) Utils.getKeyFromJsonObject("cuentaContable", je.getAsJsonObject(), "String");
+                            Integer idFormaPagoDet = (Integer) Utils.getKeyFromJsonObject("idFormaPagoDet", jsonBody, "Integer");
                             //Pregunto si son nulos 
                             if(observacionesFormaPago == null || monto == null || interes == null || plazo == null) {
                                 respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta Forma de Pago, algun campo de la grilla es nulo");
@@ -387,6 +382,14 @@ public class GrabaComprobanteRest {
                             if(monto.compareTo(BigDecimal.ZERO) == 0) {
                                 continue;
                             }
+                            
+                            FormaPagoDet formaPagoDet = formaPagoDetFacade.find(idFormaPagoDet);
+                            
+                            if(formaPagoDet == null) {
+                                respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta Forma de Pago, la forma de pago no existe");
+                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                            }
+                            
                             //Creo FacForma de pago
                             FactFormaPago factFPago = new FactFormaPago();
                             factFPago.setDetalle(observacionesFormaPago);
@@ -397,7 +400,7 @@ public class GrabaComprobanteRest {
                             calendar.add(Calendar.DAY_OF_YEAR, plazo);
                             //seteo la fecha 
                             factFPago.setFechaPago(calendar.getTime());
-                            factFPago.setIdFormaPago(formaPago);
+                            factFPago.setIdFormaPago(formaPagoDet.getIdFormaPago());
                             factFPago.setImporte(monto);
                             factFPago.setPorcentaje(interes);
                             factFPago.setCtaContable(cuentaContable);

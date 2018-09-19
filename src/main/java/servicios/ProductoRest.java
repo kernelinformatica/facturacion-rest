@@ -6,6 +6,7 @@ import datos.Payload;
 import datos.ProductoResponse;
 import datos.ServicioResponse;
 import entidades.Acceso;
+import entidades.Marca;
 import entidades.ModeloCab;
 import entidades.Producto;
 import entidades.SisIVA;
@@ -33,6 +34,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
+import persistencia.MarcaFacade;
 import persistencia.ModeloCabFacade;
 import persistencia.ProductoFacade;
 import persistencia.SisIVAFacade;
@@ -55,6 +57,7 @@ public class ProductoRest {
     @Inject SisUnidadFacade sisUnidadFacade;
     @Inject SisIVAFacade sisIVAFacade;
     @Inject ModeloCabFacade modeloCabFacade;
+    @Inject MarcaFacade marcaFacade;
     
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
@@ -154,6 +157,7 @@ public class ProductoRest {
             Integer idIva = (Integer) Utils.getKeyFromJsonObject("idIva", jsonBody, "Integer");
             Integer idUnidadCompra = (Integer) Utils.getKeyFromJsonObject("idUnidadCompra", jsonBody, "Integer");
             Integer idUnidadVenta = (Integer) Utils.getKeyFromJsonObject("idUnidadVenta", jsonBody, "Integer");
+            Integer idMarca = (Integer) Utils.getKeyFromJsonObject("idMarca", jsonBody, "Integer");
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -203,7 +207,10 @@ public class ProductoRest {
             SisUnidad sisUnidadVenta = sisUnidadFacade.find(idUnidadVenta);
             SisIVA sisIVA = sisIVAFacade.find(idIva);
             ModeloCab modeloCab = modeloCabFacade.find(modeloImputacion);
-            
+            Marca marca = null;
+            if(idMarca != null) {
+                marca = marcaFacade.find(idMarca);
+            } 
             //Pregunto si existe el SubRubro
             if(subrubro == null) {
                 respuesta.setControl(AppCodigo.ERROR, "No existe el SubRubro");
@@ -256,6 +263,7 @@ public class ProductoRest {
             producto.setUnidadCompra(sisUniudadCompra);
             producto.setUnidadVenta(sisUnidadVenta);
             producto.setIdEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
+            producto.setIdMarca(marca);
             transaccion = productoFacade.setProductoNuevo(producto);
             if(!transaccion) {
                 respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Producto, clave primaria repetida");
@@ -302,6 +310,7 @@ public class ProductoRest {
             Integer idIva = (Integer) Utils.getKeyFromJsonObject("idIva", jsonBody, "Integer");
             Integer idUnidadCompra = (Integer) Utils.getKeyFromJsonObject("idUnidadCompra", jsonBody, "Integer");
             Integer idUnidadVenta = (Integer) Utils.getKeyFromJsonObject("idUnidadVenta", jsonBody, "Integer");
+            Integer idMarca = (Integer) Utils.getKeyFromJsonObject("idMarca", jsonBody, "Integer");
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -344,6 +353,10 @@ public class ProductoRest {
             SisUnidad sisUnidadVenta = sisUnidadFacade.find(idUnidadVenta);
             SisIVA sisIVA = sisIVAFacade.find(idIva); 
             ModeloCab modeloCab = modeloCabFacade.find(modeloImputacion);
+            Marca marca = null;
+            if(idMarca != null) {
+                marca = marcaFacade.find(idMarca);
+            } 
                         
             //Pregunto si existe el SubRubro
             if(subrubro == null) {
@@ -402,6 +415,7 @@ public class ProductoRest {
             producto.setIdIVA(sisIVA);
             producto.setUnidadCompra(sisUniudadCompra);
             producto.setUnidadVenta(sisUnidadVenta);
+            producto.setIdMarca(marca);
             transaccion = productoFacade.editProducto(producto);
             if(!transaccion) {
                 respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Producto, clave primaria repetida");

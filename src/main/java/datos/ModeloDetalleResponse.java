@@ -1,6 +1,5 @@
 package datos;
 
-import entidades.ContPlanCuenta;
 import entidades.ModeloDetalle;
 import java.math.BigDecimal;
 
@@ -20,6 +19,7 @@ public class ModeloDetalleResponse implements Payload {
     private String operador;
     private SisTipoModeloResponse tipoModelo;
     private ContPlanCuentaResponse planCuenta;
+    private SisModuloResponse sisModulo;
 
     public ModeloDetalleResponse(ModeloDetalle s) {
         this.idModeloDetalle = s.getIdModeloDetalle();
@@ -31,6 +31,7 @@ public class ModeloDetalleResponse implements Payload {
         this.valor = s.getValor();
         this.operador = s.getOperador();
         this.tipoModelo = new SisTipoModeloResponse(s.getIdSisTipoModelo());
+        this.sisModulo = new SisModuloResponse(s.getIdSisModulo());
     }
     
     public ModeloDetalleResponse(ModeloDetalle s, BigDecimal total) {
@@ -41,6 +42,7 @@ public class ModeloDetalleResponse implements Payload {
         this.dh = s.getDh();
         this.prioritario = s.getPrioritario();
         this.totalModelo = total;
+        this.sisModulo = new SisModuloResponse(s.getIdSisModulo());
     }
     
 //    public ModeloDetalleResponse(ModeloDetalle s, ContPlanCuentaResponse planCuenta) {
@@ -148,5 +150,14 @@ public class ModeloDetalleResponse implements Payload {
     public void setPlanCuenta(ContPlanCuentaResponse planCuenta) {
         this.planCuenta = planCuenta;
     }
+
+    public SisModuloResponse getSisModulo() {
+        return sisModulo;
+    }
+
+    public void setSisModulo(SisModuloResponse sisModulo) {
+        this.sisModulo = sisModulo;
+    }
+    
     
 }

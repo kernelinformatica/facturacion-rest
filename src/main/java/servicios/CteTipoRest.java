@@ -100,7 +100,12 @@ public class CteTipoRest {
                 }
             //Devuelvo cteTipo por modulo
             } else if(sisModulo != null && sisComprobante == null && idCteTipo == null ) {
-                List<CteTipo> cteTipoList = cteTipoFacade.getByModulo(user.getIdPerfil().getIdSucursal().getIdEmpresa(), sisModulo);           
+                List<CteTipo> cteTipoList = new ArrayList<>();
+                if(sisModulo == 3) {
+                    cteTipoList = cteTipoFacade.findAll();
+                } else {
+                    cteTipoList = cteTipoFacade.getByModulo(user.getIdPerfil().getIdSucursal().getIdEmpresa(), sisModulo); 
+                }
                 //valido que tenga comprobantes disponibles
                 if(cteTipoList.isEmpty()) {
                     respuesta.setControl(AppCodigo.ERROR, "No hay Tipos de Comprobantes disponibles");

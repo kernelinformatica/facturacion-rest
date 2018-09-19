@@ -10,11 +10,10 @@ import datos.ServicioResponse;
 import entidades.Acceso;
 import entidades.ModeloDetalle;
 import entidades.Producto;
+import entidades.SisModulo;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.math.MathContext;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,6 +33,7 @@ import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
 import persistencia.ModeloDetalleFacade;
 import persistencia.ProductoFacade;
+import persistencia.SisModuloFacade;
 import persistencia.SisTipoModeloFacade;
 import persistencia.UsuarioFacade;
 import utils.Utils;
@@ -51,6 +51,7 @@ public class BuscaModeloRest {
     @Inject ProductoFacade productoFacade;
     @Inject ModeloDetalleFacade modeloFacade;
     @Inject SisTipoModeloFacade sisTipoModeloFacade;
+    @Inject SisModuloFacade sisModuloFacade;
     
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -65,7 +66,9 @@ public class BuscaModeloRest {
             JsonObject jsonBody = Utils.getJsonObjectFromRequest(request);
                        
             // Obtengo los atributos del body
+            Integer modulo = (Integer) Utils.getKeyFromJsonObject("modulo", jsonBody, "Integer");
             List<JsonElement> productos = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("productos", jsonBody, "ArrayList");
+            
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, token vacio");
@@ -101,6 +104,18 @@ public class BuscaModeloRest {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
+            if(modulo == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, modulo nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            
+            SisModulo mod = sisModuloFacade.find(modulo);
+            
+            if(mod == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, no existe el modulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+                       
             List<ModeloDetalleResponse> modelos = new ArrayList<>();
             for(JsonElement j : productos) {
                 Integer idProducto = (Integer) Utils.getKeyFromJsonObject("idProducto", j.getAsJsonObject(), "Integer");
@@ -132,7 +147,7 @@ public class BuscaModeloRest {
                 // / dividir
                 // n                
                 for(ModeloDetalle p : producto.getIdModeloCab().getModeloDetalleCollection()) {
-                    if(p.getIdSisTipoModelo().getIdSisTipoModelo() == 1) {
+                    if(p.getIdSisTipoModelo().getIdSisTipoModelo() == 1 && !p.getIdSisModulo().equals(mod)) {
                         continue;
                     } else {
                         BigDecimal total = BigDecimal.ZERO;
