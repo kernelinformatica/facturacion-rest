@@ -25,8 +25,9 @@ public class LoteResponse implements Payload {
     private String receta;
     private int cantidad;
     private BigDecimal stockNegativo;
+    private Integer idProducto;
 
-    public LoteResponse(String nroLote, int item, String serie, Date fechaElab, Date fechaVto, boolean vigencia, String comprobante, BigDecimal numero, String codProducto, String descripcionProd, BigDecimal stock, BigDecimal ingresos, BigDecimal egresos, BigDecimal stockNegativo) {
+    public LoteResponse(String nroLote, int item, String serie, Date fechaElab, Date fechaVto, boolean vigencia, String comprobante, BigDecimal numero, String codProducto, String descripcionProd, BigDecimal stock, BigDecimal ingresos, BigDecimal egresos, BigDecimal stockNegativo, Integer idProducto) {
         this.nroLote = nroLote;
         this.item = item;
         this.serie = serie;
@@ -43,6 +44,7 @@ public class LoteResponse implements Payload {
         this.receta = "";
         this.cantidad = 0;
         this.stockNegativo = stockNegativo;
+        this.idProducto = idProducto;
     }
 
     
@@ -174,6 +176,16 @@ public class LoteResponse implements Payload {
     public void setStockNegativo(BigDecimal stockNegativo) {
         this.stockNegativo = stockNegativo;
     }
+
+    public Integer getIdProducto() {
+        return idProducto;
+    }
+
+    public void setIdProducto(Integer idProducto) {
+        this.idProducto = idProducto;
+    }
+    
+    
     
     @Override
     public String getClassName() {

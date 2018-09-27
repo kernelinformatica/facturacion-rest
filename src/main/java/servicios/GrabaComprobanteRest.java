@@ -12,7 +12,6 @@ import entidades.FactDetalle;
 import entidades.FactFormaPago;
 import entidades.FactImputa;
 import entidades.FactPie;
-import entidades.FormaPago;
 import entidades.FormaPagoDet;
 import entidades.Lote;
 import entidades.Producto;
@@ -120,6 +119,13 @@ public class GrabaComprobanteRest {
             boolean produmo = (Boolean) Utils.getKeyFromJsonObject("produmo", jsonBody, "boolean");
             boolean factFormaPago = (Boolean) Utils.getKeyFromJsonObject("factFormaPago", jsonBody, "boolean");
             boolean lote = (Boolean) Utils.getKeyFromJsonObject("lote", jsonBody, "boolean");
+            boolean grabaFactura = (Boolean) Utils.getKeyFromJsonObject("grabaFactura", jsonBody, "boolean");
+            Integer tipoFact = (Integer) Utils.getKeyFromJsonObject("tipoFact", jsonBody, "Integer");
+            String letraFact = (String) Utils.getKeyFromJsonObject("letraFact", jsonBody, "String");
+            BigDecimal numeroFact = (BigDecimal) Utils.getKeyFromJsonObject("numeroFact", jsonBody, "BigDecimal");
+            Date fechaVencimientoFact = (Date) Utils.getKeyFromJsonObject("fechaVencimientoFact", jsonBody, "Date");
+            Date fechaContaFact = (Date) Utils.getKeyFromJsonObject("fechaContaFact", jsonBody, "Date");
+            Integer idModulo = (Integer) Utils.getKeyFromJsonObject("idModulo", jsonBody, "Integer");
             List<JsonElement> grillaArticulos = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("grillaArticulos", jsonBody, "ArrayList");          
             List<JsonElement> grillaSubTotales = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("grillaSubTotales", jsonBody, "ArrayList");
             List<JsonElement> grillaTrazabilidad = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("grillaTrazabilidad", jsonBody, "ArrayList");
@@ -129,7 +135,7 @@ public class GrabaComprobanteRest {
             Integer relNumero = (Integer) Utils.getKeyFromJsonObject("relNumero", jsonBody, "Integer");
             //Integer idDeposito = (Integer) Utils.getKeyFromJsonObject("idDeposito", jsonBody, "Integer");
             //boolean pendiente = (Boolean) Utils.getKeyFromJsonObject("pendiente", jsonBody, "boolean");
-            
+        
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, token vacio");
@@ -273,7 +279,9 @@ public class GrabaComprobanteRest {
                         String imputacion = (String) Utils.getKeyFromJsonObject("imputacion", j.getAsJsonObject(), "String");
                         Integer idFactCabImputa = (Integer) Utils.getKeyFromJsonObject("idFactCabImputa", j.getAsJsonObject(), "Integer");
                         Integer itemImputada = (Integer) Utils.getKeyFromJsonObject("itemImputada", j.getAsJsonObject(), "Integer");
-                         BigDecimal importe = (BigDecimal) Utils.getKeyFromJsonObject("importe", j.getAsJsonObject(), "BigDecimal");
+                        BigDecimal importe = (BigDecimal) Utils.getKeyFromJsonObject("importe", j.getAsJsonObject(), "BigDecimal");
+//                        List<JsonElement> modelosDetalles = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("modelosDetalles", jsonBody, "ArrayList");
+                        
 
                         //Pregunto por los campos que son NOTNULL
                         if(idProducto == null || articulo == null || pendiente == null || precio == null || porCalc == null ||
@@ -282,6 +290,14 @@ public class GrabaComprobanteRest {
                             respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, algun campo esta vacio");
                             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                         }
+                        
+//                        //Busco el porcentaje de iva que se le aplica al producto
+//                        for(JsonElement pi : modelosDetalles) {
+//                            String operador = (String) Utils.getKeyFromJsonObject("operador", j.getAsJsonObject(), "String");
+//                            BigDecimal valor = (BigDecimal) Utils.getKeyFromJsonObject("valor", j.getAsJsonObject(), "BigDecimal");
+//                            Integer idSistipoModelo = (Integer) Utils.getKeyFromJsonObject("idSistipoModelo", j.getAsJsonObject(), "Integer");
+//                            Integer idSisModulo = (Integer) Utils.getKeyFromJsonObject("idSisModulo", j.getAsJsonObject(), "Integer");
+//                        }
 
                         //Busco el deposito por id, si no encuentro alguno desarmo la transaccion.
                         Deposito deposito = depositoFacade.find(idDeposito);
@@ -344,7 +360,7 @@ public class GrabaComprobanteRest {
                         }
                         
                         //Pregunto si se graba produmo y empiezo con la transaccion
-                        if(produmo) {
+                        if(produmo && cteTipo.getIdSisComprobante().getStock().equals(1)) {
                             Produmo prod = new Produmo();
                             prod.setCantidad(pendiente);
                             prod.setDetalle(articulo);
@@ -372,9 +388,9 @@ public class GrabaComprobanteRest {
                             String detalle = (String) Utils.getKeyFromJsonObject("detalle", je.getAsJsonObject(), "String");
                             String observacionesFormaPago = (String) Utils.getKeyFromJsonObject("observaciones", je.getAsJsonObject(), "String");
                             String cuentaContable = (String) Utils.getKeyFromJsonObject("cuentaContable", je.getAsJsonObject(), "String");
-                            Integer idFormaPagoDet = (Integer) Utils.getKeyFromJsonObject("idFormaPagoDet", jsonBody, "Integer");
+                            Integer idFormaPagoDet = (Integer) Utils.getKeyFromJsonObject("idFormaPagoDet", je.getAsJsonObject(), "Integer");
                             //Pregunto si son nulos 
-                            if(observacionesFormaPago == null || monto == null || interes == null || plazo == null) {
+                            if(observacionesFormaPago == null || monto == null || interes == null || plazo == null || idFormaPagoDet == null) {
                                 respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta Forma de Pago, algun campo de la grilla es nulo");
                                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                             }
@@ -383,7 +399,7 @@ public class GrabaComprobanteRest {
                                 continue;
                             }
                             
-                            FormaPagoDet formaPagoDet = formaPagoDetFacade.find(idFormaPagoDet);
+                            FormaPagoDet formaPagoDet = formaPagoDetFacade.getByidFormaPagoDet(idFormaPagoDet);
                             
                             if(formaPagoDet == null) {
                                 respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta Forma de Pago, la forma de pago no existe");
@@ -435,7 +451,7 @@ public class GrabaComprobanteRest {
                         }
                     }
                     //Termina la griila de sub totales y empieza la de trasabilidad
-                    if(lote) {
+                    if(lote && cteTipo.getIdSisComprobante().getStock().equals(1) && grillaTrazabilidad != null) {
                         int itemTrazabilidad = 0;
                         for(JsonElement gt : grillaTrazabilidad) {
                             //Obtengo los atributos del body
@@ -481,7 +497,48 @@ public class GrabaComprobanteRest {
                             itemTrazabilidad ++;
                         }
                     }
-                    return this.persistirObjetos(factCab, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago);
+                    //Me fijo si guarda la factura del remito asociado
+                    if(!grabaFactura) {
+                        return this.persistirObjetos(factCab, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago);
+                    } else if(tipoFact != null || letraFact != null || numeroFact != null || fechaVencimientoFact != null || fechaContaFact != null){                       
+                        //Persisto Primero los objetos del remito
+                        this.persistirObjetos(factCab, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago);
+                        //Luego empiezo con los datos de la factura relacionada
+                        CteTipo cteTipoFac = cteTipoFacade.find(tipoFact);
+                        if(cteTipoFac == null) {
+                            respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el tipo de comprobante");
+                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                        }
+                        //Creo la nueva FactCab
+                        FactCab fc = new FactCab();
+                        fc.setCai(cai);
+                        fc.setCaiVto(caiVto);
+                        fc.setCodBarra(codBarra);
+                        fc.setCodigoPostal(codigoPostal);
+                        fc.setCotDolar(cotDolar);
+                        fc.setCuit(cuit);
+                        fc.setFechaConta(fechaContaFact);
+                        fc.setFechaDolar(fechaDolar);
+                        fc.setFechaEmision(fechaEmision);
+                        fc.setFechaVto(fechaVencimientoFact);
+                        fc.setIdCteTipo(cteTipoFac);
+                        fc.setIdListaPrecios(listaPrecio);
+                        fc.setIdPadron(idPadron);
+                        fc.setIdProductoCanje(productoCanje);
+                        fc.setIdmoneda(sisMonedas);
+                        fc.setInteresCanje(interesCanje);
+                        fc.setLetra(letraFact);
+                        fc.setNombre(nombre);
+                        fc.setNumero(numeroFact.longValue());
+                        fc.setObservaciones(observaciones);
+                        fc.setPrecioReferenciaCanje(precioReferenciaCanje);
+                        fc.setSitIVA(sisSitIva);
+                        fc.setIdModeloCab(idModeloCab);    
+                        return this.generarFacturaRelacionada(fc, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago);
+                    } else {
+                        respuesta.setControl(AppCodigo.ERROR, "No pudo grabar la factura asociada, algun campo no es valido");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
                 } else {
                     respuesta.setControl(AppCodigo.ERROR, "No se graban detalles");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
@@ -578,6 +635,7 @@ public class GrabaComprobanteRest {
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
         }
+        try{
         //Edito produmo para agregarle la el idDetalle y el lote
         if(!produmo.isEmpty() && !factDetalle.isEmpty()) {
                 //Comienzo con la transaccion de produmo para agregarle el idFactDetalle
@@ -596,5 +654,110 @@ public class GrabaComprobanteRest {
             }
         respuesta.setControl(AppCodigo.CREADO, "Comprobante creado con exito, con detalles");
         return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+        } catch(Exception ex) {
+            respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
+            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+        }
+    }
+    
+    public Response generarFacturaRelacionada(FactCab factCab, List<FactDetalle> factDetalle, List<FactImputa> factImputa, List<Produmo> produmo, List<FactPie> factPie, List<Lote> listaLotes, List<FactFormaPago> factFormaPago) {
+        ServicioResponse respuesta = new ServicioResponse();
+        try {
+            List<FactDetalle> listaDetalles = new ArrayList<>();
+            List<FactImputa> listaImputa = new ArrayList<>();
+            List<FactPie> listaPie = new ArrayList<>();
+            List<FactFormaPago> listaFormaPago = new ArrayList<>();
+            
+            //Le asigno el nuevo FactCab a la lista de detalles
+            for(FactDetalle d : factDetalle) {
+                FactDetalle factDet = new FactDetalle();
+                factDet.setCantBultos(d.getCantBultos());
+                factDet.setCantidad(d.getCantidad());
+                factDet.setCodProducto(d.getCodProducto());
+                factDet.setDescuento(d.getDescuento());
+                factDet.setDespacho(d.getDespacho());
+                factDet.setDetalle(d.getDetalle());
+                factDet.setIdDepositos(d.getIdDepositos());
+                factDet.setIdFactCab(factCab);
+                factDet.setIdProducto(d.getIdProducto());
+                factDet.setImporte(d.getImporte());
+                factDet.setImputacion(d.getImputacion());
+                factDet.setItem(d.getItem());
+                factDet.setIvaPorc(d.getIvaPorc());
+                factDet.setObservaciones(d.getObservaciones());
+                factDet.setPorcCalc(d.getPorcCalc());
+                factDet.setPrecio(d.getPrecio());
+                factDet.setTrazable(d.getTrazable());
+                listaDetalles.add(factDet);
+            }
+            
+            //Le asigno el remito y el nuevo factCab en imputa
+            if(!factImputa.isEmpty()) {
+                for(FactImputa l : factImputa) {
+                    FactImputa factImp = new FactImputa();
+                    factImp.setCantidadImputada(l.getCantidadImputada());
+                    factImp.setIdFactCab(l.getIdFactCabImputa().getIdFactCab());
+                    factImp.setIdFactCabImputa(factCab);
+                    factImp.setIdProducto(l.getIdProducto());
+                    factImp.setImporteImputado(l.getImporteImputado());
+                    factImp.setItem(l.getItem());
+                    factImp.setItemImputada(l.getItemImputada());
+                    factImp.setMasAsiento(l.getMasAsiento());
+                    factImp.setMasAsientoImputado(l.getMasAsientoImputado());
+                    listaImputa.add(factImp);
+                }
+            } else {
+                for(FactDetalle d : factDetalle) {
+                    FactImputa facturaImputa = new FactImputa();
+                    facturaImputa.setCantidadImputada(d.getCantidad());
+                    facturaImputa.setIdFactCab(d.getIdFactCab().getIdFactCab());
+                    facturaImputa.setIdFactCabImputa(factCab);
+                    facturaImputa.setIdProducto(d.getIdProducto());
+                    facturaImputa.setImporteImputado(d.getCantidad().multiply(d.getPorcCalc()).multiply(d.getPrecio()));
+                    facturaImputa.setItem(d.getItem());
+                    facturaImputa.setItemImputada(d.getItem());
+                    facturaImputa.setMasAsiento(0);
+                    facturaImputa.setMasAsientoImputado(0);
+                    listaImputa.add(facturaImputa);
+                }
+            }
+            //Limpio la coleccion de produmo porque no se guarda
+            produmo.clear();
+            
+            //Guardo el nuevo factCab en factPie
+            for(FactPie p : factPie) {
+                FactPie faPie = new FactPie();
+                faPie.setCtaContable(p.getCtaContable());
+                faPie.setDetalle(p.getDetalle());
+                faPie.setIdConceptos(p.getIdConceptos());
+                faPie.setIdFactCab(factCab);
+                faPie.setImporte(p.getImporte());
+                faPie.setPorcentaje(p.getPorcentaje());
+                listaPie.add(faPie);
+            }
+            
+            //Limpio la lista de lotes porque no se guardan
+            listaLotes.clear();
+            
+            //Guardo el nuevo FactCab en la forma de pago
+            for(FactFormaPago fp : factFormaPago) {
+                FactFormaPago ffp = new FactFormaPago();
+                ffp.setCtaContable(fp.getCtaContable());
+                ffp.setDetalle(fp.getDetalle());
+                ffp.setDiasPago(fp.getDiasPago());
+                ffp.setFechaPago(fp.getFechaPago());
+                ffp.setIdFactCab(factCab);
+                ffp.setIdFormaPago(fp.getIdFormaPago());
+                ffp.setImporte(fp.getImporte());
+                ffp.setPorcentaje(fp.getPorcentaje());
+                listaFormaPago.add(ffp);
+            }
+            
+            //Persisto los objetos y devuelvo la respuesta          
+            return this.persistirObjetos(factCab, listaDetalles, listaImputa, produmo, listaPie, listaLotes, listaFormaPago);
+        } catch(Exception ex) {
+            respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
+            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+        }
     }
 }

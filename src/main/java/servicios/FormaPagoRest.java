@@ -114,10 +114,10 @@ public class FormaPagoRest {
                     if(!p.getIdListaPrecios().getListaPrecioDetCollection().isEmpty()) {
                         fp.getListaPrecio().agregarListaPrecioDet(p.getIdListaPrecios().getListaPrecioDetCollection());                        
                     }
-                    //Seteo editable en false si la coleccion de FactCab es distinta de vacia
-                    if(!p.getFactFormaPagoCollection().isEmpty()){
-                        fp.setEditar(false);
-                    }                  
+//                    //Seteo editable en false si la coleccion de FactCab es distinta de vacia
+//                    if(!p.getFactFormaPagoCollection().isEmpty()){
+//                        fp.setEditar(false);
+//                    }                  
                     if(!p.getFormaPagoDetCollection().isEmpty()) {
                         for(FormaPagoDet d : p.getFormaPagoDetCollection()) {
                             FormaPagoDetResponse fpd = new FormaPagoDetResponse(d);

@@ -63,7 +63,7 @@ public class BuscaComprobanteRest {
             Date fechaHasta = (Date) Utils.getKeyFromJsonObject("fechaHasta", jsonBody, "Date");
             Integer idProducto = (Integer) Utils.getKeyFromJsonObject("idProducto", jsonBody, "Integer");
             Integer padCodigo = (Integer) Utils.getKeyFromJsonObject("padCodigo", jsonBody, "Integer");
-            Integer codigoDep = (Integer) Utils.getKeyFromJsonObject("codigoDep", jsonBody, "Integer");
+            Integer idDeposito = (Integer) Utils.getKeyFromJsonObject("idDeposito", jsonBody, "Integer");
             Integer idEstado = (Integer) Utils.getKeyFromJsonObject("idEstado", jsonBody, "Integer");
             
             //valido que token no sea null
@@ -126,7 +126,7 @@ public class BuscaComprobanteRest {
             callableStatement.setDate(6, sqlFechaHasta);
             callableStatement.setInt(7, idProducto);
             callableStatement.setInt(8, padCodigo);
-            callableStatement.setInt(9, codigoDep);
+            callableStatement.setInt(9, idDeposito);
             callableStatement.setInt(10, idEstado);
            
             //Seteo los parametros para los detalle
@@ -143,7 +143,7 @@ public class BuscaComprobanteRest {
             callableStatementDetalle.setDate(6, sqlFechaHastaDetalle);
             callableStatementDetalle.setInt(7, idProducto);
             callableStatementDetalle.setInt(8, padCodigo);
-            callableStatementDetalle.setInt(9, codigoDep);
+            callableStatementDetalle.setInt(9, idDeposito);
             callableStatementDetalle.setInt(10, idEstado);
             
             //Reccorro los resultados para la cabecera

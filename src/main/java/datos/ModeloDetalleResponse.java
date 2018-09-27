@@ -34,7 +34,7 @@ public class ModeloDetalleResponse implements Payload {
         this.sisModulo = new SisModuloResponse(s.getIdSisModulo());
     }
     
-    public ModeloDetalleResponse(ModeloDetalle s, BigDecimal total) {
+    public ModeloDetalleResponse(ModeloDetalle s, BigDecimal total, BigDecimal porcentaje) {
         this.idModeloDetalle = s.getIdModeloDetalle();
         this.ctaContable = s.getCtaContable();
         this.orden = s.getOrden();
@@ -42,6 +42,7 @@ public class ModeloDetalleResponse implements Payload {
         this.dh = s.getDh();
         this.prioritario = s.getPrioritario();
         this.totalModelo = total;
+        this.valor = porcentaje;
         this.sisModulo = new SisModuloResponse(s.getIdSisModulo());
     }
     

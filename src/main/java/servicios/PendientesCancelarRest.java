@@ -2,12 +2,14 @@ package servicios;
 
 import com.google.gson.JsonObject;
 import datos.AppCodigo;
+import datos.ModeloDetalleResponse;
 import datos.Payload;
 import datos.PendientesCancelarResponse;
 import datos.ProductoResponse;
 import datos.ServicioResponse;
 import entidades.Acceso;
 import entidades.Producto;
+import entidades.SisModulo;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
@@ -32,6 +34,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
 import persistencia.ProductoFacade;
+import persistencia.SisModuloFacade;
 import persistencia.UsuarioFacade;
 import utils.Utils;
 
@@ -47,6 +50,7 @@ public class PendientesCancelarRest {
     @Inject AccesoFacade accesoFacade;
     @Inject Utils utils; 
     @Inject ProductoFacade productoFacade;
+    @Inject SisModuloFacade sisModuloFacade;
     
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -180,6 +184,7 @@ public class PendientesCancelarRest {
     public Response getProductos(  
         @HeaderParam ("token") String token,
         @QueryParam ("idSisTipoModelo") Integer idSisTipoModelo,
+        @QueryParam ("modulo") Integer idModulo, 
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {
@@ -227,13 +232,38 @@ public class PendientesCancelarRest {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
-            //busco los SubRubros de la empresa del usuario
             List<Payload> productosResponse = new ArrayList<>();
-            for(Producto s : productos) {
-                ProductoResponse pr = new ProductoResponse(s);
-                pr.getModeloCab().agregarModeloDetalleTipo(s.getIdModeloCab().getModeloDetalleCollection(),idSisTipoModelo);
-                PendientesCancelarResponse sr = new PendientesCancelarResponse(pr);
-                productosResponse.add(sr);
+            
+            if(idModulo != null) {
+                SisModulo modulo = sisModuloFacade.find(1);
+                if(modulo == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no existe el modulo");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }               
+                for(Producto s : productos) {
+                    ProductoResponse sr = new ProductoResponse(s);
+                    sr.getModeloCab().agregarModeloDetalleTipo(s.getIdModeloCab().getModeloDetalleCollection(), idSisTipoModelo);
+                    if(!s.getLoteCollection().isEmpty()) {
+                        sr.setEditar(false);
+                    }
+                    for(ModeloDetalleResponse r : sr.getModeloCab().getModeloDetalle()) {
+                        if(r.getSisModulo().getIdSisModulos().equals(modulo.getIdSisModulos()) && 
+                           r.getValor().compareTo(BigDecimal.ZERO) != 0 && 
+                           r.getTipoModelo().getIdTipoModelo() == 2) {
+                            sr.getIVA().setPorcIVA(r.getValor());
+                            break;
+                        }
+                    }
+                    PendientesCancelarResponse pr = new PendientesCancelarResponse(sr);
+                    productosResponse.add(pr);
+                }
+            } else {                  
+                for(Producto s : productos) {
+                    ProductoResponse pr = new ProductoResponse(s);
+                    pr.getModeloCab().agregarModeloDetalleTipo(s.getIdModeloCab().getModeloDetalleCollection(),idSisTipoModelo);
+                    PendientesCancelarResponse sr = new PendientesCancelarResponse(pr);
+                    productosResponse.add(sr);
+                }
             }
             respuesta.setArraydatos(productosResponse);
             respuesta.setControl(AppCodigo.OK, "Lista de Productos");

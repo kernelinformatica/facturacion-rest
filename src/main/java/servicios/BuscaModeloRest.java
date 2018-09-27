@@ -147,7 +147,8 @@ public class BuscaModeloRest {
                 // / dividir
                 // n                
                 for(ModeloDetalle p : producto.getIdModeloCab().getModeloDetalleCollection()) {
-                    if(p.getIdSisTipoModelo().getIdSisTipoModelo() == 1 && !p.getIdSisModulo().equals(mod)) {
+                    BigDecimal porcentaje = BigDecimal.ZERO;
+                    if(p.getIdSisTipoModelo().getIdSisTipoModelo() == 1 || !p.getIdSisModulo().equals(mod)) {
                         continue;
                     } else {
                         BigDecimal total = BigDecimal.ZERO;
@@ -176,8 +177,7 @@ public class BuscaModeloRest {
                                 default:
                                     break;
                             }
-                        } else if (p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(2).getTipo())) {
-                            BigDecimal porcentaje = BigDecimal.ZERO;
+                        } else if (p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(2).getTipo())) {                            
                             total = total.add(precio.multiply(new BigDecimal(cantidad)));
                             if(p.getValor().compareTo(BigDecimal.ZERO) == 0) {
                                 porcentaje = porcentaje.add(producto.getIdIVA().getPorcIVA().divide(new BigDecimal(100)));
@@ -189,21 +189,22 @@ public class BuscaModeloRest {
                         } else if (p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(3).getTipo())) {
                             total = total.add(precio.multiply(new BigDecimal(cantidad)));
                             if(p.getValor().compareTo(BigDecimal.ZERO) == 0) {
+                                porcentaje = producto.getIdIVA().getPorcIVA();
                                 switch (p.getOperador()) {
                                     case "+":
-                                        total = total.add(producto.getIdIVA().getPorcIVA());
+                                        total = total.add(porcentaje);
                                         break;
                                     case "%":
-                                        total = total.multiply(producto.getIdIVA().getPorcIVA().divide(cien));
+                                        total = total.multiply(porcentaje.divide(cien));
                                         break;
                                     case "-":
-                                        total = total.subtract(producto.getIdIVA().getPorcIVA());
+                                        total = total.subtract(porcentaje);
                                         break;
                                     case "*":
-                                        total = total.multiply(producto.getIdIVA().getPorcIVA());
+                                        total = total.multiply(porcentaje);
                                         break;
                                     case "/":
-                                        total = total.divide(producto.getIdIVA().getPorcIVA());
+                                        total = total.divide(porcentaje);
                                         break;
                                     case "n":
                                         total = precio;
@@ -212,21 +213,22 @@ public class BuscaModeloRest {
                                         break;
                                 }
                             } else {
-                                switch (p.getOperador()) {
+                                porcentaje = p.getValor();
+                                switch (p.getOperador()) {                                   
                                     case "+":
-                                        total = total.add(p.getValor());
+                                        total = porcentaje;
                                         break;
                                     case "%":
-                                        total = total.multiply(p.getValor().divide(cien));
+                                        total = total.multiply(porcentaje.divide(cien));
                                         break;
                                     case "-":
-                                        total = total.subtract(p.getValor());
+                                        total = porcentaje.negate();
                                         break;
                                     case "*":
-                                        total = total.multiply(p.getValor());
+                                        total = total.multiply(porcentaje);
                                         break;
                                     case "/":
-                                        total = total.divide(p.getValor());
+                                        total = total.divide(porcentaje);
                                         break;
                                     case "n":
                                         total = precio;
@@ -236,7 +238,7 @@ public class BuscaModeloRest {
                                 }
                             }
                         }
-                        ModeloDetalleResponse modeloResponse = new ModeloDetalleResponse(p, total);
+                        ModeloDetalleResponse modeloResponse = new ModeloDetalleResponse(p, total, porcentaje);
                         modelos.add(modeloResponse);
                     }
                 }
@@ -246,7 +248,7 @@ public class BuscaModeloRest {
             Map<String, List<FacturaResponse>> map = new HashMap<>();
             //Armo la lista de facturas response a partir de la lista de modelos obtenidas para todos los productos
             for(ModeloDetalleResponse mdr : modelos) {
-                FacturaResponse fr = new FacturaResponse(mdr.getCtaContable(), mdr.getDescripcion(), mdr.getTotalModelo());
+                FacturaResponse fr = new FacturaResponse(mdr.getCtaContable(), mdr.getDescripcion(), mdr.getTotalModelo(), mdr.getValor());
                 listaFacturas.add(fr);
             }
             //Separo por cuenta contable la lista de facturas y los seteo en el Map
@@ -264,6 +266,7 @@ public class BuscaModeloRest {
             //Recorro el map
             for (Map.Entry<String,  List<FacturaResponse>> entry : map.entrySet()) {
                 BigDecimal total = BigDecimal.ZERO;
+                BigDecimal porcentaje = BigDecimal.ZERO;
                 String descripcion = "";
                 String cuentaContable = "";
                 //Recorro la lista dentro del Map
@@ -272,9 +275,10 @@ public class BuscaModeloRest {
                     total = total.add(fr.getImporteTotal());
                     descripcion = fr.getDescripcion();
                     cuentaContable = fr.getCuentaContable();
+                    porcentaje = fr.getPorcentaje();
                 }
                 //Armo la respuesta final
-                FacturaResponse fr = new FacturaResponse(cuentaContable,descripcion,total);
+                FacturaResponse fr = new FacturaResponse(cuentaContable,descripcion,total,porcentaje);
                 lista.add(fr);
             }
             //System.out.println(map);

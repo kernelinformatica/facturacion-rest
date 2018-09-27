@@ -162,7 +162,8 @@ public class BuscaLote {
                         rs.getBigDecimal("stock"),
                         rs.getBigDecimal("ingresos"),
                         rs.getBigDecimal("egresos"),
-                        rs.getBigDecimal("stockNegativo"));
+                        rs.getBigDecimal("stockNegativo"),
+                        rs.getInt("idProducto"));
                 lotes.add(lote);
             }
             

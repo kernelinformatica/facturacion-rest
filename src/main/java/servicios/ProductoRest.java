@@ -111,9 +111,9 @@ public class ProductoRest {
             for(Producto s : productos) {
                 ProductoResponse sr = new ProductoResponse(s);
                 sr.getModeloCab().agregarModeloDetalle(s.getIdModeloCab().getModeloDetalleCollection());
-                if(!s.getLoteCollection().isEmpty()) {
-                    sr.setEditar(false);
-                }
+//                if(!s.getLoteCollection().isEmpty()) {
+//                    sr.setEditar(false);
+//                }
                 productosResponse.add(sr);
             }
             respuesta.setArraydatos(productosResponse);
@@ -343,7 +343,7 @@ public class ProductoRest {
             }
 
             //Me fijo que  descripcion, idRubro e idEmpresa no sean nulos
-            if(codProducto == null || idSubRubro == 0 || idUnidadCompra == 0 || idUnidadVenta == 0 || idIva == 0 || idProducto == 0) {
+            if(codProducto == null || idSubRubro == null || idUnidadCompra == null || idUnidadVenta == null || idIva == null || idProducto == null || modeloImputacion == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, campos vacios");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }

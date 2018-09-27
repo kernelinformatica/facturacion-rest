@@ -155,13 +155,15 @@ public class BuscaLotes {
                             rs.getBigDecimal("stock"),
                             rs.getBigDecimal("ingresos"),
                             rs.getBigDecimal("egresos"),
-                            rs.getBigDecimal("stockNegativo"));
+                            rs.getBigDecimal("stockNegativo"),
+                            rs.getInt("idProducto"));
                     lotesResponse.add(lote);
                 }
             }
             if(lotesResponse.isEmpty()) {
-                respuesta.setControl(AppCodigo.ERROR, "Error, no hay lotes con esos parametros");
-                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                respuesta.setArraydatos(lotes);
+                respuesta.setControl(AppCodigo.OK, "Lotes");
+                return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();
             }
             Collections.sort(lotesResponse, (o1, o2) -> o1.getFechaVto().compareTo(o2.getFechaVto()));
             lotes.addAll(lotesResponse);

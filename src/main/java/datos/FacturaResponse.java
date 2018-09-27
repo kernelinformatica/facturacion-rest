@@ -10,17 +10,19 @@ public class FacturaResponse implements Payload{
     private String cuentaContable;
     private String descripcion;  
     private BigDecimal importeTotal;
+    private BigDecimal porcentaje;
 
-    public FacturaResponse(String cuentaContable, String descripcion, String tipoModelo, BigDecimal importeTotal) {
-        this.cuentaContable = cuentaContable;
-        this.descripcion = descripcion;
-        this.importeTotal = importeTotal;
-    }
+//    public FacturaResponse(String cuentaContable, String descripcion, String tipoModelo, BigDecimal importeTotal, BigDecimal porcentaje) {
+//        this.cuentaContable = cuentaContable;
+//        this.descripcion = descripcion;
+//        this.importeTotal = importeTotal;        
+//    }
     
-    public FacturaResponse(String cuentaContable, String descripcion, BigDecimal importeTotal) {
+    public FacturaResponse(String cuentaContable, String descripcion, BigDecimal importeTotal, BigDecimal porcentaje) {
         this.cuentaContable = cuentaContable;
         this.descripcion = descripcion;
         this.importeTotal = importeTotal;
+        this.porcentaje = porcentaje;
     }
 
     public String getCuentaContable() {
@@ -37,6 +39,14 @@ public class FacturaResponse implements Payload{
 
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
+    }
+
+    public BigDecimal getPorcentaje() {
+        return porcentaje;
+    }
+
+    public void setPorcentaje(BigDecimal porcentaje) {
+        this.porcentaje = porcentaje;
     }
 
     
