@@ -121,6 +121,7 @@ public class BuscaModeloRest {
                 Integer idProducto = (Integer) Utils.getKeyFromJsonObject("idProducto", j.getAsJsonObject(), "Integer");
                 BigDecimal precio = (BigDecimal) Utils.getKeyFromJsonObject("precio", j.getAsJsonObject(), "BigDecimal");
                 Integer cantidad = (Integer) Utils.getKeyFromJsonObject("cantidad", j.getAsJsonObject(), "Integer");
+                BigDecimal subTotal = (BigDecimal) Utils.getKeyFromJsonObject("subTotal", j.getAsJsonObject(), "BigDecimal");
                 
                 if(idProducto == null || cantidad == null || precio == null) {
                     respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, algun campo esta vacio");
@@ -138,7 +139,14 @@ public class BuscaModeloRest {
                 if(producto.getIdModeloCab().getModeloDetalleCollection().isEmpty()) {
                     respuesta.setControl(AppCodigo.ERROR, "Error, el producto:  " + producto.getDescripcion() + "no tiene un modelo asociado");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                }               
+                }
+                
+                //Me fijo si el subTotal es cero o nulo 
+                if(subTotal != null && subTotal.compareTo(BigDecimal.ZERO) != 0) {
+                    precio = subTotal;
+                    cantidad = 1;
+                }
+                
                 //Agrego a la lista de modelos response y calculo dependiendo operadores y tipo de modelo
                 // % porcentual
                 // + sumar
@@ -188,54 +196,28 @@ public class BuscaModeloRest {
                             }
                         } else if (p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(3).getTipo())) {
                             total = total.add(precio.multiply(new BigDecimal(cantidad)));
-                            if(p.getValor().compareTo(BigDecimal.ZERO) == 0) {
-                                porcentaje = producto.getIdIVA().getPorcIVA();
-                                switch (p.getOperador()) {
-                                    case "+":
-                                        total = total.add(porcentaje);
-                                        break;
-                                    case "%":
-                                        total = total.multiply(porcentaje.divide(cien));
-                                        break;
-                                    case "-":
-                                        total = total.subtract(porcentaje);
-                                        break;
-                                    case "*":
-                                        total = total.multiply(porcentaje);
-                                        break;
-                                    case "/":
-                                        total = total.divide(porcentaje);
-                                        break;
-                                    case "n":
-                                        total = precio;
-                                        break;
-                                    default:
-                                        break;
-                                }
-                            } else {
-                                porcentaje = p.getValor();
-                                switch (p.getOperador()) {                                   
-                                    case "+":
-                                        total = porcentaje;
-                                        break;
-                                    case "%":
-                                        total = total.multiply(porcentaje.divide(cien));
-                                        break;
-                                    case "-":
-                                        total = porcentaje.negate();
-                                        break;
-                                    case "*":
-                                        total = total.multiply(porcentaje);
-                                        break;
-                                    case "/":
-                                        total = total.divide(porcentaje);
-                                        break;
-                                    case "n":
-                                        total = precio;
-                                        break;
-                                    default:
-                                        break;
-                                }
+                            porcentaje = p.getValor();
+                            switch (p.getOperador()) {                                   
+                                case "+":
+                                    total = porcentaje;
+                                    break;
+                                case "%":
+                                    total = total.multiply(porcentaje.divide(cien));
+                                    break;
+                                case "-":
+                                    total = porcentaje.negate();
+                                    break;
+                                case "*":
+                                    total = total.multiply(porcentaje);
+                                    break;
+                                case "/":
+                                    total = total.divide(porcentaje);
+                                    break;
+                                case "n":
+                                    total = precio;
+                                    break;
+                                default:
+                                    break;
                             }
                         }
                         ModeloDetalleResponse modeloResponse = new ModeloDetalleResponse(p, total, porcentaje);

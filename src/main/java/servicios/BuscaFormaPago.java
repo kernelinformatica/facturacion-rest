@@ -2,11 +2,15 @@ package servicios;
 
 import com.google.gson.JsonObject;
 import datos.AppCodigo;
+import datos.ContPlanCuentaResponse;
+import datos.FormaPagoDetResponse;
 import datos.FormaPagoResponse;
 import datos.Payload;
 import datos.ServicioResponse;
 import entidades.Acceso;
+import entidades.ContPlanCuenta;
 import entidades.FormaPago;
+import entidades.FormaPagoDet;
 import entidades.ListaPrecio;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
@@ -26,6 +30,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
+import persistencia.ContPlanCuentaFacade;
 import persistencia.ListaPrecioFacade;
 import persistencia.UsuarioFacade;
 import utils.Utils;
@@ -41,6 +46,7 @@ public class BuscaFormaPago {
     @Inject UsuarioFacade usuarioFacade;
     @Inject AccesoFacade accesoFacade;
     @Inject ListaPrecioFacade listaPrecioFacade;
+    @Inject ContPlanCuentaFacade contPlanCuentaFacade;
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -180,20 +186,39 @@ public class BuscaFormaPago {
             
             //Armo el array de la respuesta con las formas de pago
             List<Payload> listaFormaPago = new ArrayList<>();
+            List<FormaPago> listForma = new ArrayList<>();
             for(ListaPrecio l : listaVigente) {
-                for(FormaPago f : l.getFormaPagoCollection()) {
-                    FormaPagoResponse formaPagoResponse = new FormaPagoResponse(f);
-                    formaPagoResponse.agregarDetalles(f.getFormaPagoDetCollection());
-                    listaFormaPago.add(formaPagoResponse);
+                for(FormaPago f : l.getFormaPagoCollection()) {                   
+                    listForma.add(f);
                 } 
             }
             
             //Si la lista esta vacia devuelvo respuesta
-            if(listaFormaPago.isEmpty()) {
+            if(listForma.isEmpty()) {
                 respuesta.setControl(AppCodigo.ERROR, "No existen condiciones de pagos");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
 
+            if(!listForma.isEmpty()) {
+                for(FormaPago p : listForma) {
+                    FormaPagoResponse formaPagoResponse = new FormaPagoResponse(p);
+                    for(FormaPagoDet d : p.getFormaPagoDetCollection()) {
+                        FormaPagoDetResponse fpd = new FormaPagoDetResponse(d);
+                        if(d.getCtaContable() == null) {
+                            continue;
+                        }
+                        ContPlanCuenta cont = contPlanCuentaFacade.getCuentaContable(Integer.parseInt(d.getCtaContable()));
+                        if(cont != null){
+                            fpd.setPlanCuenta(new ContPlanCuentaResponse(cont));
+                        } else {
+                            ContPlanCuentaResponse conta = new ContPlanCuentaResponse(Integer.parseInt(d.getCtaContable()),d.getDetalle());
+                            fpd.setPlanCuenta(conta);
+                        }
+                        formaPagoResponse.getFormaPagoDet().add(fpd);
+                    }
+                    listaFormaPago.add(formaPagoResponse);
+                }
+            }   
             respuesta.setArraydatos(listaFormaPago);
             respuesta.setControl(AppCodigo.OK, "Formas de Pago");
             return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();

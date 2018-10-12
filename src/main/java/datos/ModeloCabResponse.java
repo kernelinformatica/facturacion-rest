@@ -76,9 +76,9 @@ public class ModeloCabResponse implements Payload {
         }
     }
     
-    public void agregarModeloDetalleTipo(Collection<ModeloDetalle> lista, Integer idSisTipoModelo) {
+    public void agregarModeloDetalleTipo(Collection<ModeloDetalle> lista, Integer idSisTipoModelo, Integer idModulo) {
         for(ModeloDetalle l : lista) {
-            if(l.getIdSisTipoModelo().getIdSisTipoModelo().equals(idSisTipoModelo)) {
+            if(l.getIdSisTipoModelo().getIdSisTipoModelo().equals(idSisTipoModelo) && l.getIdSisModulo().getIdSisModulos().equals(idModulo)) {
                 ModeloDetalleResponse lr = new ModeloDetalleResponse(l);
                 this.modeloDetalle.add(lr);
             } else {

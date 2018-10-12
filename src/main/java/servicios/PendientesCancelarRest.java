@@ -8,6 +8,9 @@ import datos.PendientesCancelarResponse;
 import datos.ProductoResponse;
 import datos.ServicioResponse;
 import entidades.Acceso;
+import entidades.ListaPrecio;
+import entidades.ListaPrecioDet;
+import entidades.ModeloDetalle;
 import entidades.Producto;
 import entidades.SisModulo;
 import entidades.Usuario;
@@ -27,12 +30,14 @@ import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
+import persistencia.ListaPrecioFacade;
 import persistencia.ProductoFacade;
 import persistencia.SisModuloFacade;
 import persistencia.UsuarioFacade;
@@ -51,6 +56,7 @@ public class PendientesCancelarRest {
     @Inject Utils utils; 
     @Inject ProductoFacade productoFacade;
     @Inject SisModuloFacade sisModuloFacade;
+    @Inject ListaPrecioFacade listaPrecioFacade;
     
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -158,6 +164,7 @@ public class PendientesCancelarRest {
                             rs.getString("despacho"),
                             rs.getString("observaciones"),
                             rs.getInt("itemImputada"),
+                            rs.getBigDecimal("importe"),
                             producto);
                     pendientes.add(pendientesCancelar);
                 }
@@ -181,10 +188,13 @@ public class PendientesCancelarRest {
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @Path ("/{idProducto}")
     public Response getProductos(  
         @HeaderParam ("token") String token,
         @QueryParam ("idSisTipoModelo") Integer idSisTipoModelo,
-        @QueryParam ("modulo") Integer idModulo, 
+        @QueryParam ("modulo") Integer idModulo,
+        @QueryParam ("listaPrecio") Integer idListaPrecios,
+        @PathParam ("idProducto") Integer idProducto,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {
@@ -218,11 +228,6 @@ public class PendientesCancelarRest {
                 return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
             }
             
-            if(idSisTipoModelo == null) {
-                respuesta.setControl(AppCodigo.ERROR, "Error, idSisTipoModel nulo");
-                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-            }
-            
             //Busco los productos de la empresa
             List<Producto> productos = productoFacade.getProductosByEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa());
             
@@ -234,33 +239,97 @@ public class PendientesCancelarRest {
             
             List<Payload> productosResponse = new ArrayList<>();
             
-            if(idModulo != null) {
-                SisModulo modulo = sisModuloFacade.find(1);
+            if(idModulo != null && idSisTipoModelo != null && idProducto != null &&  idListaPrecios == null) {
+                //Busco el modulo(Por lo general en este if viene el de compras)
+                SisModulo modulo = sisModuloFacade.find(idModulo);
                 if(modulo == null) {
                     respuesta.setControl(AppCodigo.ERROR, "Error, no existe el modulo");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                }               
-                for(Producto s : productos) {
-                    ProductoResponse sr = new ProductoResponse(s);
-                    sr.getModeloCab().agregarModeloDetalleTipo(s.getIdModeloCab().getModeloDetalleCollection(), idSisTipoModelo);
-                    if(!s.getLoteCollection().isEmpty()) {
-                        sr.setEditar(false);
+                }             
+                
+                //Busco el producto
+                Producto s = productoFacade.find(idProducto);                
+                if(s == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no existe el producto");
+                    return Response.status(Response.Status.NOT_FOUND).entity(respuesta.toJson()).build();
+                }              
+                
+                //Armo la respuesta
+                ProductoResponse sr = new ProductoResponse(s);
+                //Agrego las cuentas contables
+                sr.getModeloCab().agregarModeloDetalleTipo(s.getIdModeloCab().getModeloDetalleCollection(), idSisTipoModelo, idModulo);
+                
+                //Si tiene un lote asignado no se puede editar
+                if(!s.getLoteCollection().isEmpty()) {
+                    sr.setEditar(false);
+                }
+                
+                //Seteo el iva del producto dependiendo la cuenta contable que tiene asignada
+                for(ModeloDetalle r : s.getIdModeloCab().getModeloDetalleCollection()) {
+                    if(r.getIdSisModulo().getIdSisModulos().equals(modulo.getIdSisModulos()) && 
+                        r.getValor().compareTo(BigDecimal.ZERO) != 0 &&
+                        r.getIdSisTipoModelo().getIdSisTipoModelo().equals(2)) {
+                        sr.getIVA().setPorcIVA(r.getValor());
+                        break;
                     }
-                    for(ModeloDetalleResponse r : sr.getModeloCab().getModeloDetalle()) {
-                        if(r.getSisModulo().getIdSisModulos().equals(modulo.getIdSisModulos()) && 
-                           r.getValor().compareTo(BigDecimal.ZERO) != 0 && 
-                           r.getTipoModelo().getIdTipoModelo() == 2) {
+                }
+                
+                //Armo la respuesta de pendientes de cancelar para que sea la misma que viene del store procedure
+                PendientesCancelarResponse pr = new PendientesCancelarResponse(sr);
+                productosResponse.add(pr);               
+            } else if(idListaPrecios != null && idModulo != null && idSisTipoModelo != null && idProducto != null) {
+                //Busco la lista de precios seleccionada
+                ListaPrecio listaPrecio = listaPrecioFacade.find(idListaPrecios);
+                if(listaPrecio == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "No hay lista de precios disponibles");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                
+                //Busco el modulo. (Por lo general en este if va a ser el de ventas)
+                SisModulo modulo = sisModuloFacade.find(idModulo);
+                if(modulo == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no existe el modulo");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                
+                //Busco el producto
+                Producto prod = productoFacade.find(idProducto);
+                if(prod == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "No existe el producto seleccionado");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                
+                //Busco el producto en la lista de precios
+                for(ListaPrecioDet l : listaPrecio.getListaPrecioDetCollection()) {
+                    //Si no es el producto que continue
+                    if(!l.getIdProductos().equals(prod)) {
+                        continue;
+                    }                    
+                    //Armo el producto response
+                    ProductoResponse sr = new ProductoResponse(l.getIdProductos());
+                    //Seteo el costo en costo de repocicion el de la lista de precio
+                    sr.setCostoReposicion(l.getPrecio());
+                    //Agrego los detalles de cuentas contables
+                    sr.getModeloCab().agregarModeloDetalleTipo(l.getIdProductos().getIdModeloCab().getModeloDetalleCollection(), idSisTipoModelo, idModulo);
+                    //Seteo el iva del producto dependiendo del detalle si es != de 0 seteo el del detalle sino el del producto
+                    for(ModeloDetalle r : prod.getIdModeloCab().getModeloDetalleCollection()) {
+                        if(r.getIdSisModulo().getIdSisModulos().equals(modulo.getIdSisModulos()) && 
+                           r.getValor().compareTo(BigDecimal.ZERO) != 0 &&
+                           r.getIdSisTipoModelo().getIdSisTipoModelo().equals(2)) {
                             sr.getIVA().setPorcIVA(r.getValor());
                             break;
                         }
                     }
+                    //Armo la respuesta de pendientes de cancelar asi es igual a la del store procedure
                     PendientesCancelarResponse pr = new PendientesCancelarResponse(sr);
+                    //seteo el precio de la lista de precios seleccionada
+                    pr.setPrecio(l.getPrecio());
                     productosResponse.add(pr);
-                }
+                }                
             } else {                  
                 for(Producto s : productos) {
                     ProductoResponse pr = new ProductoResponse(s);
-                    pr.getModeloCab().agregarModeloDetalleTipo(s.getIdModeloCab().getModeloDetalleCollection(),idSisTipoModelo);
+                    pr.getModeloCab().agregarModeloDetalleTipo(s.getIdModeloCab().getModeloDetalleCollection(),idSisTipoModelo, idModulo);
                     PendientesCancelarResponse sr = new PendientesCancelarResponse(pr);
                     productosResponse.add(sr);
                 }

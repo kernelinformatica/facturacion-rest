@@ -97,6 +97,10 @@ public class CalculoImportesSubtotales {
             //Alto invento mio jeje
             Map map = new HashMap();
             char[] arreglo = descuento.toCharArray();
+            if(arreglo[0] != '+' && arreglo[0] != '-') {
+                String desc = "+".concat(descuento);
+                arreglo = desc.toCharArray();
+            }
             int i = 0;
             for(char a : arreglo) {
                 if(a == '+' || a == '-') {
@@ -130,6 +134,32 @@ public class CalculoImportesSubtotales {
                 totalIva = totalIva.add(total.multiply(porcentajeIva.add(new BigDecimal(1))));
                 subTotal.setSubTotal(total.setScale(2, BigDecimal.ROUND_HALF_EVEN));
                 subTotal.setSubTotalIva(totalIva.setScale(2, BigDecimal.ROUND_HALF_EVEN));
+//            } else if("+".equals(tipoDescuento)){
+//                BigDecimal total = new BigDecimal(0);
+//                BigDecimal totalIva = new BigDecimal(0);
+//                total = total.add(precio.multiply(new BigDecimal(cantidad)));
+//                for(Map.Entry<Integer, Integer> entry : mapInteger.entrySet()) {
+//                    BigDecimal desc = new BigDecimal(entry.getValue());
+//                    total = total.add(desc);
+//                }
+//                BigDecimal porcentajeIva = new BigDecimal(0);
+//                porcentajeIva = porcentajeIva.add(iva.divide(new BigDecimal(100)));
+//                totalIva = totalIva.add(total.multiply(porcentajeIva.add(new BigDecimal(1))));
+//                subTotal.setSubTotal(total.setScale(2, BigDecimal.ROUND_HALF_EVEN));
+//                subTotal.setSubTotalIva(totalIva.setScale(2, BigDecimal.ROUND_HALF_EVEN));
+//            } else if("-".equals(tipoDescuento)){
+//                BigDecimal total = new BigDecimal(0);
+//                BigDecimal totalIva = new BigDecimal(0);
+//                total = total.add(precio.multiply(new BigDecimal(cantidad)));
+//                for(Map.Entry<Integer, Integer> entry : mapInteger.entrySet()) {
+//                    BigDecimal desc = new BigDecimal(entry.getValue());
+//                    total = total.add(desc.negate());
+//                }
+//                BigDecimal porcentajeIva = new BigDecimal(0);
+//                porcentajeIva = porcentajeIva.add(iva.divide(new BigDecimal(100)));
+//                totalIva = totalIva.add(total.multiply(porcentajeIva.add(new BigDecimal(1))));
+//                subTotal.setSubTotal(total.setScale(2, BigDecimal.ROUND_HALF_EVEN));
+//                subTotal.setSubTotalIva(totalIva.setScale(2, BigDecimal.ROUND_HALF_EVEN));
             } else {
                 BigDecimal total = new BigDecimal(0);
                 BigDecimal totalIva = new BigDecimal(0);

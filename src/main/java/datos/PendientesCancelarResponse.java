@@ -25,9 +25,10 @@ public class PendientesCancelarResponse implements Payload{
     private String despacho;
     private String observaciones;
     private Integer itemImputada;
+    private BigDecimal importe;
     private ProductoResponse producto;
 
-    public PendientesCancelarResponse(String comprobante, String numero, BigDecimal original, BigDecimal pendiente, BigDecimal precio, BigDecimal dolar, String moneda, BigDecimal porCalc, BigDecimal ivaPorc, Integer deposito, Integer idFactDetalleImputada, Integer idFactCabImputada, BigDecimal descuento, String tipoDescuento, BigDecimal cantBultos, String despacho, String observaciones, Integer itemImputada, ProductoResponse p) {
+    public PendientesCancelarResponse(String comprobante, String numero, BigDecimal original, BigDecimal pendiente, BigDecimal precio, BigDecimal dolar, String moneda, BigDecimal porCalc, BigDecimal ivaPorc, Integer deposito, Integer idFactDetalleImputada, Integer idFactCabImputada, BigDecimal descuento, String tipoDescuento, BigDecimal cantBultos, String despacho, String observaciones, Integer itemImputada,BigDecimal importe, ProductoResponse p) {
         this.comprobante = comprobante;
         this.numero = numero;
         this.original = original;
@@ -47,6 +48,7 @@ public class PendientesCancelarResponse implements Payload{
         this.observaciones = observaciones;
         this.itemImputada = itemImputada;
         this.producto = p;
+        this.importe = importe;
     }
     public PendientesCancelarResponse(ProductoResponse p) {
         this.comprobante = "";

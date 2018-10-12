@@ -55,6 +55,12 @@ public class ProductoResponse implements Payload {
         this.modeloCab = new ModeloCabResponse(p.getIdModeloCab());
         this.marca = new MarcaResponse(p.getIdMarca());
     }
+
+    public ProductoResponse(Integer idProductos, String descripcion, String codProducto) {
+        this.idProductos = idProductos;
+        this.descripcion = descripcion;
+        this.codProducto = codProducto;
+    }
     
     public Integer getIdProductos() {
         return idProductos;

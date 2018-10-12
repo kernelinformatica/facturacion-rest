@@ -183,7 +183,8 @@ public class BuscaComprobanteRest {
                         rsd.getString("moneda"),
                         rsd.getBigDecimal("porCalc"),
                         rsd.getBigDecimal("ivaPorc"),
-                        rsd.getInt("deposito"));
+                        rsd.getInt("deposito"),
+                        rsd.getBigDecimal("importe"));
                 factDetResponses.add(factDet);
             }
             

@@ -6,6 +6,8 @@ import datos.Payload;
 import datos.ProductoResponse;
 import datos.ServicioResponse;
 import entidades.Acceso;
+import entidades.ListaPrecio;
+import entidades.ListaPrecioDet;
 import entidades.Marca;
 import entidades.ModeloCab;
 import entidades.Producto;
@@ -30,10 +32,12 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
+import persistencia.ListaPrecioFacade;
 import persistencia.MarcaFacade;
 import persistencia.ModeloCabFacade;
 import persistencia.ProductoFacade;
@@ -58,12 +62,15 @@ public class ProductoRest {
     @Inject SisIVAFacade sisIVAFacade;
     @Inject ModeloCabFacade modeloCabFacade;
     @Inject MarcaFacade marcaFacade;
+    @Inject ListaPrecioFacade listaPrecioFacade;
     
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response getProductos(  
-        @HeaderParam ("token") String token,  
+        @HeaderParam ("token") String token,
+        @QueryParam ("tipo") String tipo,
+        @QueryParam ("listaPrecio") Integer idListaPrecio,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {
@@ -105,16 +112,39 @@ public class ProductoRest {
                 respuesta.setControl(AppCodigo.ERROR, "No hay Productos disponibles");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            
-            //busco los SubRubros de la empresa del usuario
             List<Payload> productosResponse = new ArrayList<>();
-            for(Producto s : productos) {
-                ProductoResponse sr = new ProductoResponse(s);
-                sr.getModeloCab().agregarModeloDetalle(s.getIdModeloCab().getModeloDetalleCollection());
-//                if(!s.getLoteCollection().isEmpty()) {
-//                    sr.setEditar(false);
-//                }
-                productosResponse.add(sr);
+            if(tipo != null && tipo.equals("reducida") && idListaPrecio == null) {
+                for(Producto s : productos) {
+                    ProductoResponse sr = new ProductoResponse(s.getIdProductos(),s.getDescripcion(),s.getCodProducto());
+                    productosResponse.add(sr);
+                }
+            } else if(tipo != null && tipo.equals("reducida") && idListaPrecio != null) {
+                //Busco la lista de precio
+                ListaPrecio lista = listaPrecioFacade.find(idListaPrecio);
+                //Pregunto si existe
+                if(lista == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "No existe la lista de precios");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                //PRegunto si tiene detalles
+                if(lista.getListaPrecioDetCollection().isEmpty()) {
+                    respuesta.setControl(AppCodigo.ERROR, "No hay productos disponibles para la lista de precios seleccionada");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                //Armo la respuesta
+                for(ListaPrecioDet d : lista.getListaPrecioDetCollection()) {
+                    ProductoResponse sr = new ProductoResponse(d.getIdProductos().getIdProductos(),d.getIdProductos().getDescripcion(),d.getIdProductos().getCodProducto());
+                    productosResponse.add(sr);
+                }               
+            } else {
+                for(Producto s : productos) {
+                    ProductoResponse sr = new ProductoResponse(s);
+                    sr.getModeloCab().agregarModeloDetalle(s.getIdModeloCab().getModeloDetalleCollection());
+    //                if(!s.getLoteCollection().isEmpty()) {
+    //                    sr.setEditar(false);
+    //                }
+                    productosResponse.add(sr);
+                }
             }
             respuesta.setArraydatos(productosResponse);
             respuesta.setControl(AppCodigo.OK, "Lista de Productos");

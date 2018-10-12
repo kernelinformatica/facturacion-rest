@@ -6,6 +6,7 @@ import datos.Payload;
 import datos.ServicioResponse;
 import entidades.Acceso;
 import entidades.Padron;
+import entidades.Parametro;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
@@ -19,11 +20,13 @@ import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
 import persistencia.PadronFacade;
+import persistencia.ParametroFacade;
 import persistencia.UsuarioFacade;
 
 /**
@@ -38,12 +41,14 @@ public class PadronRest {
     @Inject UsuarioFacade usuarioFacade;
     @Inject AccesoFacade accesoFacade;
     @Inject PadronFacade padronFacade;
+    @Inject ParametroFacade parametroFacade;
  
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response getPadron(  
-        @HeaderParam ("token") String token,  
+        @HeaderParam ("token") String token,
+        @QueryParam ("grupo") Integer grupo,    
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {
@@ -76,19 +81,45 @@ public class PadronRest {
                 respuesta.setControl(AppCodigo.ERROR, "Credenciales incorrectas");
                 return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
             }
-            
-            List<Padron> listaPadron = padronFacade.findAll();
-            
-            //valido que tenga campos disponibles
-            if(listaPadron.isEmpty()) {
-                respuesta.setControl(AppCodigo.ERROR, "No hay registros en el Padron");
-                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-            }
-            
             List<Payload> clientes = new ArrayList<>();
-            for(Padron p : listaPadron){
-                PadronResponse fp = new PadronResponse(p);
-                clientes.add(fp);
+            
+            if(grupo == null) {
+                List<Padron> listaPadron = padronFacade.findAll();
+
+                //valido que tenga campos disponibles
+                if(listaPadron.isEmpty()) {
+                    respuesta.setControl(AppCodigo.ERROR, "No hay registros en el Padron");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+
+                for(Padron p : listaPadron){
+                    PadronResponse fp = new PadronResponse(p);
+                    clientes.add(fp);
+                }
+            } else {
+                List<Parametro> listaParametros = parametroFacade.getByGrupoEmpresa(grupo, user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
+                
+                if(listaParametros.isEmpty() || listaParametros == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "No existe el grupo");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                
+                List<Padron> listaPadron = new ArrayList();
+                
+                for(Parametro p : listaParametros) {
+                    listaPadron.addAll(padronFacade.getPadronByCategoria(Integer.parseInt(p.getValor())));
+                }
+                
+                if(listaPadron.isEmpty() ||listaPadron == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Padron no disponible");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                
+                for(Padron p : listaPadron) {
+                    PadronResponse fp = new PadronResponse(p);
+                    clientes.add(fp);
+                }
+
             }
             respuesta.setArraydatos(clientes);
             respuesta.setControl(AppCodigo.OK, "Padron");

@@ -279,9 +279,7 @@ public class GrabaComprobanteRest {
                         String imputacion = (String) Utils.getKeyFromJsonObject("imputacion", j.getAsJsonObject(), "String");
                         Integer idFactCabImputa = (Integer) Utils.getKeyFromJsonObject("idFactCabImputa", j.getAsJsonObject(), "Integer");
                         Integer itemImputada = (Integer) Utils.getKeyFromJsonObject("itemImputada", j.getAsJsonObject(), "Integer");
-                        BigDecimal importe = (BigDecimal) Utils.getKeyFromJsonObject("importe", j.getAsJsonObject(), "BigDecimal");
-//                        List<JsonElement> modelosDetalles = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("modelosDetalles", jsonBody, "ArrayList");
-                        
+                        BigDecimal importe = (BigDecimal) Utils.getKeyFromJsonObject("importe", j.getAsJsonObject(), "BigDecimal");                       
 
                         //Pregunto por los campos que son NOTNULL
                         if(idProducto == null || articulo == null || pendiente == null || precio == null || porCalc == null ||
@@ -291,13 +289,6 @@ public class GrabaComprobanteRest {
                             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                         }
                         
-//                        //Busco el porcentaje de iva que se le aplica al producto
-//                        for(JsonElement pi : modelosDetalles) {
-//                            String operador = (String) Utils.getKeyFromJsonObject("operador", j.getAsJsonObject(), "String");
-//                            BigDecimal valor = (BigDecimal) Utils.getKeyFromJsonObject("valor", j.getAsJsonObject(), "BigDecimal");
-//                            Integer idSistipoModelo = (Integer) Utils.getKeyFromJsonObject("idSistipoModelo", j.getAsJsonObject(), "Integer");
-//                            Integer idSisModulo = (Integer) Utils.getKeyFromJsonObject("idSisModulo", j.getAsJsonObject(), "Integer");
-//                        }
 
                         //Busco el deposito por id, si no encuentro alguno desarmo la transaccion.
                         Deposito deposito = depositoFacade.find(idDeposito);
@@ -362,7 +353,11 @@ public class GrabaComprobanteRest {
                         //Pregunto si se graba produmo y empiezo con la transaccion
                         if(produmo && cteTipo.getIdSisComprobante().getStock().equals(1)) {
                             Produmo prod = new Produmo();
-                            prod.setCantidad(pendiente);
+                            if(cteTipo.getSurenu().equals('H')) {
+                                prod.setCantidad(pendiente.multiply(BigDecimal.ONE.negate()));
+                            } else {
+                                prod.setCantidad(pendiente);
+                            }   
                             prod.setDetalle(articulo);
                             prod.setIdCteTipo(cteTipo);
                             prod.setIdDepositos(deposito);
@@ -374,7 +369,7 @@ public class GrabaComprobanteRest {
                             prod.setStock(cteTipo.getIdSisComprobante().getStock());
                             //prod.setIdLotes(item);
                             listaProdumo.add(prod);
-                        }
+                        }                        
                         //Le sumo uno al contador de items
                         item++;
                     }

@@ -8,6 +8,8 @@ import datos.ServicioResponse;
 import entidades.Acceso;
 import entidades.CteTipo;
 import entidades.SisComprobante;
+import entidades.SisOperacionComprobante;
+import entidades.SisTipoOperacion;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
@@ -33,6 +35,7 @@ import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
 import persistencia.CteTipoFacade;
 import persistencia.SisComprobanteFacade;
+import persistencia.SisTipoOperacionFacade;
 import persistencia.UsuarioFacade;
 import utils.Utils;
 
@@ -48,6 +51,7 @@ public class CteTipoRest {
     @Inject AccesoFacade accesoFacade;
     @Inject CteTipoFacade cteTipoFacade;
     @Inject SisComprobanteFacade sisComprobanteFacade;
+    @Inject SisTipoOperacionFacade sisTipoOperacionFacade;
     @Inject Utils utils;
     
     @GET
@@ -58,6 +62,7 @@ public class CteTipoRest {
         @QueryParam("sisModulo") Integer sisModulo,
         @QueryParam("sisComprobante") Integer sisComprobante,
         @QueryParam("idCteTipo") Integer idCteTipo,
+        @QueryParam("sisTipoOperacion") Integer sisTipoOperacion,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {
@@ -93,13 +98,13 @@ public class CteTipoRest {
             //Armo la respuesta de cteTipos
             List<Payload> cteTipos = new ArrayList<>();
             //devuelvo todos los cteTipo
-            if(sisModulo == null && sisComprobante == null && idCteTipo == null) {
+            if(sisModulo == null && sisComprobante == null && idCteTipo == null && sisTipoOperacion == null) {
                 for(CteTipo p : user.getIdPerfil().getIdSucursal().getIdEmpresa().getCteTipoCollection()){
                     CteTipoResponse pr = new CteTipoResponse(p);
                     cteTipos.add(pr);
                 }
             //Devuelvo cteTipo por modulo
-            } else if(sisModulo != null && sisComprobante == null && idCteTipo == null ) {
+            } else if(sisModulo != null && sisComprobante == null && idCteTipo == null && sisTipoOperacion == null) {
                 List<CteTipo> cteTipoList = new ArrayList<>();
                 if(sisModulo == 3) {
                     cteTipoList = cteTipoFacade.findAll();
@@ -119,7 +124,7 @@ public class CteTipoRest {
                     cteTipos.add(pr);
                 }                
             //Devuelvo cteTipo por comprobante
-            } else if(sisModulo == null && sisComprobante != null && idCteTipo == null) {
+            } else if(sisModulo == null && sisComprobante != null && idCteTipo == null && sisTipoOperacion == null) {
                 SisComprobante sisComprobanteEncontrado = sisComprobanteFacade.find(sisComprobante);            
                 if(sisComprobanteEncontrado == null) {
                     respuesta.setControl(AppCodigo.ERROR, "Error, no existe el sis comprobante");
@@ -130,12 +135,15 @@ public class CteTipoRest {
                     respuesta.setControl(AppCodigo.ERROR, "Error, no hay cte tipo disponibles para ese sis comprobante");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
+                //Ordeno la lista
+                Collections.sort(cteTipo, (o1, o2) -> o1.getIdSisComprobante().getOrden().compareTo(o2.getIdSisComprobante().getOrden()));
+                //Armo la respuesta
                 for(CteTipo c : cteTipo) {
                     CteTipoResponse cteTipoResponse = new CteTipoResponse(c);
                     cteTipos.add(cteTipoResponse);
                 }
             //Devuelvo los numeradores de ese cteTipo   
-            } else if(sisModulo == null && sisComprobante != null && idCteTipo != null) {
+            } else if(sisModulo == null && sisComprobante != null && idCteTipo != null && sisTipoOperacion == null) {
                 CteTipo cteTipo = cteTipoFacade.find(idCteTipo);
                 if(cteTipo == null) {
                     respuesta.setControl(AppCodigo.ERROR, "Error, no existe ese tipo de comprobamte");
@@ -150,7 +158,7 @@ public class CteTipoRest {
                 cteTipoResponse.agregarNumeradores(cteTipo.getCteNumeradorCollection());
                 cteTipos.add(cteTipoResponse); 
             //Devuelvo el comprobante anterior para los relacionados
-            } else if(sisModulo != null && sisComprobante == null && idCteTipo != null) {
+            } else if(sisModulo != null && sisComprobante == null && idCteTipo != null && sisTipoOperacion == null) {
                 CteTipo cteTipo = cteTipoFacade.find(idCteTipo);                
                 if(cteTipo == null) {
                     respuesta.setControl(AppCodigo.ERROR, "Error, no existe ese tipo de comprobamte");
@@ -161,11 +169,48 @@ public class CteTipoRest {
                     respuesta.setControl(AppCodigo.ERROR, "Error, no hay comprobantes anteriores");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
+                //Ordeno la lista
+                Collections.sort(cteTipoAnteriores, (o1, o2) -> o1.getIdSisComprobante().getOrden().compareTo(o2.getIdSisComprobante().getOrden()));
+                //Armo la respuesta
                 for(CteTipo c : cteTipoAnteriores) {
                     CteTipoResponse cteTip = new CteTipoResponse(c);
                     cteTipos.add(cteTip);
                 }
                 
+            } else if(sisModulo == null && sisComprobante == null && idCteTipo == null && sisTipoOperacion != null) {
+                SisTipoOperacion tipoOperacion = sisTipoOperacionFacade.find(sisTipoOperacion);
+                
+                if(tipoOperacion == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no existe el tipo de operacion");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                
+                if(tipoOperacion.getSisOperacionComprobanteCollection().isEmpty()) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no hay tipos de comprobantes para el tipo de operacion seleccionado");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                List<CteTipo> listaTipos = new ArrayList<>();
+                
+                for(SisOperacionComprobante p : tipoOperacion.getSisOperacionComprobanteCollection()) {
+                    if(p.getIdSisComprobantes().getCteTipoCollection().isEmpty()) {
+                        continue;
+                    } else {
+                        for(CteTipo c : p.getIdSisComprobantes().getCteTipoCollection()) {
+                            if(!listaTipos.isEmpty() && listaTipos.contains(c)) {
+                                continue;
+                            } else {
+                                listaTipos.add(c);
+                            }
+                        }                        
+                    }                   
+                }
+                //Ordeno la lista
+                Collections.sort(listaTipos, (o1, o2) -> o1.getIdSisComprobante().getOrden().compareTo(o2.getIdSisComprobante().getOrden()));
+                //Armo la respuesta
+                for(CteTipo c : listaTipos) {
+                    CteTipoResponse ctr = new CteTipoResponse(c);
+                    cteTipos.add(ctr);
+                }               
             } else {
                 respuesta.setControl(AppCodigo.ERROR, "No hay Tipos de Comprobantes disponibles");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
