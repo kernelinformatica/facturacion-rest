@@ -17,7 +17,7 @@ public class PendientesCancelarResponse implements Payload{
     private BigDecimal porCalc;
     private BigDecimal ivaPorc;
     private Integer deposito;
-    private Integer idFactDetalleImputada;
+    private Integer idFactDetalleImputa;
     private Integer idFactCabImputada;
     private BigDecimal descuento;
     private String tipoDescuento;
@@ -28,7 +28,7 @@ public class PendientesCancelarResponse implements Payload{
     private BigDecimal importe;
     private ProductoResponse producto;
 
-    public PendientesCancelarResponse(String comprobante, String numero, BigDecimal original, BigDecimal pendiente, BigDecimal precio, BigDecimal dolar, String moneda, BigDecimal porCalc, BigDecimal ivaPorc, Integer deposito, Integer idFactDetalleImputada, Integer idFactCabImputada, BigDecimal descuento, String tipoDescuento, BigDecimal cantBultos, String despacho, String observaciones, Integer itemImputada,BigDecimal importe, ProductoResponse p) {
+    public PendientesCancelarResponse(String comprobante, String numero, BigDecimal original, BigDecimal pendiente, BigDecimal precio, BigDecimal dolar, String moneda, BigDecimal porCalc, BigDecimal ivaPorc, Integer deposito, Integer idFactDetalleImputa, Integer idFactCabImputada, BigDecimal descuento, String tipoDescuento, BigDecimal cantBultos, String despacho, String observaciones, Integer itemImputada,BigDecimal importe, ProductoResponse p) {
         this.comprobante = comprobante;
         this.numero = numero;
         this.original = original;
@@ -39,7 +39,7 @@ public class PendientesCancelarResponse implements Payload{
         this.porCalc = porCalc;
         this.ivaPorc = ivaPorc;
         this.deposito = deposito;
-        this.idFactDetalleImputada = idFactDetalleImputada;
+        this.idFactDetalleImputa = idFactDetalleImputa;
         this.idFactCabImputada = idFactCabImputada;
         this.descuento = descuento;
         this.tipoDescuento = tipoDescuento;
@@ -61,7 +61,7 @@ public class PendientesCancelarResponse implements Payload{
         this.porCalc = new BigDecimal(0);
         this.ivaPorc = p.getIVA().getPorcIVA();
         this.deposito = 0;
-        this.idFactDetalleImputada = null;
+        this.idFactDetalleImputa = null;
         this.idFactCabImputada = null;
         this.descuento = new BigDecimal(0);
         this.tipoDescuento = "%";
@@ -162,12 +162,12 @@ public class PendientesCancelarResponse implements Payload{
         this.porCalc = porCalc;
     }
 
-    public Integer getIdFactDetalleImputada() {
-        return idFactDetalleImputada;
+    public Integer getIdFactDetalleImputa() {
+        return idFactDetalleImputa;
     }
 
-    public void setIdFactDetalleImputada(Integer idFactDetalleImputada) {
-        this.idFactDetalleImputada = idFactDetalleImputada;
+    public void setIdFactDetalleImputa(Integer idFactDetalleImputa) {
+        this.idFactDetalleImputa = idFactDetalleImputa;
     }
 
     public Integer getIdFactCabImputada() {

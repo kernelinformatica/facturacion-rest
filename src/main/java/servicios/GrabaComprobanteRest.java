@@ -277,8 +277,7 @@ public class GrabaComprobanteRest {
                         Integer idDeposito = (Integer) Utils.getKeyFromJsonObject("idDeposito", j.getAsJsonObject(), "Integer");
                         String observacionDetalle = (String) Utils.getKeyFromJsonObject("observacionDetalle", j.getAsJsonObject(), "String");
                         String imputacion = (String) Utils.getKeyFromJsonObject("imputacion", j.getAsJsonObject(), "String");
-                        Integer idFactCabImputa = (Integer) Utils.getKeyFromJsonObject("idFactCabImputa", j.getAsJsonObject(), "Integer");
-                        Integer itemImputada = (Integer) Utils.getKeyFromJsonObject("itemImputada", j.getAsJsonObject(), "Integer");
+                        Integer idFactDetalleImputa = (Integer) Utils.getKeyFromJsonObject("idFactDetalleImputa", j.getAsJsonObject(), "Integer");
                         BigDecimal importe = (BigDecimal) Utils.getKeyFromJsonObject("importe", j.getAsJsonObject(), "BigDecimal");                       
 
                         //Pregunto por los campos que son NOTNULL
@@ -331,27 +330,24 @@ public class GrabaComprobanteRest {
                         listaDetalles.add(factDetalle);
                         
                         //Empiezo la transaccion para la grabacion de FactImputa
-                        if(factImputa && idFactCabImputa != null) {  
-                            FactCab imputa = factCabFacade.find(idFactCabImputa);
+                        if(factImputa && idFactDetalleImputa != null) {  
+                            FactDetalle imputa = factDetalleFacade.find(idFactDetalleImputa);
                             if(imputa == null) {
-                                respuesta.setControl(AppCodigo.ERROR, "Error al cargar Imputacion, la factura con id " + idFactCabImputa + " no existe");
+                                respuesta.setControl(AppCodigo.ERROR, "Error al cargar Imputacion, la factura con id " + idFactDetalleImputa + " no existe");
                                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                             }
                             FactImputa facturaImputa = new FactImputa();
                             facturaImputa.setCantidadImputada(pendiente);
-                            facturaImputa.setIdFactCab(imputa.getIdFactCab());
-                            facturaImputa.setIdFactCabImputa(factCab);
-                            facturaImputa.setIdProducto(idProducto);
+                            facturaImputa.setIdFactDetalle(imputa);
+                            facturaImputa.setIdFactDetalleImputa(factDetalle);
                             facturaImputa.setImporteImputado(pendiente.multiply(porCalc).multiply(precio));
-                            facturaImputa.setItem(item);
-                            facturaImputa.setItemImputada(itemImputada);
                             facturaImputa.setMasAsiento(0);
                             facturaImputa.setMasAsientoImputado(0);
                             listaImputa.add(facturaImputa);
                         }
                         
                         //Pregunto si se graba produmo y empiezo con la transaccion
-                        if(produmo && cteTipo.getIdSisComprobante().getStock().equals(1)) {
+                        if(produmo && (cteTipo.getIdSisComprobante().getStock().equals(1) || cteTipo.getIdSisComprobante().getStock().equals(2))) {
                             Produmo prod = new Produmo();
                             if(cteTipo.getSurenu().equals('H')) {
                                 prod.setCantidad(pendiente.multiply(BigDecimal.ONE.negate()));
@@ -573,7 +569,7 @@ public class GrabaComprobanteRest {
                     transaccion3 = factImputaFacade.setFactImputaNuevo(i);
                     //si la trnsaccion fallo devuelvo el mensaje
                     if(!transaccion3) {
-                        respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta la imputacion con el articulo: " + i.getIdProducto());
+                        respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta la imputacion con el articulo: " + i.getIdFactDetalle().getCodProducto());
                         return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                     }      
                 }
@@ -690,13 +686,18 @@ public class GrabaComprobanteRest {
             if(!factImputa.isEmpty()) {
                 for(FactImputa l : factImputa) {
                     FactImputa factImp = new FactImputa();
-                    factImp.setCantidadImputada(l.getCantidadImputada());
-                    factImp.setIdFactCab(l.getIdFactCabImputa().getIdFactCab());
-                    factImp.setIdFactCabImputa(factCab);
-                    factImp.setIdProducto(l.getIdProducto());
+                    factImp.setCantidadImputada(l.getCantidadImputada());                   
+                    for(FactDetalle d : listaDetalles) {
+                        if(d.getCodProducto().equals(l.getIdFactDetalle().getCodProducto())) {   
+                            //Factura
+                            factImp.setIdFactDetalleImputa(d);
+                        } else {
+                            continue;
+                        }
+                    }
+                    //Remito
+                    factImp.setIdFactDetalle(l.getIdFactDetalle());                   
                     factImp.setImporteImputado(l.getImporteImputado());
-                    factImp.setItem(l.getItem());
-                    factImp.setItemImputada(l.getItemImputada());
                     factImp.setMasAsiento(l.getMasAsiento());
                     factImp.setMasAsientoImputado(l.getMasAsientoImputado());
                     listaImputa.add(factImp);
@@ -705,12 +706,16 @@ public class GrabaComprobanteRest {
                 for(FactDetalle d : factDetalle) {
                     FactImputa facturaImputa = new FactImputa();
                     facturaImputa.setCantidadImputada(d.getCantidad());
-                    facturaImputa.setIdFactCab(d.getIdFactCab().getIdFactCab());
-                    facturaImputa.setIdFactCabImputa(factCab);
-                    facturaImputa.setIdProducto(d.getIdProducto());
+                    for(FactDetalle det : listaDetalles) {
+                        if(d.getCodProducto().equals(det.getCodProducto())) {   
+                            //Factura
+                            facturaImputa.setIdFactDetalleImputa(det);
+                        } else {
+                            continue;
+                        }
+                    }
+                    facturaImputa.setIdFactDetalle(d);
                     facturaImputa.setImporteImputado(d.getCantidad().multiply(d.getPorcCalc()).multiply(d.getPrecio()));
-                    facturaImputa.setItem(d.getItem());
-                    facturaImputa.setItemImputada(d.getItem());
                     facturaImputa.setMasAsiento(0);
                     facturaImputa.setMasAsientoImputado(0);
                     listaImputa.add(facturaImputa);

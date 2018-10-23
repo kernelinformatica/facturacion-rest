@@ -153,48 +153,54 @@ public class BuscaStockRest {
                         //sumo los egresos negativos al stock
                         st = st.add(sr.get(i).getEgresos().negate());
                         //Le seteo el stock fisico
-                        sr.get(i).setStock(st);
+                        sr.get(i).setStockFisico(st);
                         //Seteo el stock virtual
-                        sr.get(i).setVirtual(st.add(sr.get(i).getPendiente()));
+                        sr.get(i).setStockVirtual(st.add(sr.get(i).getPendiente()));
                     }
                     stock.addAll(sr);
                 }
             } else if(tipo != null && tipo.equals("general")){
-                 //seteo el nombre del store
-            String noombreSP = "call s_buscaStockGral(?,?,?,?,?,?,?,?)";
+               //seteo el nombre del store
+               String noombreSP = "call s_buscaStockGral(?,?,?,?,?,?,?,?)";
 
-            //invoco al store
-            CallableStatement callableStatement = this.utils.procedimientoAlmacenado(user, noombreSP);
-            
-            //valido que el Procedimiento Almacenado no sea null
-            if(callableStatement == null) {
-                respuesta.setControl(AppCodigo.ERROR, "Error, no existe el procedimiento");
-                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-            }
-                       
-            //Parseo las fechas a sql.date
-            java.sql.Date sqlFechaHasta = new java.sql.Date(fechaHasta.getTime());
-            //Seteo los parametros del SP
-            callableStatement.setInt(1,user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
-            callableStatement.setDate(2, sqlFechaHasta);
-            callableStatement.setInt(3,idProductoDesde);
-            callableStatement.setInt(4,idProductoHasta);
-            callableStatement.setInt(5, idDeposito);
-            callableStatement.setInt(6, idRubro);
-            callableStatement.setInt(7, idSubRubro);
-            callableStatement.setInt(8, idCteTipo);
-            ResultSet rs = callableStatement.executeQuery();
-                while (rs.next()) {
-                    StockGeneralResponse st = new StockGeneralResponse(
-                            rs.getBigDecimal("ingresos"),
-                            rs.getBigDecimal("egresos"),
-                            rs.getBoolean("trazable"),
-                            rs.getString("rubro"),
-                            rs.getString("subRubro"),
-                            rs.getString("codProducto"),
-                            rs.getString("descripcion"));
-                    stock.add(st);
+               //invoco al store
+               CallableStatement callableStatement = this.utils.procedimientoAlmacenado(user, noombreSP);
+
+               //valido que el Procedimiento Almacenado no sea null
+               if(callableStatement == null) {
+                   respuesta.setControl(AppCodigo.ERROR, "Error, no existe el procedimiento");
+                   return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
+
+               //Parseo las fechas a sql.date
+               java.sql.Date sqlFechaHasta = new java.sql.Date(fechaHasta.getTime());
+               //Seteo los parametros del SP
+               callableStatement.setInt(1,user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
+               callableStatement.setDate(2, sqlFechaHasta);
+               callableStatement.setInt(3,idProductoDesde);
+               callableStatement.setInt(4,idProductoHasta);
+               callableStatement.setInt(5, idRubro);
+               callableStatement.setInt(6, idSubRubro);
+               callableStatement.setInt(7, idDeposito);
+               callableStatement.setInt(8, tipoEstado);
+               ResultSet rs = callableStatement.executeQuery();
+                   while (rs.next()) {
+                       StockGeneralResponse st = new StockGeneralResponse(
+                               rs.getString("codProducto"),
+                               rs.getString("descripcion"),
+                               rs.getBigDecimal("ingresos"),
+                               rs.getBigDecimal("egresos"),                              
+                               rs.getBigDecimal("fisicoImputado"),
+                               rs.getBigDecimal("ingresos").subtract(rs.getBigDecimal("egresos")),
+                               rs.getBigDecimal("ingresoVirtual"),
+                               rs.getBigDecimal("egresoVirtual"),
+                               rs.getBigDecimal("virtualImputado"),
+                               (rs.getBigDecimal("ingresoVirtual").subtract(rs.getBigDecimal("egresoVirtual"))).subtract(rs.getBigDecimal("virtualImputado")),                               
+                               rs.getBoolean("trazable"),
+                               rs.getString("rubro"),
+                               rs.getString("subRubro"));
+                       stock.add(st);
+                   }
             } else {
                 respuesta.setControl(AppCodigo.ERROR, "Error, no existe el servicio");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();

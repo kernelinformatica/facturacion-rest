@@ -14,7 +14,12 @@ public class MarcaResponse implements Payload {
         this.idMarcas = m.getIdMarcas();
         this.descripcion = m.getDescripcion();
     }
-       
+
+    public MarcaResponse(Integer idMarcas, String descripcion) {
+        this.idMarcas = idMarcas;
+        this.descripcion = descripcion;
+    }
+    
     public Integer getIdMarcas() {
         return idMarcas;
     }

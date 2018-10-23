@@ -44,6 +44,7 @@ public class ModeloDetalleResponse implements Payload {
         this.totalModelo = total;
         this.valor = porcentaje;
         this.sisModulo = new SisModuloResponse(s.getIdSisModulo());
+        this.tipoModelo = new SisTipoModeloResponse(s.getIdSisTipoModelo());
     }
     
 //    public ModeloDetalleResponse(ModeloDetalle s, ContPlanCuentaResponse planCuenta) {

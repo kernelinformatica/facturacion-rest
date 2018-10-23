@@ -19,8 +19,8 @@ public class StockResponse implements Payload {
     private String rubro;
     private String subRubro;
     private Integer idFactCab;
-    private BigDecimal stock;
-    private BigDecimal virtual;
+    private BigDecimal stockFisico;
+    private BigDecimal stockVirtual;
 
 
     public StockResponse(String comprobante, BigDecimal numero, Date fechaEmision, BigDecimal ingresos, BigDecimal egresos, BigDecimal pendiente, String deposito, Boolean trazable, String rubro, String subRubro, Integer idFactCab) {
@@ -125,24 +125,24 @@ public class StockResponse implements Payload {
         this.idFactCab = idFactCab;
     }
 
-    public BigDecimal getStock() {
-        return stock;
+    public BigDecimal getStockFisico() {
+        return stockFisico;
     }
 
-    public void setStock(BigDecimal stock) {
-        this.stock = stock;
+    public void setStockFisico(BigDecimal stockFisico) {
+        this.stockFisico = stockFisico;
     }
 
-    public BigDecimal getVirtual() {
-        return virtual;
+    public BigDecimal getStockVirtual() {
+        return stockVirtual;
     }
 
-    public void setVirtual(BigDecimal virtual) {
-        this.virtual = virtual;
+    public void setStockVirtual(BigDecimal stockVirtual) {
+        this.stockVirtual = stockVirtual;
     }
+
+
     
-    
-   
     @Override
     public String getClassName() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.

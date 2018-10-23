@@ -9,10 +9,12 @@ import entidades.SisTipoModelo;
 public class SisTipoModeloResponse implements Payload{
     private int idTipoModelo;
     private String descripcion;
+    private Integer orden;
 
     public SisTipoModeloResponse(SisTipoModelo s) {
         this.idTipoModelo = s.getIdSisTipoModelo();
         this.descripcion = s.getTipo();
+        this.orden = s.getOrden();
     }
     
     public int getIdTipoModelo() {
@@ -30,6 +32,16 @@ public class SisTipoModeloResponse implements Payload{
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
     }
+
+    public Integer getOrden() {
+        return orden;
+    }
+
+    public void setOrden(Integer orden) {
+        this.orden = orden;
+    }
+
+
 
     @Override
     public String getClassName() {

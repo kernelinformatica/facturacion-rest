@@ -16,6 +16,7 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -146,7 +147,7 @@ public class BuscaModeloRest {
                     precio = subTotal;
                     cantidad = 1;
                 }
-                
+                                              
                 //Agrego a la lista de modelos response y calculo dependiendo operadores y tipo de modelo
                 // % porcentual
                 // + sumar
@@ -185,7 +186,7 @@ public class BuscaModeloRest {
                                 default:
                                     break;
                             }
-                        } else if (p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(2).getTipo())) {                            
+                        } else if(!p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(3).getTipo()) && !p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(1).getTipo())) {                            
                             total = total.add(precio.multiply(new BigDecimal(cantidad)));
                             if(p.getValor().compareTo(BigDecimal.ZERO) == 0) {
                                 porcentaje = porcentaje.add(producto.getIdIVA().getPorcIVA().divide(new BigDecimal(100)));
@@ -194,7 +195,7 @@ public class BuscaModeloRest {
                                 porcentaje = porcentaje.add(p.getValor().divide(cien));
                                 total = total.multiply(porcentaje);
                             }
-                        } else if (p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(3).getTipo())) {
+                        } else if(p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(3).getTipo())) {
                             total = total.add(precio.multiply(new BigDecimal(cantidad)));
                             porcentaje = p.getValor();
                             switch (p.getOperador()) {                                   
@@ -224,13 +225,17 @@ public class BuscaModeloRest {
                         modelos.add(modeloResponse);
                     }
                 }
-            }           
+            }   
+            
+            //Instancio las nuevas listas
             List<FacturaResponse> listaFacturas = new ArrayList<>();
+            List<FacturaResponse> listaFacturasLast = new ArrayList<>();
             List<Payload> lista = new ArrayList<>();
             Map<String, List<FacturaResponse>> map = new HashMap<>();
+            
             //Armo la lista de facturas response a partir de la lista de modelos obtenidas para todos los productos
             for(ModeloDetalleResponse mdr : modelos) {
-                FacturaResponse fr = new FacturaResponse(mdr.getCtaContable(), mdr.getDescripcion(), mdr.getTotalModelo(), mdr.getValor());
+                FacturaResponse fr = new FacturaResponse(mdr.getCtaContable(), mdr.getDescripcion(), mdr.getTotalModelo(), mdr.getValor(), mdr.getTipoModelo().getOrden());
                 listaFacturas.add(fr);
             }
             //Separo por cuenta contable la lista de facturas y los seteo en el Map
@@ -251,6 +256,7 @@ public class BuscaModeloRest {
                 BigDecimal porcentaje = BigDecimal.ZERO;
                 String descripcion = "";
                 String cuentaContable = "";
+                Integer orden = 0;
                 //Recorro la lista dentro del Map
                 for(FacturaResponse fr : entry.getValue()) {
                     //Sumo los totales de acuerdo a la cuenta contable.
@@ -258,12 +264,18 @@ public class BuscaModeloRest {
                     descripcion = fr.getDescripcion();
                     cuentaContable = fr.getCuentaContable();
                     porcentaje = fr.getPorcentaje();
+                    orden = fr.getOrden();
                 }
                 //Armo la respuesta final
-                FacturaResponse fr = new FacturaResponse(cuentaContable,descripcion,total,porcentaje);
-                lista.add(fr);
+                FacturaResponse fr = new FacturaResponse(cuentaContable,descripcion,total,porcentaje,orden);
+                listaFacturasLast.add(fr);
             }
-            //System.out.println(map);
+            //Ordeno la lista de los detalles por numero de orden de la tabla sisTipoModelo            
+            Collections.sort(listaFacturasLast, (o1, o2) -> o1.getOrden().compareTo(o2.getOrden()));
+            //Agrego la lista ordenada a la respuesta
+            for(FacturaResponse f : listaFacturasLast) {
+                lista.add(f);
+            }            
             respuesta.setArraydatos(lista);
             respuesta.setControl(AppCodigo.OK, "Lista de Modelos");
             return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();

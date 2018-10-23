@@ -22,7 +22,6 @@ public class CteFechaResponse implements Payload{
         this.cteTipo = new CteTipoResponse(c.getIdCteTipo());
     }
     
-    
 
     public Integer getIdCteFechas() {
         return idCteFechas;

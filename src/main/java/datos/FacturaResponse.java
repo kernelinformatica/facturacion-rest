@@ -11,6 +11,7 @@ public class FacturaResponse implements Payload{
     private String descripcion;  
     private BigDecimal importeTotal;
     private BigDecimal porcentaje;
+    private Integer orden;
 
 //    public FacturaResponse(String cuentaContable, String descripcion, String tipoModelo, BigDecimal importeTotal, BigDecimal porcentaje) {
 //        this.cuentaContable = cuentaContable;
@@ -18,11 +19,12 @@ public class FacturaResponse implements Payload{
 //        this.importeTotal = importeTotal;        
 //    }
     
-    public FacturaResponse(String cuentaContable, String descripcion, BigDecimal importeTotal, BigDecimal porcentaje) {
+    public FacturaResponse(String cuentaContable, String descripcion, BigDecimal importeTotal, BigDecimal porcentaje, Integer orden) {
         this.cuentaContable = cuentaContable;
         this.descripcion = descripcion;
         this.importeTotal = importeTotal;
         this.porcentaje = porcentaje;
+        this.orden = orden;
     }
 
     public String getCuentaContable() {
@@ -48,8 +50,6 @@ public class FacturaResponse implements Payload{
     public void setPorcentaje(BigDecimal porcentaje) {
         this.porcentaje = porcentaje;
     }
-
-    
     
     public BigDecimal getImporteTotal() {
         return importeTotal;
@@ -58,7 +58,15 @@ public class FacturaResponse implements Payload{
     public void setImporteTotal(BigDecimal importeTotal) {
         this.importeTotal = importeTotal;
     }
-    
+
+    public Integer getOrden() {
+        return orden;
+    }
+
+    public void setOrden(Integer orden) {
+        this.orden = orden;
+    }
+
     @Override
     public String getClassName() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.

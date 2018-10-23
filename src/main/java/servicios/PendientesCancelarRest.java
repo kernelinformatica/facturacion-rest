@@ -156,14 +156,14 @@ public class PendientesCancelarRest {
                             rs.getBigDecimal("porCalc"),
                             rs.getBigDecimal("ivaPorc"),
                             rs.getInt("deposito"),
-                            rs.getInt("idFactDetalleImputada"),
-                            rs.getInt("idFactCabImputada"),
+                            rs.getInt("idFactDetalleImputa"),
+                            rs.getInt("idFactCabImputa"),
                             rs.getBigDecimal("descuento"),
                             rs.getString("tipoDescuento"),
                             rs.getBigDecimal("cantBultos"),
                             rs.getString("despacho"),
                             rs.getString("observaciones"),
-                            rs.getInt("itemImputada"),
+                            rs.getInt("itemImputa"),
                             rs.getBigDecimal("importe"),
                             producto);
                     pendientes.add(pendientesCancelar);
