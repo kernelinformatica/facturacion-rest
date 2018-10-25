@@ -119,7 +119,6 @@ public class CteTipoResponse implements Payload {
     public void agregarNumeradores(Collection<CteNumerador> cteNumeradorCollection) {
         for(CteNumerador c : cteNumeradorCollection) {
             CteNumeradorResponse cte = new CteNumeradorResponse(c);
-            cte.agregarNumero(c.getCteNumeroCollection());
             this.numerador.add(cte);
         }
     }

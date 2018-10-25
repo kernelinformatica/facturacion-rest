@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.3.0.final using JasperReports Library version 6.3.0  -->
-<!-- 2018-10-19T14:26:15 -->
+<!-- 2018-10-23T14:26:17 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="listado" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" isFloatColumnFooter="true" whenResourceMissingType="Empty" uuid="4806e2f6-ab00-41d0-b74f-73434a7c5917">
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
@@ -38,14 +38,6 @@
 	<field name="modulo" class="java.lang.String"/>
 	<detail>
 		<band height="62" splitType="Stretch">
-			<textField>
-				<reportElement x="10" y="30" width="100" height="30" uuid="71824388-8046-420a-8522-0423e7ab94e9"/>
-				<textFieldExpression><![CDATA[$F{idFactCab}]]></textFieldExpression>
-			</textField>
-			<staticText>
-				<reportElement x="10" y="0" width="100" height="30" uuid="9a9c5c74-3fb2-4632-8f5f-d27e3de41159"/>
-				<text><![CDATA[idFactCab]]></text>
-			</staticText>
 			<textField>
 				<reportElement x="110" y="32" width="100" height="30" uuid="68295796-52c0-441f-af6c-faf0e48ccc91"/>
 				<textFieldExpression><![CDATA[$F{comprobante}]]></textFieldExpression>

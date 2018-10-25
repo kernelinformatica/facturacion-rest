@@ -143,18 +143,28 @@ public class CteTipoRest {
                     cteTipos.add(cteTipoResponse);
                 }
             //Devuelvo los numeradores de ese cteTipo   
-            } else if(sisModulo == null && sisComprobante != null && idCteTipo != null && sisTipoOperacion == null) {
+            } else if(sisModulo == null && sisComprobante == null && idCteTipo != null && sisTipoOperacion == null) {
                 CteTipo cteTipo = cteTipoFacade.find(idCteTipo);
+                
+                
                 if(cteTipo == null) {
                     respuesta.setControl(AppCodigo.ERROR, "Error, no existe ese tipo de comprobamte");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
-                CteTipoResponse cteTipoResponse = new CteTipoResponse(cteTipo);
-                if(cteTipo.getCteNumeradorCollection().isEmpty()) {
-                    respuesta.setControl(AppCodigo.ERROR, "Error, no existen numeradores para ese tipo de comprobante");
-                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+
+                if(cteTipo.getIdSisComprobante().getPropio() == 0) {
+                    respuesta.setControl(AppCodigo.AVISO, "No existen numeradores para ese tipo de comprobante, debera cargarlo a mano");
+                    return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();
                 }
-                //Agrego los numeradores a la coleccion en cteTipoResponse y le sumo uno al punto de venta
+                
+                if(cteTipo.getCteNumeradorCollection().isEmpty()) {
+                    respuesta.setControl(AppCodigo.AVISO, "No hay numeradores cargados para ese tipo de comprobante, comuniquese con el administrador");
+                    return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();
+                }
+                
+                //Armo la respuesta  
+                CteTipoResponse cteTipoResponse = new CteTipoResponse(cteTipo);
+                //Agrego los numeradores a la coleccion en cteTipoResponse y le sumo uno al numero
                 cteTipoResponse.agregarNumeradores(cteTipo.getCteNumeradorCollection());
                 cteTipos.add(cteTipoResponse); 
             //Devuelvo el comprobante anterior para los relacionados
@@ -205,10 +215,13 @@ public class CteTipoRest {
                     }                   
                 }
                 //Ordeno la lista
-                Collections.sort(listaTipos, (o1, o2) -> o1.getIdSisComprobante().getOrden().compareTo(o2.getIdSisComprobante().getOrden()));
+                Collections.sort(listaTipos, (o1, o2) -> o1.getIdSisComprobante().getOrden().compareTo(o2.getIdSisComprobante().getOrden()));               
                 //Armo la respuesta
                 for(CteTipo c : listaTipos) {
                     CteTipoResponse ctr = new CteTipoResponse(c);
+                    if(!c.getCteNumeradorCollection().isEmpty() && c.getIdSisComprobante().getPropio() == 1) {
+                        ctr.agregarNumeradores(c.getCteNumeradorCollection());
+                    }
                     cteTipos.add(ctr);
                 }               
             } else {

@@ -10,5 +10,6 @@ public enum AppCodigo {
     LOGIN_PRIMER_INGRESO,
     GUARDADO,
     BORRADO,
-    CREADO
+    CREADO,
+    AVISO
 }
