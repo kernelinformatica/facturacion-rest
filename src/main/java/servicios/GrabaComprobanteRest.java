@@ -509,6 +509,10 @@ public class GrabaComprobanteRest {
                                 respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el numero de comprobante");
                                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                             }
+                            String ptoVenta = cteNumero.getPtoVenta().toString();
+                            String numeroVentaFormat = String.format("%08d",cteNumero.getNumero());
+                            String concatenado = ptoVenta.concat(numeroVentaFormat);
+                            factCab.setNumero(Integer.parseInt(concatenado));
                         } 
                         return this.persistirObjetos(factCab, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumero);
                     } else if(tipoFact != null || letraFact != null || numeroFact != null || fechaVencimientoFact != null || fechaContaFact != null){                       

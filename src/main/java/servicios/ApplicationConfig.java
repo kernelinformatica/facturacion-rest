@@ -34,6 +34,8 @@ public class ApplicationConfig extends Application {
         resources.add(servicios.BuscaProductosRest.class);
         resources.add(servicios.BuscaStockRest.class);
         resources.add(servicios.CalculoImportesSubtotales.class);
+        resources.add(servicios.CategoriaRest.class);
+        resources.add(servicios.ClienteRest.class);
         resources.add(servicios.ComprobanteGestAgroRest.class);
         resources.add(servicios.ContPlanCuentaRest.class);
         resources.add(servicios.CteTipoRest.class);
@@ -56,6 +58,7 @@ public class ApplicationConfig extends Application {
         resources.add(servicios.ProveedoresRest.class);
         resources.add(servicios.RubroRest.class);
         resources.add(servicios.SisCanjeRest.class);
+        resources.add(servicios.SisCategoriaRest.class);
         resources.add(servicios.SisComprobanteRest.class);
         resources.add(servicios.SisEstadoRest.class);
         resources.add(servicios.SisFormaPagoRest.class);
@@ -70,6 +73,7 @@ public class ApplicationConfig extends Application {
         resources.add(servicios.SucursalRest.class);
         resources.add(servicios.UltimoCodigoProdRest.class);
         resources.add(servicios.UsuarioRest.class);
+        resources.add(servicios.VendedorRest.class);
         resources.add(utils.CrossRules.class);
     }
     

@@ -1,6 +1,7 @@
 package datos;
 
 import entidades.CteNumerador;
+import entidades.CteTipo;
 import java.util.Date;
 
 /**
@@ -12,6 +13,7 @@ public class CteNumeradorResponse implements Payload {
     private String descripcion;
     private Date fechaApertura;
     private Date fechaCierre;
+    private CteTipoResponse cteTipo;
     private CteNumeroResponse numero;
 
     public CteNumeradorResponse(CteNumerador c) {
@@ -19,6 +21,7 @@ public class CteNumeradorResponse implements Payload {
         this.descripcion = c.getDescripcion();
         this.fechaApertura = c.getFechaApertura();
         this.fechaCierre = c.getFechaCierre();
+        this.cteTipo = new CteTipoResponse(c.getIdCteTipo());
         this.numero = new CteNumeroResponse(c.getIdCteNumero());
     }
     
@@ -62,6 +65,16 @@ public class CteNumeradorResponse implements Payload {
         this.fechaCierre = fechaCierre;
     }
 
+    public CteTipoResponse getCteTipo() {
+        return cteTipo;
+    }
+
+    public void setCteTipo(CteTipoResponse cteTipo) {
+        this.cteTipo = cteTipo;
+    }
+    
+    
+    
     @Override
     public String getClassName() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
