@@ -22,8 +22,9 @@ public class FactDetalleResponse implements Payload{
     private BigDecimal ivaPorc;
     private int deposito;
     private BigDecimal importe;
+    private int factCab;
 
-    public FactDetalleResponse(String comprobante, long numero, Date fechaEmision, String codProducto, String articulo, BigDecimal original, BigDecimal pendiente, BigDecimal precio, BigDecimal dolar, String moneda, BigDecimal porCalc, BigDecimal ivaPorc, int deposito, BigDecimal importe) {
+    public FactDetalleResponse(String comprobante, long numero, Date fechaEmision, String codProducto, String articulo, BigDecimal original, BigDecimal pendiente, BigDecimal precio, BigDecimal dolar, String moneda, BigDecimal porCalc, BigDecimal ivaPorc, int deposito, BigDecimal importe, int idFactCab) {
         this.comprobante = comprobante;
         this.numero = numero;
         this.fechaEmision = fechaEmision;
@@ -38,6 +39,7 @@ public class FactDetalleResponse implements Payload{
         this.ivaPorc = ivaPorc;
         this.deposito = deposito;
         this.importe = importe;
+        this.factCab = idFactCab;
     }
 
     
@@ -152,6 +154,15 @@ public class FactDetalleResponse implements Payload{
     public void setImporte(BigDecimal importe) {
         this.importe = importe;
     }
+
+    public int getFactCab() {
+        return factCab;
+    }
+
+    public void setFactCab(int factCab) {
+        this.factCab = factCab;
+    }
+    
     
     
 

@@ -1,7 +1,11 @@
 package datos;
 
+import entidades.ProdCultivo;
 import entidades.Producto;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  *
@@ -30,6 +34,7 @@ public class ProductoResponse implements Payload {
     private boolean editar; 
     private ModeloCabResponse modeloCab;
     private MarcaResponse marca;
+    private List<CultivoResponse> cultivos;   
 
     public ProductoResponse(Producto p) {
         this.idProductos = p.getIdProductos();
@@ -54,6 +59,7 @@ public class ProductoResponse implements Payload {
         this.editar = true;
         this.modeloCab = new ModeloCabResponse(p.getIdModeloCab());
         this.marca = new MarcaResponse(p.getIdMarca());
+        this.cultivos = new ArrayList<>();
     }
 
     public ProductoResponse(Integer idProductos, String descripcion, String codProducto) {
@@ -252,6 +258,12 @@ public class ProductoResponse implements Payload {
         this.marca = marca;
     }
     
+    public void agregarCultivos(Collection<ProdCultivo> prodCultivo) {
+        for(ProdCultivo p : prodCultivo) {
+            CultivoResponse cr = new CultivoResponse(p.getIdCultivo());
+            this.cultivos.add(cr);
+        }
+    }
     
     
 }

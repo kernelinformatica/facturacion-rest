@@ -189,11 +189,11 @@ public class BuscaModeloRest {
                         } else if(!p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(3).getTipo()) && !p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(1).getTipo())) {                            
                             total = total.add(precio.multiply(new BigDecimal(cantidad)));
                             if(p.getValor().compareTo(BigDecimal.ZERO) == 0) {
-                                porcentaje = porcentaje.add(producto.getIdIVA().getPorcIVA().divide(new BigDecimal(100)));
-                                total = total.multiply(porcentaje);
+                                porcentaje = porcentaje.add(producto.getIdIVA().getPorcIVA());
+                                total = total.multiply(producto.getIdIVA().getPorcIVA().divide(new BigDecimal(100)));
                             } else {
-                                porcentaje = porcentaje.add(p.getValor().divide(cien));
-                                total = total.multiply(porcentaje);
+                                porcentaje = porcentaje.add(p.getValor());
+                                total = total.multiply(p.getValor().divide(cien));
                             }
                         } else if(p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(3).getTipo())) {
                             total = total.add(precio.multiply(new BigDecimal(cantidad)));

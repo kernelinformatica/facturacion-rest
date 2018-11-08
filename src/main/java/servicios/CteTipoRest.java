@@ -140,6 +140,9 @@ public class CteTipoRest {
                 //Armo la respuesta
                 for(CteTipo c : cteTipo) {
                     CteTipoResponse cteTipoResponse = new CteTipoResponse(c);
+                    if(!c.getCteNumeradorCollection().isEmpty()) {
+                        cteTipoResponse.agregarNumeradores(c.getCteNumeradorCollection());
+                    }
                     cteTipos.add(cteTipoResponse);
                 }
             //Devuelvo los numeradores de ese cteTipo   

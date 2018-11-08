@@ -39,6 +39,7 @@ public class ApplicationConfig extends Application {
         resources.add(servicios.ComprobanteGestAgroRest.class);
         resources.add(servicios.ContPlanCuentaRest.class);
         resources.add(servicios.CteTipoRest.class);
+        resources.add(servicios.CultivoRest.class);
         resources.add(servicios.DepositoRest.class);
         resources.add(servicios.DescargarListadoRest.class);
         resources.add(servicios.DescargarPdfRest.class);

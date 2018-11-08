@@ -19,6 +19,7 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -44,7 +45,8 @@ public class DescargarListadoRest {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response getPDF(  
-        @HeaderParam ("token") String token,  
+        @HeaderParam ("token") String token,
+        @QueryParam("tipo") String tipo,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {
@@ -91,14 +93,24 @@ public class DescargarListadoRest {
                 respuesta.setControl(AppCodigo.ERROR, "Credenciales incorrectas");
                 return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
             }
-           
-            String nombreReporte = "listado";
+            if(tipo == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Tipo de listado vacio");
+                return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
+            }
             
-            if(nombreReporte == null) {
-                respuesta.setControl(AppCodigo.ERROR, "El comprobante nro:  no tiene un reporte asociado");
-                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-            }            
-
+            String nombreReporte = "";
+            
+            if(tipo.equals("cabecera")) {
+                nombreReporte = "listadoCabecera";
+            } else if(tipo.equals("detalle")) {
+                nombreReporte = "listadoDetalles";
+            } else {
+                respuesta.setControl(AppCodigo.ERROR, "Tipo de listado no encontrado");
+                return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
+            }
+            
+            String tituloReporte = "Consulta de Comprobantes";
+                   
             HashMap hm = new HashMap();
             hm.put("empresa",user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
             hm.put("modulo",comprobanteModulo);
@@ -115,6 +127,7 @@ public class DescargarListadoRest {
             hm.put("padCodigo", padCodigo);
             hm.put("deposito", idDeposito);
             hm.put("estado", idEstado);
+            hm.put("titulo", tituloReporte);
             
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             byte[] bytes = utils.generateJasperReportPDF(request, nombreReporte, hm, user, outputStream);

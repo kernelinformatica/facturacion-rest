@@ -23,8 +23,10 @@ import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import javax.ejb.Stateless;
@@ -93,7 +95,8 @@ public class GrabaComprobanteRest {
             // Obtengo el body de la request
             JsonObject jsonBody = Utils.getJsonObjectFromRequest(request);
             
-            // Obtengo los atributos del body
+            //Obtengo los atributos del body
+            //Datos de FactCab
             Integer idCteTipo = (Integer) Utils.getKeyFromJsonObject("idCteTipo", jsonBody, "Integer");
             String letra = (String) Utils.getKeyFromJsonObject("letra", jsonBody, "String");
             BigDecimal numero = (BigDecimal) Utils.getKeyFromJsonObject("numero", jsonBody, "BigDecimal");
@@ -118,6 +121,10 @@ public class GrabaComprobanteRest {
             String observaciones = (String) Utils.getKeyFromJsonObject("observaciones", jsonBody, "String");
             Integer idSisTipoOperacion = (Integer) Utils.getKeyFromJsonObject("idSisTipoOperacion", jsonBody, "Integer");           
             Integer idFactCab = (Integer) Utils.getKeyFromJsonObject("idFactCab", jsonBody, "Integer");
+            Integer idNumero = (Integer) Utils.getKeyFromJsonObject("idNumero", jsonBody, "Integer");
+            Integer idVendedor = (Integer) Utils.getKeyFromJsonObject("idVendedor", jsonBody, "Integer");
+            
+            //Booleanos para ver que se guarda y que no.
             boolean factCabecera = (Boolean) Utils.getKeyFromJsonObject("factCabecera", jsonBody, "boolean");
             boolean factDet = (Boolean) Utils.getKeyFromJsonObject("factDet", jsonBody, "boolean");          
             boolean factImputa = (Boolean) Utils.getKeyFromJsonObject("factImputa", jsonBody, "boolean");
@@ -126,21 +133,22 @@ public class GrabaComprobanteRest {
             boolean factFormaPago = (Boolean) Utils.getKeyFromJsonObject("factFormaPago", jsonBody, "boolean");
             boolean lote = (Boolean) Utils.getKeyFromJsonObject("lote", jsonBody, "boolean");
             boolean grabaFactura = (Boolean) Utils.getKeyFromJsonObject("grabaFactura", jsonBody, "boolean");
+            
+            //Datos de la factura relacionada a un remito
             Integer tipoFact = (Integer) Utils.getKeyFromJsonObject("tipoFact", jsonBody, "Integer");
             String letraFact = (String) Utils.getKeyFromJsonObject("letraFact", jsonBody, "String");
             BigDecimal numeroFact = (BigDecimal) Utils.getKeyFromJsonObject("numeroFact", jsonBody, "BigDecimal");
             Date fechaVencimientoFact = (Date) Utils.getKeyFromJsonObject("fechaVencimientoFact", jsonBody, "Date");
             Date fechaContaFact = (Date) Utils.getKeyFromJsonObject("fechaContaFact", jsonBody, "Date");
-            Integer idModulo = (Integer) Utils.getKeyFromJsonObject("idModulo", jsonBody, "Integer");
+            Integer idNumeroFact = (Integer) Utils.getKeyFromJsonObject("idNumeroFact", jsonBody, "Integer");
+                        
+            //Grillas de articulos, subTotales, elementos trazables y formas de pago
             List<JsonElement> grillaArticulos = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("grillaArticulos", jsonBody, "ArrayList");          
             List<JsonElement> grillaSubTotales = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("grillaSubTotales", jsonBody, "ArrayList");
             List<JsonElement> grillaTrazabilidad = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("grillaTrazabilidad", jsonBody, "ArrayList");
             List<JsonElement> grillaFormaPago = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("grillaFormaPago", jsonBody, "ArrayList");
-            String relComprobante = (String) Utils.getKeyFromJsonObject("relComprobante", jsonBody, "String");
-            Integer relPuntoVenta = (Integer) Utils.getKeyFromJsonObject("relPuntoVenta", jsonBody, "Integer");
-            Integer relNumero = (Integer) Utils.getKeyFromJsonObject("relNumero", jsonBody, "Integer");
-            Integer idNumero = (Integer) Utils.getKeyFromJsonObject("idNumero", jsonBody, "Integer");
-        
+           
+            
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, token vacio");
@@ -172,15 +180,73 @@ public class GrabaComprobanteRest {
             }
 
             //Me fijo que  los campos que tienen el atributo NotNull no sean nulos
-            if(idCteTipo == null || letra == null || numero == null || fechaEmision == null || 
-               fechaVencimiento == null || idPadron == null || 
-               productoCanje == null || precioReferenciaCanje == null || interesCanje == null || 
-               idMoneda == null ||nombre == null || cuit == null || sisSitIva == null || 
-               codigoPostal == null || cotDolar== null || idSisTipoOperacion == null) {
-                respuesta.setControl(AppCodigo.ERROR, "Error, algun campo esta en nulo");
+            if(idCteTipo == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, tipo de comprobante nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            if(letra == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, letra nula");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            if(numero == null ) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, numero nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            if(fechaEmision == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, fecha emision nula");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            if(fechaVencimiento == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, fecha vencimiento nula");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            if(idPadron == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, padron nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            if(productoCanje == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, producto canje nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            if(precioReferenciaCanje == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, precio referencia canje nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            } 
+            if(interesCanje == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, interes canje nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            } 
+            if(idMoneda == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, moneda en nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            if(nombre == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, nombre nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            if(cuit == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, cuit nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            } 
+            if (sisSitIva == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, sisSitIva nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            if(codigoPostal == null){
+                respuesta.setControl(AppCodigo.ERROR, "Error, codigo postal nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            } 
+            if (cotDolar== null){
+                respuesta.setControl(AppCodigo.ERROR, "Error, cot dolar nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            if(idSisTipoOperacion == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, sisTipoOperacion nulo");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
+            
+
             //----------Metodos de busquedas de clases por id----------//
             
             CteTipo cteTipo = cteTipoFacade.find(idCteTipo);
@@ -223,6 +289,17 @@ public class GrabaComprobanteRest {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
+            //Valido que la fecha de emision no sea menor a la de un comprobante con el mismo tipo dado de alta.
+            List<FactCab> posteriores = factCabFacade.getByFechaEmpresaComp(fechaEmision,cteTipo,user.getIdPerfil().getIdSucursal().getIdEmpresa());
+            if(posteriores != null && !posteriores.isEmpty() && posteriores.size() > 0) {
+                if(posteriores.size() > 1) {
+                    Collections.sort(posteriores, (o1, o2) -> o1.getFechaEmision().compareTo(o2.getFechaEmision()));
+                }
+                SimpleDateFormat formateador = new SimpleDateFormat("dd/MM/yy");
+                respuesta.setControl(AppCodigo.ERROR, "Error al dar de alta el Comprobante, la fecha debe ser mayor a: "  + formateador.format(posteriores.get(posteriores.size()-1).getFechaEmision()));
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            
             FactCab factCab = new FactCab();
             //Pregunto si se guarda una cabecera
             if(factCabecera) {               
@@ -249,6 +326,7 @@ public class GrabaComprobanteRest {
                 factCab.setPrecioReferenciaCanje(precioReferenciaCanje);
                 factCab.setSitIVA(sisSitIva);
                 factCab.setIdSisTipoOperacion(sisTipoOperacion);
+                factCab.setIdVendedor(idVendedor);
                 //factCab.setIdDepositos(null);
             } else {
                 if(idFactCab == null) {
@@ -512,10 +590,10 @@ public class GrabaComprobanteRest {
                             String ptoVenta = cteNumero.getPtoVenta().toString();
                             String numeroVentaFormat = String.format("%08d",cteNumero.getNumero());
                             String concatenado = ptoVenta.concat(numeroVentaFormat);
-                            factCab.setNumero(Integer.parseInt(concatenado));
+                            factCab.setNumero(Long.parseLong(concatenado,10));
                         } 
                         return this.persistirObjetos(factCab, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumero);
-                    } else if(tipoFact != null || letraFact != null || numeroFact != null || fechaVencimientoFact != null || fechaContaFact != null){                       
+                    } else if(tipoFact != null || letraFact != null || numeroFact != null || fechaVencimientoFact != null || fechaContaFact != null){                                              
                         CteNumero cteNumero = null;
                         if(idNumero != null) {
                             cteNumero = cteNumeroFacade.find(idNumero);
@@ -523,17 +601,41 @@ public class GrabaComprobanteRest {
                                 respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el numero de comprobante");
                                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                             }
+                            String ptoVenta = cteNumero.getPtoVenta().toString();
+                            String numeroVentaFormat = String.format("%08d",cteNumero.getNumero());
+                            String concatenado = ptoVenta.concat(numeroVentaFormat);
+                            factCab.setNumero(Long.parseLong(concatenado,10));
                         } 
+                        
                         //Persisto Primero los objetos del remito
                         this.persistirObjetos(factCab, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumero);
+                        
                         //Luego empiezo con los datos de la factura relacionada
                         CteTipo cteTipoFac = cteTipoFacade.find(tipoFact);
                         if(cteTipoFac == null) {
                             respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el tipo de comprobante");
                             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                         }
+                        
                         //Creo la nueva FactCab
                         FactCab fc = new FactCab();
+                        
+                        //Busco el numerador del relacionado
+                        CteNumero cteNumeroRel = null;
+                        if(idNumeroFact != null) {
+                            cteNumeroRel = cteNumeroFacade.find(idNumeroFact);
+                            if(cteNumeroRel == null) {
+                                respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el numero de comprobante");
+                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                            }
+                            String ptoVenta = cteNumeroRel.getPtoVenta().toString();
+                            String numeroVentaFormat = String.format("%08d",cteNumeroRel.getNumero());
+                            String concatenado = ptoVenta.concat(numeroVentaFormat);
+                            fc.setNumero(Long.parseLong(concatenado,10));
+                        } else {
+                            fc.setNumero(numeroFact.longValue());
+                        }
+                        
                         fc.setCai(cai);
                         fc.setCaiVto(caiVto);
                         fc.setCodBarra(codBarra);
@@ -552,12 +654,12 @@ public class GrabaComprobanteRest {
                         fc.setInteresCanje(interesCanje);
                         fc.setLetra(letraFact);
                         fc.setNombre(nombre);
-                        fc.setNumero(numeroFact.longValue());
                         fc.setObservaciones(observaciones);
                         fc.setPrecioReferenciaCanje(precioReferenciaCanje);
                         fc.setSitIVA(sisSitIva);
-                        factCab.setIdSisTipoOperacion(sisTipoOperacion);    
-                        return this.generarFacturaRelacionada(fc, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumero);
+                        fc.setIdSisTipoOperacion(sisTipoOperacion);
+                        fc.setIdVendedor(idVendedor);
+                        return this.generarFacturaRelacionada(fc, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumeroRel);
                     } else {
                         respuesta.setControl(AppCodigo.ERROR, "No pudo grabar la factura asociada, algun campo no es valido");
                         return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();

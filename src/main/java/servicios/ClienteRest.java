@@ -27,6 +27,7 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -61,7 +62,8 @@ public class ClienteRest {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response getClientes(  
-        @HeaderParam ("token") String token,  
+        @HeaderParam ("token") String token,
+        @QueryParam("codCliente") Integer codCliente,    
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {
@@ -94,22 +96,30 @@ public class ClienteRest {
                 respuesta.setControl(AppCodigo.ERROR, "Credenciales incorrectas");
                 return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
             }
-            
-            List<PadronClientes> clientes = padronClientesFacade.findByEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa());
-            
-            //Valido que la lista de SisFormaPago no este vacia.
-            if(clientes.isEmpty()) {
-                respuesta.setControl(AppCodigo.ERROR, "No hay clientes disponibles");
-                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-            }
-            
-            //busco los SubRubros de la empresa del usuario
             List<Payload> clientesRespuesta = new ArrayList<>();
-            for(PadronClientes s : clientes) {
-                ClienteResponse sr = new ClienteResponse(s);
+            if(codCliente == null) {         
+                List<PadronClientes> clientes = padronClientesFacade.findByEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa());
+
+                //Valido que la lista de SisFormaPago no este vacia.
+                if(clientes.isEmpty()) {
+                    respuesta.setControl(AppCodigo.ERROR, "No hay clientes disponibles");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+
+                //busco los SubRubros de la empresa del usuario
+                for(PadronClientes s : clientes) {
+                    ClienteResponse sr = new ClienteResponse(s);
+                    clientesRespuesta.add(sr);
+                }
+            } else {
+                PadronClientes cliente = padronClientesFacade.findByEmpresaCodigo(user.getIdPerfil().getIdSucursal().getIdEmpresa(), codCliente);
+                if(cliente == null) {
+                    respuesta.setControl(AppCodigo.AVISO, "Cliente y Vendedor no asignados, desea asignarlos ahora?");
+                    return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();
+                }
+                ClienteResponse sr = new ClienteResponse(cliente);
                 clientesRespuesta.add(sr);
             }
-            
             respuesta.setArraydatos(clientesRespuesta);
             respuesta.setControl(AppCodigo.OK, "Lista de Clientes");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
@@ -119,7 +129,7 @@ public class ClienteRest {
         }
     }
     
-     @POST
+    @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response setClienteVendedor(  
@@ -203,7 +213,11 @@ public class ClienteRest {
                 //lo doy de alta con los datos de gestagro
                 PadronGral padronGeneralCliNuevo = new PadronGral();
                 padronGeneralCliNuevo.setApellido(padronCliente.getPadronApelli());
-                padronGeneralCliNuevo.setCuit(padronCliente.getPadronCuit11().toString());
+                if(padronCliente.getPadronCuit11() == null) {
+                    padronGeneralCliNuevo.setCuit(padronCliente.getPadronCuil11().toString());
+                } else {
+                    padronGeneralCliNuevo.setCuit(padronCliente.getPadronCuit11().toString());
+                }                
                 padronGeneralCliNuevo.setDomicilio(padronCliente.getPadronDomici());
                 padronGeneralCliNuevo.setIdEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa());
                 padronGeneralCliNuevo.setIdPadronGral(padronCliente.getPadronCodigo());
@@ -293,6 +307,7 @@ public class ClienteRest {
                     } else {
                         PadronVendedor pv = padronGeneralVen.getPadronVendedorCollection().iterator().next();
                         pv.setPorcentaje(porcentaje);
+                        pv.getIdPadronGral().setIdCategoria(catVendedor);
                         boolean transaccion1;
                         transaccion1 = padronVendedorFacade.editPadronVendedor(pv);
                         if(!transaccion1) {
@@ -320,6 +335,7 @@ public class ClienteRest {
                         return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                     }
                     boolean transaccion2;
+                    pc.getIdPadronGral().setIdCategoria(catCliente);
                     transaccion2 = padronClientesFacade.editPadronClientes(pc);
                     if(!transaccion2) {
                         respuesta.setControl(AppCodigo.ERROR, "No se pudo editar el cliente");
@@ -329,6 +345,7 @@ public class ClienteRest {
                     PadronClientes pc = padronGeneralCli.getPadronClientesCollection().iterator().next();
                     PadronVendedor pv = padronGeneralVen.getPadronVendedorCollection().iterator().next();
                     pv.setPorcentaje(porcentaje);
+                    pv.getIdPadronGral().setIdCategoria(catVendedor);
                         boolean transaccion1;
                         transaccion1 = padronVendedorFacade.editPadronVendedor(pv);
                         if(!transaccion1) {
@@ -336,6 +353,7 @@ public class ClienteRest {
                             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                         }
                     pc.setIdVendedor(pv);
+                    pc.getIdPadronGral().setIdCategoria(catCliente);
                     boolean transaccion2;
                     transaccion2 = padronClientesFacade.editPadronClientes(pc);
                     if(!transaccion2) {

@@ -25,6 +25,7 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -47,7 +48,8 @@ public class BuscaComprobanteRest {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response getProductos(  
-        @HeaderParam ("token") String token,  
+        @HeaderParam ("token") String token,
+        @QueryParam("imputados") String imputados,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException, SQLException {
         ServicioResponse respuesta = new ServicioResponse();
         try {  
@@ -184,20 +186,25 @@ public class BuscaComprobanteRest {
                         rsd.getBigDecimal("porCalc"),
                         rsd.getBigDecimal("ivaPorc"),
                         rsd.getInt("deposito"),
-                        rsd.getBigDecimal("importe"));
+                        rsd.getBigDecimal("importe"),
+                        rsd.getInt("idFactCab"));
                 factDetResponses.add(factDet);
             }
-            
             List<Payload> comprobantes = new ArrayList<>();
-            for(FactCabResponse c : factCabResponses) {
-                for(FactDetalleResponse d : factDetResponses) {
-                    if(c.getNumero() == d.getNumero() && (c.getComprobante() == null ? d.getComprobante() == null : c.getComprobante().equals(d.getComprobante()))) {
-                        c.getDetalle().add(d);
+//            if(imputados.equals("imputados") && !factCabResponses.isEmpty()) {
+//                for(FactCabResponse c : factCabResponses) {
+//                     
+//                }
+//            } else {
+                for(FactCabResponse c : factCabResponses) {
+                    for(FactDetalleResponse d : factDetResponses) {
+                        if(c.getIdFactCab()== d.getFactCab()) {
+                            c.getDetalle().add(d);
+                        }
                     }
+                    comprobantes.add(c);
                 }
-                comprobantes.add(c);
-            }
-            
+            //}
             respuesta.setArraydatos(comprobantes);
             respuesta.setControl(AppCodigo.OK, "Comprobantes");
             return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();

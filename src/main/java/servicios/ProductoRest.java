@@ -1,15 +1,18 @@
 package servicios;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import datos.AppCodigo;
 import datos.Payload;
 import datos.ProductoResponse;
 import datos.ServicioResponse;
 import entidades.Acceso;
+import entidades.Cultivo;
 import entidades.ListaPrecio;
 import entidades.ListaPrecioDet;
 import entidades.Marca;
 import entidades.ModeloCab;
+import entidades.ProdCultivo;
 import entidades.Producto;
 import entidades.SisIVA;
 import entidades.SisUnidad;
@@ -37,9 +40,11 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
+import persistencia.CultivoFacade;
 import persistencia.ListaPrecioFacade;
 import persistencia.MarcaFacade;
 import persistencia.ModeloCabFacade;
+import persistencia.ProdCultivoFacade;
 import persistencia.ProductoFacade;
 import persistencia.SisIVAFacade;
 import persistencia.SisUnidadFacade;
@@ -63,6 +68,8 @@ public class ProductoRest {
     @Inject ModeloCabFacade modeloCabFacade;
     @Inject MarcaFacade marcaFacade;
     @Inject ListaPrecioFacade listaPrecioFacade;
+    @Inject CultivoFacade cultivoFacade;
+    @Inject ProdCultivoFacade prodCultivoFacade;
     
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
@@ -140,6 +147,9 @@ public class ProductoRest {
                 for(Producto s : productos) {
                     ProductoResponse sr = new ProductoResponse(s);
                     sr.getModeloCab().agregarModeloDetalle(s.getIdModeloCab().getModeloDetalleCollection());
+                    if(!s.getProdCultivoCollection().isEmpty()) {
+                        sr.agregarCultivos(s.getProdCultivoCollection());
+                    }                 
     //                if(!s.getLoteCollection().isEmpty()) {
     //                    sr.setEditar(false);
     //                }
@@ -188,6 +198,7 @@ public class ProductoRest {
             Integer idUnidadCompra = (Integer) Utils.getKeyFromJsonObject("idUnidadCompra", jsonBody, "Integer");
             Integer idUnidadVenta = (Integer) Utils.getKeyFromJsonObject("idUnidadVenta", jsonBody, "Integer");
             Integer idMarca = (Integer) Utils.getKeyFromJsonObject("idMarca", jsonBody, "Integer");
+            List<JsonElement> cultivos = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("cultivos", jsonBody, "ArrayList");
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -232,6 +243,27 @@ public class ProductoRest {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
+            List<Cultivo> listaCultivos = new ArrayList<>();
+            if(cultivos != null && !cultivos.isEmpty()) {
+                for(JsonElement j : cultivos) {
+                    //Obtengo los atributos del body
+                    Integer idCultivo = (Integer) Utils.getKeyFromJsonObject("idCultivo", j.getAsJsonObject(), "Integer");
+                    
+                    if(idCultivo == null) {
+                        respuesta.setControl(AppCodigo.ERROR, "Cultivo nulo");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                    
+                    Cultivo cultivo = cultivoFacade.find(idCultivo);
+                    if(cultivo == null) {
+                        respuesta.setControl(AppCodigo.ERROR, "Error cultivo no encontrado");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                    
+                    listaCultivos.add(cultivo);
+                }
+            }
+            
             SubRubro subrubro = subRubroFacade.find(idSubRubro);
             SisUnidad sisUniudadCompra = sisUnidadFacade.find(idUnidadCompra);
             SisUnidad sisUnidadVenta = sisUnidadFacade.find(idUnidadVenta);
@@ -270,37 +302,54 @@ public class ProductoRest {
                 respuesta.setControl(AppCodigo.ERROR, "No existe el modelo de imputacion");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            
-            boolean transaccion;
-            Producto producto = new Producto();
-            producto.setCodProducto(codProducto);
-            producto.setCodigoBarra(codigoBarra);
-            producto.setDescripcionCorta(descripcionCorta);
-            producto.setDescripcion(descripcion);
-            producto.setIdModeloCab(modeloCab);
-            producto.setAptoCanje(aptoCanje);
-            producto.setStock(stock);
-            producto.setTraReceta(traReceta);
-            producto.setTraInforma(traInforma);
-            producto.setTrazable(trazable);
-            producto.setGtin(gtin);
-            producto.setCostoReposicion(costoReposicion);
-            producto.setPrecioVentaProv(precioVentaProv);
-            producto.setPuntoPedido(puntoPedido);
-            producto.setObservaciones(observaciones);
-            producto.setIdSubRubros(subrubro);
-            producto.setIdIVA(sisIVA);
-            producto.setUnidadCompra(sisUniudadCompra);
-            producto.setUnidadVenta(sisUnidadVenta);
-            producto.setIdEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
-            producto.setIdMarca(marca);
-            transaccion = productoFacade.setProductoNuevo(producto);
-            if(!transaccion) {
-                respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Producto, clave primaria repetida");
+            try {
+                boolean transaccion;
+                Producto producto = new Producto();
+                producto.setCodProducto(codProducto);
+                producto.setCodigoBarra(codigoBarra);
+                producto.setDescripcionCorta(descripcionCorta);
+                producto.setDescripcion(descripcion);
+                producto.setIdModeloCab(modeloCab);
+                producto.setAptoCanje(aptoCanje);
+                producto.setStock(stock);
+                producto.setTraReceta(traReceta);
+                producto.setTraInforma(traInforma);
+                producto.setTrazable(trazable);
+                producto.setGtin(gtin);
+                producto.setCostoReposicion(costoReposicion);
+                producto.setPrecioVentaProv(precioVentaProv);
+                producto.setPuntoPedido(puntoPedido);
+                producto.setObservaciones(observaciones);
+                producto.setIdSubRubros(subrubro);
+                producto.setIdIVA(sisIVA);
+                producto.setUnidadCompra(sisUniudadCompra);
+                producto.setUnidadVenta(sisUnidadVenta);
+                producto.setIdEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
+                producto.setIdMarca(marca);
+                transaccion = productoFacade.setProductoNuevo(producto);
+                if(!transaccion) {
+                    respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Producto, clave primaria repetida");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                if(!listaCultivos.isEmpty()) {
+                    for(Cultivo c : listaCultivos) {
+                        boolean transaccion2;
+                        ProdCultivo prodCultivo = new ProdCultivo();
+                        prodCultivo.setIdCultivo(c);
+                        prodCultivo.setIdProductos(producto);
+                        transaccion2 = prodCultivoFacade.setProdCultivoNuevo(prodCultivo);
+                        if(!transaccion) {
+                            respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta la relacion Cultivo Producto:" + c.getDescripcion() + "y" + producto.getDescripcion());
+                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                        }
+                    }
+                }
+                respuesta.setControl(AppCodigo.CREADO, "Producto creado con exito");
+                return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+            } catch (Exception ex) { 
+                respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            respuesta.setControl(AppCodigo.CREADO, "Producto creado con exito");
-            return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception ex) { 
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
@@ -341,6 +390,7 @@ public class ProductoRest {
             Integer idUnidadCompra = (Integer) Utils.getKeyFromJsonObject("idUnidadCompra", jsonBody, "Integer");
             Integer idUnidadVenta = (Integer) Utils.getKeyFromJsonObject("idUnidadVenta", jsonBody, "Integer");
             Integer idMarca = (Integer) Utils.getKeyFromJsonObject("idMarca", jsonBody, "Integer");
+            List<JsonElement> cultivos = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("cultivos", jsonBody, "ArrayList");
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -377,6 +427,28 @@ public class ProductoRest {
                 respuesta.setControl(AppCodigo.ERROR, "Error, campos vacios");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
+            
+            List<Cultivo> listaCultivos = new ArrayList<>();
+            if(cultivos != null && !cultivos.isEmpty()) {
+                for(JsonElement j : cultivos) {
+                    //Obtengo los atributos del body
+                    Integer idCultivo = (Integer) Utils.getKeyFromJsonObject("idCultivo", j.getAsJsonObject(), "Integer");
+                    
+                    if(idCultivo == null) {
+                        respuesta.setControl(AppCodigo.ERROR, "Cultivo nulo");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                    
+                    Cultivo cultivo = cultivoFacade.find(idCultivo);
+                    if(cultivo == null) {
+                        respuesta.setControl(AppCodigo.ERROR, "Error cultivo no encontrado");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                    
+                    listaCultivos.add(cultivo);
+                }
+            }
+            
             Producto producto = productoFacade.find(idProducto);
             SubRubro subrubro = subRubroFacade.find(idSubRubro);
             SisUnidad sisUniudadCompra = sisUnidadFacade.find(idUnidadCompra);
@@ -446,10 +518,24 @@ public class ProductoRest {
             producto.setUnidadCompra(sisUniudadCompra);
             producto.setUnidadVenta(sisUnidadVenta);
             producto.setIdMarca(marca);
+            producto.getProdCultivoCollection().clear();
             transaccion = productoFacade.editProducto(producto);
             if(!transaccion) {
-                respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Producto, clave primaria repetida");
+                respuesta.setControl(AppCodigo.ERROR, "No se pudo editar el Producto, clave primaria repetida");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            if(!listaCultivos.isEmpty()) {
+                    for(Cultivo c : listaCultivos) {
+                        boolean transaccion2;
+                        ProdCultivo prodCultivo = new ProdCultivo();
+                        prodCultivo.setIdCultivo(c);
+                        prodCultivo.setIdProductos(producto);
+                        transaccion2 = prodCultivoFacade.editProdCultivo(prodCultivo);
+                        if(!transaccion) {
+                            respuesta.setControl(AppCodigo.ERROR, "No se pudo editar la relacion Cultivo Producto:" + c.getDescripcion() + "y" + producto.getDescripcion());
+                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                        }
+                    }
             }
             respuesta.setControl(AppCodigo.GUARDADO, "Producto editado con exito");
             return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();
