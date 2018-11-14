@@ -78,6 +78,10 @@ public class FactCabResponse implements Payload{
         this.imputada = imputada;
         this.modulo = modulo;
     }
+
+    public FactCabResponse(Integer idFactCab) {
+        this.idFactCab = idFactCab;
+    }
     
 //    public String getLetra() {
 //        return letra;

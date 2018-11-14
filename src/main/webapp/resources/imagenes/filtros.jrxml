@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.3.0.final using JasperReports Library version 6.3.0  -->
-<!-- 2018-11-06T11:33:03 -->
+<!-- 2018-11-09T11:15:38 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="filtros" pageWidth="555" pageHeight="842" columnWidth="555" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="ce3a8601-a83a-4829-9a43-9ebb7a2f26b8">
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
@@ -12,15 +12,11 @@
 	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
-	<parameter name="modulo" class="java.lang.String"/>
-	<parameter name="tipo" class="java.lang.String"/>
-	<parameter name="numero" class="java.lang.Long"/>
-	<parameter name="fechaDesde" class="java.sql.Date"/>
 	<parameter name="fechaHasta" class="java.sql.Date"/>
 	<parameter name="producto" class="java.lang.String"/>
-	<parameter name="padCodigo" class="java.lang.Integer"/>
 	<parameter name="deposito" class="java.lang.String"/>
 	<parameter name="estado" class="java.lang.String"/>
+	<parameter name="cteTipo" class="java.lang.Integer"/>
 	<queryString>
 		<![CDATA[Select 
 SisModulos.descripcion as descripcionModulo,

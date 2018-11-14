@@ -142,6 +142,7 @@ public class BuscaLotes {
 
                 while (rs.next()) {
                     LoteResponse lote = new LoteResponse(
+                            rs.getInt("idLotes"),
                             rs.getString("nroLote"),
                             rs.getInt("item"),
                             rs.getString("serie"),

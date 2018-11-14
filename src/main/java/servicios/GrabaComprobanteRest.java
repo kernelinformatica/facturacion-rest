@@ -3,6 +3,9 @@ package servicios;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import datos.AppCodigo;
+import datos.DatosResponse;
+import datos.FactCabResponse;
+import datos.Payload;
 import datos.ServicioResponse;
 import entidades.Acceso;
 import entidades.CteNumero;
@@ -439,8 +442,8 @@ public class GrabaComprobanteRest {
                         //Pregunto si se graba produmo y empiezo con la transaccion
                         if(produmo && (cteTipo.getIdSisComprobante().getStock().equals(1) || cteTipo.getIdSisComprobante().getStock().equals(2))) {
                             Produmo prod = new Produmo();
-                            if(cteTipo.getSurenu().equals('H')) {
-                                prod.setCantidad(pendiente.multiply(BigDecimal.ONE.negate()));
+                            if(cteTipo.getSurenu().equals("D")){
+                                prod.setCantidad(pendiente.negate());
                             } else {
                                 prod.setCantidad(pendiente);
                             }   
@@ -450,7 +453,21 @@ public class GrabaComprobanteRest {
                             prod.setIdFactDetalle(factDetalle.getIdFactDetalle());
                             prod.setIdProductos(producto);
                             prod.setItem(item);
-                            prod.setNumero(numero.longValue());
+                            
+                            CteNumero cteNumero = null;
+                            if(idNumero != null) {
+                                cteNumero = cteNumeroFacade.find(idNumero);
+                                if(cteNumero == null) {
+                                    respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el numero de comprobante");
+                                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                                }
+                                String ptoVenta = cteNumero.getPtoVenta().toString();
+                                String numeroVentaFormat = String.format("%08d",cteNumero.getNumero());
+                                String concatenado = ptoVenta.concat(numeroVentaFormat);
+                                prod.setNumero(Long.parseLong(concatenado,10));
+                            } else {
+                                prod.setNumero(numero.longValue());
+                            }                                                       
                             prod.setFecha(fechaEmision);
                             prod.setStock(cteTipo.getIdSisComprobante().getStock());
                             //prod.setIdLotes(item);
@@ -780,6 +797,10 @@ public class GrabaComprobanteRest {
             if(cteNumero != null) {
                 cteNumero.setNumero(cteNumero.getNumero()+1);
                 cteNumeroFacade.edit(cteNumero);
+            }
+            if(factCab.getIdFactCab() != null) {
+                DatosResponse r = new DatosResponse(factCab.getIdFactCab());
+                respuesta.setDatos(r);
             }
             respuesta.setControl(AppCodigo.CREADO, "Comprobante creado con exito, con detalles");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();

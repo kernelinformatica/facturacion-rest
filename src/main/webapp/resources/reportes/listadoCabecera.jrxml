@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.3.0.final using JasperReports Library version 6.3.0  -->
-<!-- 2018-11-06T11:03:59 -->
+<!-- 2018-11-13T11:21:26 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="listadoCabecera" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="0" bottomMargin="20" isFloatColumnFooter="true" whenResourceMissingType="Error" uuid="4806e2f6-ab00-41d0-b74f-73434a7c5917">
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
 	<parameter name="pathImagen" class="java.lang.String"/>
@@ -32,9 +32,12 @@
 	<field name="prefijoComprobante" class="java.lang.String"/>
 	<field name="numeroComprobante" class="java.lang.String"/>
 	<title>
-		<band height="100">
+		<band height="115">
+			<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 			<subreport>
-				<reportElement x="0" y="0" width="555" height="100" uuid="88b052fb-0d6f-43d1-b99b-11bd396c90fc"/>
+				<reportElement x="0" y="0" width="555" height="115" uuid="88b052fb-0d6f-43d1-b99b-11bd396c90fc">
+					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+				</reportElement>
 				<subreportParameter name="empresa">
 					<subreportParameterExpression><![CDATA[$P{empresa}]]></subreportParameterExpression>
 				</subreportParameter>

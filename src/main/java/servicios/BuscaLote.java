@@ -149,6 +149,7 @@ public class BuscaLote {
             List<Payload> lotes = new ArrayList<>();
             while (rs.next()) {
                 LoteResponse lote = new LoteResponse(
+                        rs.getInt("idLotes"),
                         rs.getString("nroLote"),
                         rs.getInt("item"),
                         rs.getString("serie"),

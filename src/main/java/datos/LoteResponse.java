@@ -8,7 +8,7 @@ import java.util.Date;
  * @author FrancoSili
  */
 public class LoteResponse implements Payload {
-    
+    private Integer idLote;
     private String nroLote;
     private int item;
     private String serie;
@@ -27,7 +27,8 @@ public class LoteResponse implements Payload {
     private BigDecimal stockNegativo;
     private Integer idProducto;
 
-    public LoteResponse(String nroLote, int item, String serie, Date fechaElab, Date fechaVto, boolean vigencia, String comprobante, BigDecimal numero, String codProducto, String descripcionProd, BigDecimal stock, BigDecimal ingresos, BigDecimal egresos, BigDecimal stockNegativo, Integer idProducto) {
+    public LoteResponse(Integer idLote, String nroLote, int item, String serie, Date fechaElab, Date fechaVto, boolean vigencia, String comprobante, BigDecimal numero, String codProducto, String descripcionProd, BigDecimal stock, BigDecimal ingresos, BigDecimal egresos, BigDecimal stockNegativo, Integer idProducto) {
+        this.idLote = idLote;
         this.nroLote = nroLote;
         this.item = item;
         this.serie = serie;
@@ -47,7 +48,14 @@ public class LoteResponse implements Payload {
         this.idProducto = idProducto;
     }
 
-    
+    public Integer getIdLote() {
+        return idLote;
+    }
+
+    public void setIdLote(Integer idLote) {
+        this.idLote = idLote;
+    }
+
     
     public String getNroLote() {
         return nroLote;
