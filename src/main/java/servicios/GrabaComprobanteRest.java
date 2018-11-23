@@ -21,6 +21,7 @@ import entidades.Lote;
 import entidades.Producto;
 import entidades.Produmo;
 import entidades.SisMonedas;
+import entidades.SisTipoModelo;
 import entidades.SisTipoOperacion;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
@@ -58,6 +59,7 @@ import persistencia.LoteFacade;
 import persistencia.ProductoFacade;
 import persistencia.ProdumoFacade;
 import persistencia.SisMonedasFacade;
+import persistencia.SisTipoModeloFacade;
 import persistencia.SisTipoOperacionFacade;
 import persistencia.UsuarioFacade;
 import utils.Utils;
@@ -86,6 +88,7 @@ public class GrabaComprobanteRest {
     @Inject FormaPagoDetFacade formaPagoDetFacade;
     @Inject SisTipoOperacionFacade  sisTipoOperacionFacade;
     @Inject CteNumeroFacade cteNumeroFacade;
+    @Inject SisTipoModeloFacade sisTipoModeloFacade;
           
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -531,13 +534,20 @@ public class GrabaComprobanteRest {
                             BigDecimal importe = (BigDecimal) Utils.getKeyFromJsonObject("importe", je.getAsJsonObject(), "BigDecimal");
                             BigDecimal totalComprobante = (BigDecimal) Utils.getKeyFromJsonObject("totalComprobante", je.getAsJsonObject(), "BigDecimal");
                             BigDecimal porcentaje = (BigDecimal) Utils.getKeyFromJsonObject("porcentaje", je.getAsJsonObject(), "BigDecimal");
+                            Integer idSisTipoModelo = (Integer) Utils.getKeyFromJsonObject("idSisTipoModelo", je.getAsJsonObject(), "Integer");
 
                             //Pregunto por los que no pueden ser Null
-                            if(cuenta == null || descripcionPie == null ||importe == null || totalComprobante == null) {
+                            if(cuenta == null || descripcionPie == null ||importe == null || totalComprobante == null || idSisTipoModelo == null) {
                                 respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, algun campo de la grilla es nulo");
                                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                             }
-
+                            
+                            SisTipoModelo sisTipoModelo = sisTipoModeloFacade.find(idSisTipoModelo);                     
+                            if(sisTipoModelo == null) {
+                                respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, sisTipoOperacion no encontrado");
+                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                            }
+                            
                             //Creo el pie 
                             FactPie facturacionPie = new FactPie();
                             facturacionPie.setCtaContable(cuenta);
@@ -545,6 +555,7 @@ public class GrabaComprobanteRest {
                             facturacionPie.setImporte(importe);
                             facturacionPie.setIdFactCab(factCab);
                             facturacionPie.setPorcentaje(porcentaje);
+                            facturacionPie.setIdSisTipoModelo(sisTipoModelo);
                             listaPie.add(facturacionPie);
                         }
                     }

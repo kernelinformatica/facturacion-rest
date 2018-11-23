@@ -61,6 +61,7 @@ public class ApplicationConfig extends Application {
         resources.add(servicios.RubroRest.class);
         resources.add(servicios.SisCanjeRest.class);
         resources.add(servicios.SisCategoriaRest.class);
+        resources.add(servicios.SisCodigoAfipRest.class);
         resources.add(servicios.SisComprobanteRest.class);
         resources.add(servicios.SisEstadoRest.class);
         resources.add(servicios.SisFormaPagoRest.class);

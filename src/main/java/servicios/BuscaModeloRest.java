@@ -235,7 +235,7 @@ public class BuscaModeloRest {
             
             //Armo la lista de facturas response a partir de la lista de modelos obtenidas para todos los productos
             for(ModeloDetalleResponse mdr : modelos) {
-                FacturaResponse fr = new FacturaResponse(mdr.getCtaContable(), mdr.getDescripcion(), mdr.getTotalModelo(), mdr.getValor(), mdr.getTipoModelo().getOrden());
+                FacturaResponse fr = new FacturaResponse(mdr.getCtaContable(), mdr.getDescripcion(), mdr.getTotalModelo(), mdr.getValor(), mdr.getTipoModelo().getOrden(), mdr.getTipoModelo().getIdTipoModelo());
                 listaFacturas.add(fr);
             }
             //Separo por cuenta contable la lista de facturas y los seteo en el Map
@@ -257,6 +257,7 @@ public class BuscaModeloRest {
                 String descripcion = "";
                 String cuentaContable = "";
                 Integer orden = 0;
+                Integer idTipoModelo = 0;
                 //Recorro la lista dentro del Map
                 for(FacturaResponse fr : entry.getValue()) {
                     //Sumo los totales de acuerdo a la cuenta contable.
@@ -265,9 +266,10 @@ public class BuscaModeloRest {
                     cuentaContable = fr.getCuentaContable();
                     porcentaje = fr.getPorcentaje();
                     orden = fr.getOrden();
+                    idTipoModelo = fr.getIdSisTipoModelo();
                 }
                 //Armo la respuesta final
-                FacturaResponse fr = new FacturaResponse(cuentaContable,descripcion,total,porcentaje,orden);
+                FacturaResponse fr = new FacturaResponse(cuentaContable,descripcion,total,porcentaje,orden, idTipoModelo);
                 listaFacturasLast.add(fr);
             }
             //Ordeno la lista de los detalles por numero de orden de la tabla sisTipoModelo            

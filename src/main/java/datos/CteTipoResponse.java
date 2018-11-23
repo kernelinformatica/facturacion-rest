@@ -2,6 +2,7 @@ package datos;
 
 import entidades.CteNumerador;
 import entidades.CteTipo;
+import entidades.FacComprobante;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -16,9 +17,10 @@ public class CteTipoResponse implements Payload {
     String descCorta;
     String descripcion; 
     boolean cursoLegal; 
-    int codigoAfip; 
+    SisCodigoAfipResponse codigoAfip; 
     String surenu;
     String observaciones;
+    boolean requiereFormaPago;
     SisComprobanteResponse comprobante;
     List<CteNumeradorResponse> numerador;
     
@@ -28,10 +30,11 @@ public class CteTipoResponse implements Payload {
         this.descCorta = c.getDescCorta();
         this.descripcion = c.getDescripcion();
         this.cursoLegal = c.getCursoLegal();
-        this.codigoAfip = c.getCodigoAfip();
+        this.codigoAfip = new SisCodigoAfipResponse(c.getCodigoAfip());
         this.surenu = c.getSurenu();
         this.observaciones = c.getObservaciones();
         this.comprobante = new SisComprobanteResponse(c.getIdSisComprobante());
+        this.requiereFormaPago = c.getRequiereFormaPago();
         this.numerador = new ArrayList<>();
     }
 
@@ -75,11 +78,11 @@ public class CteTipoResponse implements Payload {
         this.cursoLegal = cursoLegal;
     }
 
-    public int getCodigoAfip() {
+    public SisCodigoAfipResponse getCodigoAfip() {
         return codigoAfip;
     }
 
-    public void setCodigoAfip(int codigoAfip) {
+    public void setCodigoAfip(SisCodigoAfipResponse codigoAfip) {
         this.codigoAfip = codigoAfip;
     }
 
@@ -121,6 +124,14 @@ public class CteTipoResponse implements Payload {
             CteNumeradorResponse cte = new CteNumeradorResponse(c);
             this.numerador.add(cte);
         }
+    }
+
+    public boolean isRequiereFormaPago() {
+        return requiereFormaPago;
+    }
+
+    public void setRequiereFormaPago(boolean requiereFormaPago) {
+        this.requiereFormaPago = requiereFormaPago;
     }
     
     

@@ -7,6 +7,7 @@ import datos.Payload;
 import datos.ServicioResponse;
 import entidades.Acceso;
 import entidades.CteTipo;
+import entidades.SisCodigoAfip;
 import entidades.SisComprobante;
 import entidades.SisOperacionComprobante;
 import entidades.SisTipoOperacion;
@@ -34,6 +35,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
 import persistencia.CteTipoFacade;
+import persistencia.SisCodigoAfipFacade;
 import persistencia.SisComprobanteFacade;
 import persistencia.SisTipoOperacionFacade;
 import persistencia.UsuarioFacade;
@@ -52,6 +54,7 @@ public class CteTipoRest {
     @Inject CteTipoFacade cteTipoFacade;
     @Inject SisComprobanteFacade sisComprobanteFacade;
     @Inject SisTipoOperacionFacade sisTipoOperacionFacade;
+    @Inject SisCodigoAfipFacade sisCodigoAfipFacade;
     @Inject Utils utils;
     
     @GET
@@ -100,7 +103,7 @@ public class CteTipoRest {
             //devuelvo todos los cteTipo
             if(sisModulo == null && sisComprobante == null && idCteTipo == null && sisTipoOperacion == null) {
                 for(CteTipo p : user.getIdPerfil().getIdSucursal().getIdEmpresa().getCteTipoCollection()){
-                    CteTipoResponse pr = new CteTipoResponse(p);
+                    CteTipoResponse pr = new CteTipoResponse(p);       
                     cteTipos.add(pr);
                 }
             //Devuelvo cteTipo por modulo
@@ -257,6 +260,7 @@ public class CteTipoRest {
             String descCorta = (String) Utils.getKeyFromJsonObject("descCorta", jsonBody, "String");
             String descripcion = (String) Utils.getKeyFromJsonObject("descripcion", jsonBody, "String");
             boolean cursoLegal = (boolean) Utils.getKeyFromJsonObject("cursoLegal", jsonBody, "boolean");
+            boolean requiereFormaPago = (boolean) Utils.getKeyFromJsonObject("requiereFormaPago", jsonBody, "boolean");
             Integer codigoAfip = (Integer) Utils.getKeyFromJsonObject("codigoAfip", jsonBody, "Integer"); 
             String surenu = (String) Utils.getKeyFromJsonObject("surenu", jsonBody, "String");
             String observaciones = (String) Utils.getKeyFromJsonObject("observaciones", jsonBody, "String");
@@ -292,7 +296,7 @@ public class CteTipoRest {
             }
 
             //Me fijo que descCorta, descripcion, surenu, codigoComp y codigoAfip no sean nulos
-            if(descCorta == null || descripcion == null || surenu == null || codigoComp == 0 || codigoAfip == 0) {
+            if(descCorta == null || descripcion == null || surenu == null || codigoComp == 0 || codigoAfip == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, algun campos esta vacio");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
@@ -304,9 +308,15 @@ public class CteTipoRest {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
+            SisCodigoAfip sisCodigoAfip = sisCodigoAfipFacade.find(codigoAfip);
+            if(sisCodigoAfip == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, no existe el sisCodigoAfip");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+             
             boolean transaccion;
             CteTipo newCte = new CteTipo();
-            newCte.setCodigoAfip(codigoAfip);
+            newCte.setCodigoAfip(sisCodigoAfip);
             newCte.setCodigoComp(codigoComp);
             newCte.setCursoLegal(cursoLegal);
             newCte.setDescCorta(descCorta);
@@ -315,6 +325,7 @@ public class CteTipoRest {
             newCte.setObservaciones(observaciones);
             newCte.setSurenu(surenu);
             newCte.setIdSisComprobante(sisComprobante);
+            newCte.setRequiereFormaPago(requiereFormaPago);
             transaccion = cteTipoFacade.setCteTipoNuevo(newCte, user);
             if(!transaccion) {
                 respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Tipo de Comprobante, Codigo de Comprobante existente");
@@ -346,6 +357,7 @@ public class CteTipoRest {
             String descCorta = (String) Utils.getKeyFromJsonObject("descCorta", jsonBody, "String");
             String descripcion = (String) Utils.getKeyFromJsonObject("descripcion", jsonBody, "String");
             boolean cursoLegal = (boolean) Utils.getKeyFromJsonObject("cursoLegal", jsonBody, "boolean");
+            boolean requiereFormaPago = (boolean) Utils.getKeyFromJsonObject("requiereFormaPago", jsonBody, "boolean");
             Integer codigoAfip = (Integer) Utils.getKeyFromJsonObject("codigoAfip", jsonBody, "Integer"); 
             String surenu = (String) Utils.getKeyFromJsonObject("surenu", jsonBody, "String");
             String observaciones = (String) Utils.getKeyFromJsonObject("observaciones", jsonBody, "String");
@@ -381,7 +393,7 @@ public class CteTipoRest {
             }
 
             //Me fijo que descCorta, descripcion, surenu, codigoComp y codigoAfip no sean nulos
-            if(idCteTipo == 0 || descCorta == null || descripcion == null || surenu == null || codigoComp == 0 || codigoAfip == 0) {
+            if(idCteTipo == 0 || descCorta == null || descripcion == null || surenu == null || codigoComp == 0 || codigoAfip == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, algun campo esta vacio");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
@@ -394,6 +406,12 @@ public class CteTipoRest {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
+            SisCodigoAfip sisCodigoAfip = sisCodigoAfipFacade.find(codigoAfip);
+            if(sisCodigoAfip == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, no existe el sisCodigoAfip");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            
             //Pregunto si existe el Cte
             if(newCte == null) {
                 respuesta.setControl(AppCodigo.ERROR, "No existe el tipo de comprobonta");
@@ -401,7 +419,7 @@ public class CteTipoRest {
             }
             
             boolean transaccion;
-            newCte.setCodigoAfip(codigoAfip);
+            newCte.setCodigoAfip(sisCodigoAfip);
             newCte.setCodigoComp(codigoComp);
             newCte.setCursoLegal(cursoLegal);
             newCte.setDescCorta(descCorta);
@@ -410,6 +428,7 @@ public class CteTipoRest {
             newCte.setObservaciones(observaciones);
             newCte.setSurenu(surenu);
             newCte.setIdSisComprobante(sisComprobante);
+            newCte.setRequiereFormaPago(requiereFormaPago);
             transaccion = cteTipoFacade.editCteTipo(newCte);
             if(!transaccion) {
                 respuesta.setControl(AppCodigo.ERROR, "No se pudo editar el Tipo de Comprobante");
