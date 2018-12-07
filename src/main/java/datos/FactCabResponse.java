@@ -38,6 +38,7 @@ public class FactCabResponse implements Payload{
     private String moneda;
     private String imputada;
     private Date fechaEmi;
+    private String vendedor;
     private List<FactDetalleResponse> detalle;
     
 //    FactCabResponse(FactCab f) {
@@ -64,7 +65,7 @@ public class FactCabResponse implements Payload{
 //        this.idmoneda = new SisMonedasResponse(f.getIdmoneda());
 //    }
 
-    public FactCabResponse(Integer idFactCab, String comprobante,long numero, Date fechaEmision, Integer idPadron, String nombre, String cuit, BigDecimal cotDolar, String moneda, String imputada, String modulo) {
+    public FactCabResponse(Integer idFactCab, String comprobante,long numero, Date fechaEmision, Integer idPadron, String nombre, String cuit, BigDecimal cotDolar, String moneda, String imputada, String modulo, String vendedor) {
         this.idFactCab = idFactCab;
         this.comprobante = comprobante;
         this.numero = numero;
@@ -77,6 +78,7 @@ public class FactCabResponse implements Payload{
         this.moneda = moneda;
         this.imputada = imputada;
         this.modulo = modulo;
+        this.vendedor = vendedor;
     }
 
     public FactCabResponse(Integer idFactCab) {
@@ -298,6 +300,8 @@ public class FactCabResponse implements Payload{
     public void setImputada(String imputada) {
         this.imputada = imputada;
     }
+    
+    
     
     public void agregarDetalles(List<FactDetalleResponse> f) {
         for(FactDetalleResponse fd: f) {

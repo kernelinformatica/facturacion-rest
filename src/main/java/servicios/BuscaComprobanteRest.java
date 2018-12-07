@@ -67,6 +67,7 @@ public class BuscaComprobanteRest {
             Integer padCodigo = (Integer) Utils.getKeyFromJsonObject("padCodigo", jsonBody, "Integer");
             Integer idDeposito = (Integer) Utils.getKeyFromJsonObject("idDeposito", jsonBody, "Integer");
             Integer idEstado = (Integer) Utils.getKeyFromJsonObject("idEstado", jsonBody, "Integer");
+            Integer idVendedor = (Integer) Utils.getKeyFromJsonObject("idVendedor", jsonBody, "Integer");
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -99,10 +100,10 @@ public class BuscaComprobanteRest {
             }
                   
             //seteo el nombre del store cabecera
-            String nombreSP = "call s_buscaComprobantesCabecera(?,?,?,?,?,?,?,?,?,?)";
+            String nombreSP = "call s_buscaComprobantesCabecera(?,?,?,?,?,?,?,?,?,?,?)";
             
             //seteo el nombre del store detalle
-            String nombreSPDetalle = "call s_buscaComprobantesDetalles(?,?,?,?,?,?,?,?,?,?)";
+            String nombreSPDetalle = "call s_buscaComprobantesDetalles(?,?,?,?,?,?,?,?,?,?,?)";
             
             //invoco al store
             CallableStatement callableStatement = this.utils.procedimientoAlmacenado(user, nombreSP);
@@ -130,6 +131,7 @@ public class BuscaComprobanteRest {
             callableStatement.setInt(8, padCodigo);
             callableStatement.setInt(9, idDeposito);
             callableStatement.setInt(10, idEstado);
+            callableStatement.setInt(11, idVendedor);
            
             //Seteo los parametros para los detalle
             callableStatementDetalle.setInt(1,user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
@@ -147,6 +149,7 @@ public class BuscaComprobanteRest {
             callableStatementDetalle.setInt(8, padCodigo);
             callableStatementDetalle.setInt(9, idDeposito);
             callableStatementDetalle.setInt(10, idEstado);
+            callableStatementDetalle.setInt(11, idVendedor);
             
             //Reccorro los resultados para la cabecera
             ResultSet rs = callableStatement.executeQuery();
@@ -165,7 +168,8 @@ public class BuscaComprobanteRest {
                         rs.getBigDecimal("dolar"),
                         rs.getString("moneda"),
                         rs.getString("imputada"),
-                        rs.getString("modulo"));
+                        rs.getString("modulo"),
+                        rs.getString("vendedor"));
                 factCabResponses.add(factCab);
             }
             
@@ -187,7 +191,8 @@ public class BuscaComprobanteRest {
                         rsd.getBigDecimal("ivaPorc"),
                         rsd.getInt("deposito"),
                         rsd.getBigDecimal("importe"),
-                        rsd.getInt("idFactCab"));
+                        rsd.getInt("idFactCab"),
+                        rsd.getString("vendedor"));
                 factDetResponses.add(factDet);
             }
             List<Payload> comprobantes = new ArrayList<>();

@@ -27,7 +27,7 @@ public class ApplicationConfig extends Application {
     private void addRestResourceClasses(Set<Class<?>> resources) {
         resources.add(servicios.BuscaComprobanteRest.class);
         resources.add(servicios.BuscaCotizacionRest.class);
-        resources.add(servicios.BuscaFormaPago.class);
+        resources.add(servicios.BuscaListaPrecio.class);
         resources.add(servicios.BuscaLote.class);
         resources.add(servicios.BuscaLotes.class);
         resources.add(servicios.BuscaModeloRest.class);
@@ -66,6 +66,7 @@ public class ApplicationConfig extends Application {
         resources.add(servicios.SisEstadoRest.class);
         resources.add(servicios.SisFormaPagoRest.class);
         resources.add(servicios.SisIVARest.class);
+        resources.add(servicios.SisLetraRest.class);
         resources.add(servicios.SisModuloRest.class);
         resources.add(servicios.SisMonedaRest.class);
         resources.add(servicios.SisSitIvaRest.class);

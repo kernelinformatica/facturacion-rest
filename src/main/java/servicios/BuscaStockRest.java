@@ -121,8 +121,8 @@ public class BuscaStockRest {
             callableStatement.setDate(2, sqlFechaHasta);
             callableStatement.setInt(3,idProducto);
             callableStatement.setInt(4, idDeposito);
-            callableStatement.setInt(5, idCteTipo);
-            callableStatement.setInt(6, tipoEstado);
+            callableStatement.setInt(5, tipoEstado);                        
+            callableStatement.setInt(6, idCteTipo);
             ResultSet rs = callableStatement.executeQuery();
             List<StockResponse> sr = new ArrayList<>();
                 while (rs.next()) {
@@ -143,6 +143,7 @@ public class BuscaStockRest {
                 }
                 if(!sr.isEmpty()) {
                     BigDecimal st = new BigDecimal(0);
+                    BigDecimal sv = new BigDecimal(0);
                     //Recorro el array desde el ultimo registro al primero para calcular el stock fisico
                     for(int i = sr.size() -1; i >= 0; i--) {
                         //sumo los ingresos al stock
@@ -152,7 +153,8 @@ public class BuscaStockRest {
                         //Le seteo el stock fisico
                         sr.get(i).setStockFisico(st);
                         //Seteo el stock virtual
-                        sr.get(i).setStockVirtual(st.add(sr.get(i).getPendiente()));
+                        sv = sv.add(sr.get(i).getPendiente());
+                        sr.get(i).setStockVirtual(sv);
                     }
                     stock.addAll(sr);
                 }
@@ -191,8 +193,9 @@ public class BuscaStockRest {
                                rs.getBigDecimal("ingresos").subtract(rs.getBigDecimal("egresos")),
                                rs.getBigDecimal("ingresoVirtual"),
                                rs.getBigDecimal("egresoVirtual"),
-                               rs.getBigDecimal("virtualImputado"),
-                               (rs.getBigDecimal("ingresoVirtual").subtract(rs.getBigDecimal("egresoVirtual"))).subtract(rs.getBigDecimal("virtualImputado")),                               
+                               //rs.getBigDecimal("virtualImputado"),
+                               BigDecimal.ZERO,
+                               (rs.getBigDecimal("ingresoVirtual").subtract(rs.getBigDecimal("egresoVirtual"))),                               
                                rs.getBoolean("trazable"),
                                rs.getString("rubro"),
                                rs.getString("subRubro"));

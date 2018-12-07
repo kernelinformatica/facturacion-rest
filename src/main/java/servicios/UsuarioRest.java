@@ -1,5 +1,6 @@
 package servicios;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import datos.AppCodigo;
 import datos.LoginResponse;
@@ -7,10 +8,12 @@ import datos.Payload;
 import datos.ServicioResponse;
 import datos.UsuarioResponse;
 import entidades.Acceso;
+import entidades.ListaPrecio;
 import entidades.MenuSucursal;
 import entidades.Perfil;
 import entidades.Sucursal;
 import entidades.Usuario;
+import entidades.UsuarioListaPrecio;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -31,10 +34,12 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
+import persistencia.ListaPrecioFacade;
 import persistencia.ParametroGeneralFacade;
 import persistencia.PerfilFacade;
 import persistencia.SucursalFacade;
 import persistencia.UsuarioFacade;
+import persistencia.UsuarioListaPrecioFacade;
 import utils.Utils;
 
 /**
@@ -51,6 +56,8 @@ public class UsuarioRest {
     @Inject SucursalFacade sucursalFacade;
     @Inject ParametroGeneralFacade parametros;
     @Inject Utils servicioUtils;
+    @Inject ListaPrecioFacade listaPrecioFacade;
+    @Inject UsuarioListaPrecioFacade usuarioListaPrecioFacade;
     
     @POST
     @Path("/{usuario}")
@@ -123,6 +130,7 @@ public class UsuarioRest {
             Integer perfil = (Integer) Utils.getKeyFromJsonObject("perfil", jsonBody, "Integer");
             String telefono = (String) Utils.getKeyFromJsonObject("telefono", jsonBody, "String");
             String mail = (String) Utils.getKeyFromJsonObject("mail", jsonBody, "String");
+            List<JsonElement> listasPrecios = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("formaPagoDet", jsonBody, "ArrayList");
 
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -191,6 +199,28 @@ public class UsuarioRest {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
+            if(listasPrecios != null) {
+                for(JsonElement j : listasPrecios) {
+                    Integer idListaPrecio = (Integer) Utils.getKeyFromJsonObject("idListaPrecio", jsonBody,"Integer");
+                    ListaPrecio listaPrecio = listaPrecioFacade.find(idListaPrecio);            
+                    //Pregunto si existe el la lista de precios
+                    if(listaPrecio == null) {
+                        respuesta.setControl(AppCodigo.ERROR, "No existe la lista de precios");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                    
+                    UsuarioListaPrecio lf = new UsuarioListaPrecio();
+                    lf.setIdUsuarios(usuario);
+                    lf.setIdListaPrecios(listaPrecio);
+                    boolean transaccion2;
+                    transaccion2 = usuarioListaPrecioFacade.setUsuarioListaPrecioNuevo(lf);
+                    if(!transaccion2) {
+                        respuesta.setControl(AppCodigo.ERROR, "No se pudo crear el usuario con la lista de precios" );
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                }
+            }
+            
             String cuerpoMail = "Nombre de Usuario: " + nombreConcatenado + "\n" + "Clave: " + clave;
             //envio el mail
             servicioUtils.enviarMail(
@@ -257,6 +287,9 @@ public class UsuarioRest {
                 for(Perfil p : s.getPerfilCollection()) {
                     for(Usuario u : p.getUsuarioCollection()) {
                         UsuarioResponse parseUser = new UsuarioResponse(u);
+                        if(u.getUsuarioListaPrecioCollection() != null && !u.getUsuarioListaPrecioCollection().isEmpty()) {
+                            parseUser.agregarListaPrecios(u.getUsuarioListaPrecioCollection());
+                        }
                         listaUsuariosResponse.add(parseUser);
                     }
                 }
@@ -288,6 +321,8 @@ public class UsuarioRest {
             Integer perfil = (Integer) Utils.getKeyFromJsonObject("perfil", jsonBody, "Integer");
             String telefono = (String) Utils.getKeyFromJsonObject("telefono", jsonBody, "String");
             String mail = (String) Utils.getKeyFromJsonObject("mail", jsonBody, "String");
+            List<JsonElement> listasPrecios = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("formaPagoDet", jsonBody, "ArrayList");
+
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -338,11 +373,35 @@ public class UsuarioRest {
             usuario.setMail(mail);
             usuario.setNombre(nombre);
             usuario.setTelefono(telefono);
+            usuario.getUsuarioListaPrecioCollection().clear();
             transaccion = usuarioFacade.editUsuario(usuario);
             if(!transaccion) {
                 respuesta.setControl(AppCodigo.ERROR, "No se pudo editar el usuario");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
+            
+            if(listasPrecios != null) {
+                for(JsonElement j : listasPrecios) {
+                    Integer idListaPrecio = (Integer) Utils.getKeyFromJsonObject("idListaPrecio", jsonBody,"Integer");
+                    ListaPrecio listaPrecio = listaPrecioFacade.find(idListaPrecio);            
+                    //Pregunto si existe el la lista de precios
+                    if(listaPrecio == null) {
+                        respuesta.setControl(AppCodigo.ERROR, "No existe la lista de precios");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                    
+                    UsuarioListaPrecio lf = new UsuarioListaPrecio();
+                    lf.setIdUsuarios(usuario);
+                    lf.setIdListaPrecios(listaPrecio);
+                    boolean transaccion2;
+                    transaccion2 = usuarioListaPrecioFacade.editUsuarioListaPrecio(lf);
+                    if(!transaccion2) {
+                        respuesta.setControl(AppCodigo.ERROR, "No se pudo editar el usuario con la lista de precios" );
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                }
+            }
+            
             respuesta.setControl(AppCodigo.OK, "Usuario editado con exito");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception e) {

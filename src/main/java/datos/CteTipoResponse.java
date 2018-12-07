@@ -2,7 +2,8 @@ package datos;
 
 import entidades.CteNumerador;
 import entidades.CteTipo;
-import entidades.FacComprobante;
+import entidades.CteTipoSisLetra;
+import entidades.SisLetra;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -23,6 +24,7 @@ public class CteTipoResponse implements Payload {
     boolean requiereFormaPago;
     SisComprobanteResponse comprobante;
     List<CteNumeradorResponse> numerador;
+    List<SisLetraResponse> letras;
     
     public CteTipoResponse(CteTipo c) {
         this.idCteTipo = c.getIdCteTipo();
@@ -36,6 +38,7 @@ public class CteTipoResponse implements Payload {
         this.comprobante = new SisComprobanteResponse(c.getIdSisComprobante());
         this.requiereFormaPago = c.getRequiereFormaPago();
         this.numerador = new ArrayList<>();
+        this.letras = new ArrayList<>();
     }
 
     public Integer getIdCteTipo() {
@@ -118,11 +121,26 @@ public class CteTipoResponse implements Payload {
     public void setNumerador(List<CteNumeradorResponse> numerador) {
         this.numerador = numerador;
     }
+
+    public List<SisLetraResponse> getLetras() {
+        return letras;
+    }
+
+    public void setLetras(List<SisLetraResponse> letras) {
+        this.letras = letras;
+    }
     
     public void agregarNumeradores(Collection<CteNumerador> cteNumeradorCollection) {
         for(CteNumerador c : cteNumeradorCollection) {
             CteNumeradorResponse cte = new CteNumeradorResponse(c);
             this.numerador.add(cte);
+        }
+    }
+    
+    public void agregarLetras(Collection<CteTipoSisLetra> letras) {
+        for(CteTipoSisLetra l : letras) {
+            SisLetraResponse slr = new SisLetraResponse(l.getIdSisLetra());
+            this.letras.add(slr);
         }
     }
 

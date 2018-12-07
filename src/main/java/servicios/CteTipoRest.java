@@ -1,5 +1,6 @@
 package servicios;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import datos.AppCodigo;
 import datos.CteTipoResponse;
@@ -7,8 +8,10 @@ import datos.Payload;
 import datos.ServicioResponse;
 import entidades.Acceso;
 import entidades.CteTipo;
+import entidades.CteTipoSisLetra;
 import entidades.SisCodigoAfip;
 import entidades.SisComprobante;
+import entidades.SisLetra;
 import entidades.SisOperacionComprobante;
 import entidades.SisTipoOperacion;
 import entidades.Usuario;
@@ -35,8 +38,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
 import persistencia.CteTipoFacade;
+import persistencia.CteTipoSisLetraFacade;
 import persistencia.SisCodigoAfipFacade;
 import persistencia.SisComprobanteFacade;
+import persistencia.SisLetraFacade;
 import persistencia.SisTipoOperacionFacade;
 import persistencia.UsuarioFacade;
 import utils.Utils;
@@ -56,6 +61,8 @@ public class CteTipoRest {
     @Inject SisTipoOperacionFacade sisTipoOperacionFacade;
     @Inject SisCodigoAfipFacade sisCodigoAfipFacade;
     @Inject Utils utils;
+    @Inject SisLetraFacade sisLetraFacade;
+    @Inject CteTipoSisLetraFacade cteTipoSisLetraFacade; 
     
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
@@ -66,6 +73,7 @@ public class CteTipoRest {
         @QueryParam("sisComprobante") Integer sisComprobante,
         @QueryParam("idCteTipo") Integer idCteTipo,
         @QueryParam("sisTipoOperacion") Integer sisTipoOperacion,
+        @QueryParam("condicion") String condicion,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {
@@ -101,11 +109,31 @@ public class CteTipoRest {
             //Armo la respuesta de cteTipos
             List<Payload> cteTipos = new ArrayList<>();
             //devuelvo todos los cteTipo
-            if(sisModulo == null && sisComprobante == null && idCteTipo == null && sisTipoOperacion == null) {
+            if(sisModulo == null && sisComprobante == null && idCteTipo == null && sisTipoOperacion == null && condicion == null) {
                 for(CteTipo p : user.getIdPerfil().getIdSucursal().getIdEmpresa().getCteTipoCollection()){
-                    CteTipoResponse pr = new CteTipoResponse(p);       
+                    CteTipoResponse pr = new CteTipoResponse(p);
+                    if(!p.getCteNumeradorCollection().isEmpty() && p.getIdSisComprobante().getPropio() == 1) {
+                        pr.agregarNumeradores(p.getCteNumeradorCollection());
+                    }
+                    if(!p.getCteTipoSisLetraCollection().isEmpty() && p.getCteTipoSisLetraCollection() != null) {
+                        pr.agregarLetras(p.getCteTipoSisLetraCollection());
+                    }
                     cteTipos.add(pr);
                 }
+            //Devuelvo por condicion
+            } else if(sisModulo == null && sisComprobante == null && idCteTipo == null && sisTipoOperacion == null && condicion.equals("propio")) {
+                for(CteTipo p : user.getIdPerfil().getIdSucursal().getIdEmpresa().getCteTipoCollection()){
+                    if(p.getIdSisComprobante().getPropio().equals(1)) {
+                        CteTipoResponse pr = new CteTipoResponse(p);
+                        if(!p.getCteNumeradorCollection().isEmpty() && p.getIdSisComprobante().getPropio() == 1) {
+                            pr.agregarNumeradores(p.getCteNumeradorCollection());
+                        }
+                        if(!p.getCteTipoSisLetraCollection().isEmpty() && p.getCteTipoSisLetraCollection() != null) {
+                            pr.agregarLetras(p.getCteTipoSisLetraCollection());
+                        }
+                        cteTipos.add(pr);
+                    }
+                }    
             //Devuelvo cteTipo por modulo
             } else if(sisModulo != null && sisComprobante == null && idCteTipo == null && sisTipoOperacion == null) {
                 List<CteTipo> cteTipoList = new ArrayList<>();
@@ -124,6 +152,12 @@ public class CteTipoRest {
                 //Armo la respuesta
                 for(CteTipo p : cteTipoList){
                     CteTipoResponse pr = new CteTipoResponse(p);
+                    if(!p.getCteNumeradorCollection().isEmpty() && p.getIdSisComprobante().getPropio() == 1) {
+                        pr.agregarNumeradores(p.getCteNumeradorCollection());
+                    }
+                    if(!p.getCteTipoSisLetraCollection().isEmpty() && p.getCteTipoSisLetraCollection() != null) {
+                        pr.agregarLetras(p.getCteTipoSisLetraCollection());
+                    }
                     cteTipos.add(pr);
                 }                
             //Devuelvo cteTipo por comprobante
@@ -143,15 +177,17 @@ public class CteTipoRest {
                 //Armo la respuesta
                 for(CteTipo c : cteTipo) {
                     CteTipoResponse cteTipoResponse = new CteTipoResponse(c);
-                    if(!c.getCteNumeradorCollection().isEmpty()) {
+                    if(!c.getCteNumeradorCollection().isEmpty() && c.getIdSisComprobante().getPropio() == 1) {
                         cteTipoResponse.agregarNumeradores(c.getCteNumeradorCollection());
+                    }
+                    if(!c.getCteTipoSisLetraCollection().isEmpty() && c.getCteTipoSisLetraCollection() != null) {
+                        cteTipoResponse.agregarLetras(c.getCteTipoSisLetraCollection());
                     }
                     cteTipos.add(cteTipoResponse);
                 }
             //Devuelvo los numeradores de ese cteTipo   
             } else if(sisModulo == null && sisComprobante == null && idCteTipo != null && sisTipoOperacion == null) {
-                CteTipo cteTipo = cteTipoFacade.find(idCteTipo);
-                
+                CteTipo cteTipo = cteTipoFacade.find(idCteTipo);                
                 
                 if(cteTipo == null) {
                     respuesta.setControl(AppCodigo.ERROR, "Error, no existe ese tipo de comprobamte");
@@ -170,8 +206,12 @@ public class CteTipoRest {
                 
                 //Armo la respuesta  
                 CteTipoResponse cteTipoResponse = new CteTipoResponse(cteTipo);
-                //Agrego los numeradores a la coleccion en cteTipoResponse y le sumo uno al numero
-                cteTipoResponse.agregarNumeradores(cteTipo.getCteNumeradorCollection());
+                 if(!cteTipo.getCteNumeradorCollection().isEmpty() && cteTipo.getIdSisComprobante().getPropio() == 1) {
+                    cteTipoResponse.agregarNumeradores(cteTipo.getCteNumeradorCollection());
+                }
+                if(!cteTipo.getCteTipoSisLetraCollection().isEmpty() && cteTipo.getCteTipoSisLetraCollection() != null) {
+                    cteTipoResponse.agregarLetras(cteTipo.getCteTipoSisLetraCollection());
+                }
                 cteTipos.add(cteTipoResponse); 
             //Devuelvo el comprobante anterior para los relacionados
             } else if(sisModulo != null && sisComprobante == null && idCteTipo != null && sisTipoOperacion == null) {
@@ -190,9 +230,14 @@ public class CteTipoRest {
                 //Armo la respuesta
                 for(CteTipo c : cteTipoAnteriores) {
                     CteTipoResponse cteTip = new CteTipoResponse(c);
+                    if(!c.getCteNumeradorCollection().isEmpty() && c.getIdSisComprobante().getPropio() == 1) {
+                        cteTip.agregarNumeradores(c.getCteNumeradorCollection());
+                    }
+                    if(!c.getCteTipoSisLetraCollection().isEmpty() && c.getCteTipoSisLetraCollection() != null) {
+                        cteTip.agregarLetras(c.getCteTipoSisLetraCollection());
+                    }
                     cteTipos.add(cteTip);
-                }
-                
+                }                
             } else if(sisModulo == null && sisComprobante == null && idCteTipo == null && sisTipoOperacion != null) {
                 SisTipoOperacion tipoOperacion = sisTipoOperacionFacade.find(sisTipoOperacion);
                 
@@ -227,6 +272,9 @@ public class CteTipoRest {
                     CteTipoResponse ctr = new CteTipoResponse(c);
                     if(!c.getCteNumeradorCollection().isEmpty() && c.getIdSisComprobante().getPropio() == 1) {
                         ctr.agregarNumeradores(c.getCteNumeradorCollection());
+                    }
+                    if(!c.getCteTipoSisLetraCollection().isEmpty() && c.getCteTipoSisLetraCollection() != null) {
+                        ctr.agregarLetras(c.getCteTipoSisLetraCollection());
                     }
                     cteTipos.add(ctr);
                 }               
@@ -265,6 +313,7 @@ public class CteTipoRest {
             String surenu = (String) Utils.getKeyFromJsonObject("surenu", jsonBody, "String");
             String observaciones = (String) Utils.getKeyFromJsonObject("observaciones", jsonBody, "String");
             Integer idSisComprobante = (Integer) Utils.getKeyFromJsonObject("idSisComprobante", jsonBody, "Integer");
+            List<JsonElement> letras = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("letras", jsonBody, "ArrayList");
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, token vacio");
@@ -331,6 +380,32 @@ public class CteTipoRest {
                 respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Tipo de Comprobante, Codigo de Comprobante existente");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
+            if(letras != null && !letras.isEmpty()){
+                for(JsonElement l : letras) {
+                    Integer idSisLetra = (Integer) Utils.getKeyFromJsonObject("idSisLetra", l.getAsJsonObject(), "Integer"); 
+                    
+                    if(idSisLetra == null) {
+                        respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Tipo de Comprobante,idSisLetra nulo");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                    
+                    SisLetra sisLetra = sisLetraFacade.find(idSisLetra);
+                    
+                    if(sisLetra == null) {
+                        respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Tipo de Comprobante, no existe la letra seleccionada");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                    boolean transaccion2;
+                    CteTipoSisLetra cteTipoSisLetra = new CteTipoSisLetra();
+                    cteTipoSisLetra.setIdCteTipo(newCte);
+                    cteTipoSisLetra.setIdSisLetra(sisLetra);
+                    transaccion2 = cteTipoSisLetraFacade.setCteTipoSisLetraNuevo(cteTipoSisLetra);
+                    if(!transaccion2) {
+                        respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Tipo de Comprobante");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                }
+            }
             respuesta.setControl(AppCodigo.OK, "Tipo de Comprobante creado con exito");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception ex) { 
@@ -362,6 +437,7 @@ public class CteTipoRest {
             String surenu = (String) Utils.getKeyFromJsonObject("surenu", jsonBody, "String");
             String observaciones = (String) Utils.getKeyFromJsonObject("observaciones", jsonBody, "String");
             Integer idSisComprobante = (Integer) Utils.getKeyFromJsonObject("idSisComprobante", jsonBody, "Integer");
+            List<JsonElement> letras = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("letras", jsonBody, "ArrayList");
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, token vacio");
@@ -429,10 +505,37 @@ public class CteTipoRest {
             newCte.setSurenu(surenu);
             newCte.setIdSisComprobante(sisComprobante);
             newCte.setRequiereFormaPago(requiereFormaPago);
+            newCte.getCteTipoSisLetraCollection().clear();
             transaccion = cteTipoFacade.editCteTipo(newCte);
             if(!transaccion) {
                 respuesta.setControl(AppCodigo.ERROR, "No se pudo editar el Tipo de Comprobante");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            if(letras != null && !letras.isEmpty()){
+                for(JsonElement l : letras) {
+                    Integer idSisLetra = (Integer) Utils.getKeyFromJsonObject("idSisLetra", l.getAsJsonObject(), "Integer"); 
+                    
+                    if(idSisLetra == null) {
+                        respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Tipo de Comprobante,idSisLetra nulo");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                    
+                    SisLetra sisLetra = sisLetraFacade.find(idSisLetra);
+                    
+                    if(sisLetra == null) {
+                        respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Tipo de Comprobante, no existe la letra seleccionada");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                    boolean transaccion2;
+                    CteTipoSisLetra cteTipoSisLetra = new CteTipoSisLetra();
+                    cteTipoSisLetra.setIdCteTipo(newCte);
+                    cteTipoSisLetra.setIdSisLetra(sisLetra);
+                    transaccion2 = cteTipoSisLetraFacade.setCteTipoSisLetraNuevo(cteTipoSisLetra);
+                    if(!transaccion2) {
+                        respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Tipo de Comprobante");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                }
             }
             respuesta.setControl(AppCodigo.OK, "Tipo de Comprobante editado con exito");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();

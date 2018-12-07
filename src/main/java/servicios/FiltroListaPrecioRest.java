@@ -223,6 +223,13 @@ public class FiltroListaPrecioRest {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
+            if(porcentajeInf == null || porcentajeSup == null) {
+                respuesta.setControl(AppCodigo.ERROR, "El porcentaje de las cotas no debe ser nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            
+            BigDecimal cien = new BigDecimal(100);
+            
             //Armo la respuesta
             List<Payload> productosResponse = new ArrayList<>();
             if(!productos.isEmpty()) {
@@ -230,16 +237,20 @@ public class FiltroListaPrecioRest {
                     for(Producto p : productos) {
                         //Multiplico el precio del producto por el porcentaje de la cabecera
                         BigDecimal precio = new BigDecimal(0);
-                        precio = p.getPrecioVentaProv().multiply(porcentajeCabecera);
+                        precio = p.getCostoReposicion().multiply(porcentajeCabecera.divide(cien));
+                        precio = precio.add(p.getCostoReposicion());
                         ListaPrecioDetResponse pr = new ListaPrecioDetResponse(precio,p.getPrecioVentaProv(),p.getPrecioVentaProv(),p);
                         productosResponse.add(pr);
                     }
                 } else if(porcentajeInf.compareTo(porcentajeSup) < 0){ 
                     for(Producto p : productos) {
                         BigDecimal precio = new BigDecimal(0);
-                        precio = p.getPrecioVentaProv().multiply(porcentajeCabecera);
-                        BigDecimal precioInf = p.getPrecioVentaProv().multiply(porcentajeInf);
-                        BigDecimal precioSup = p.getPrecioVentaProv().multiply(porcentajeSup);
+                        precio = p.getCostoReposicion().multiply(porcentajeCabecera.divide(cien));
+                        precio = precio.add(p.getCostoReposicion());
+                        BigDecimal precioInf = precio.multiply(porcentajeInf.divide(cien));
+                        BigDecimal precioSup = precio.multiply(porcentajeSup.divide(cien));
+                        precioInf = precioInf.add(precio);
+                        precioSup = precioSup.add(precio);
                         ListaPrecioDetResponse pr = new ListaPrecioDetResponse(precio,precioInf,precioSup,p);
                         productosResponse.add(pr);
                     }

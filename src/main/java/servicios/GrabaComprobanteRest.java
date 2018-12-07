@@ -4,8 +4,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import datos.AppCodigo;
 import datos.DatosResponse;
-import datos.FactCabResponse;
-import datos.Payload;
 import datos.ServicioResponse;
 import entidades.Acceso;
 import entidades.CteNumero;
@@ -903,6 +901,7 @@ public class GrabaComprobanteRest {
                 faPie.setIdFactCab(factCab);
                 faPie.setImporte(p.getImporte());
                 faPie.setPorcentaje(p.getPorcentaje());
+                faPie.setIdSisTipoModelo(p.getIdSisTipoModelo());
                 listaPie.add(faPie);
             }
             

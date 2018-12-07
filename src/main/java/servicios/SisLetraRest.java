@@ -1,22 +1,15 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package servicios;
 
 import datos.AppCodigo;
 import datos.Payload;
-import datos.ProductoResponse;
-import datos.ProximoCodigoResponse;
 import datos.ServicioResponse;
+import datos.SisLetraResponse;
 import entidades.Acceso;
-import entidades.Producto;
+import entidades.SisLetra;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -30,25 +23,24 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
-import persistencia.ProductoFacade;
+import persistencia.SisLetraFacade;
 import persistencia.UsuarioFacade;
 
 /**
  *
- * @author usuario
+ * @author FrancoSili
  */
-
 @Stateless
-@Path("proximoCodigo")
-public class UltimoCodigoProdRest {
+@Path("sisLetra")
+public class SisLetraRest {
     @Inject UsuarioFacade usuarioFacade;
     @Inject AccesoFacade accesoFacade;
-    @Inject ProductoFacade productoFacade;
-      
+    @Inject SisLetraFacade sisLetraFacade;
+    
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getUltimoCodProducto(  
+    public Response getSisLetra(  
         @HeaderParam ("token") String token,  
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
@@ -83,22 +75,23 @@ public class UltimoCodigoProdRest {
                 return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
             }
             
-            //Busco los productos de la empresa
-            List<Producto> productos = productoFacade.getProductosByEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa());
-            Collections.sort(productos, (o2, o1) -> o1.getIdProductos().compareTo(o2.getIdProductos()));           
+            List<SisLetra> sisLetra = sisLetraFacade.findAll();
             
-            Integer prox = Integer.parseInt(productos.get(0).getCodProducto())+1;
-            String proximo = prox.toString();
-            
-            while(productoFacade.getByCodigoProdEmpresa(proximo,user.getIdPerfil().getIdSucursal().getIdEmpresa()) != null) {                
-                prox = prox +1;
-                proximo = prox.toString();
+            //Valido que la lista de SisFormaPago no este vacia.
+            if(sisLetra.isEmpty()) {
+                respuesta.setControl(AppCodigo.ERROR, "No hay Letras disponibles");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-                       
-            Payload s = new ProximoCodigoResponse(proximo);
-            respuesta.setDatos(s);
-            respuesta.setControl(AppCodigo.OK, "Proximo Codigo");
-            return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();
+            
+            //busco los SubRubros de la empresa del usuario
+            List<Payload> sisLetraRes = new ArrayList<>();
+            for(SisLetra s : sisLetra) {
+                SisLetraResponse sr = new SisLetraResponse(s);
+                sisLetraRes.add(sr);
+            }
+            respuesta.setArraydatos(sisLetraRes);
+            respuesta.setControl(AppCodigo.OK, "Lista de Letras");
+            return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception e) {
             respuesta.setControl(AppCodigo.ERROR, e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();

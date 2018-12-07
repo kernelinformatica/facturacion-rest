@@ -1,7 +1,9 @@
 package datos;
 
+import entidades.FormaPago;
 import entidades.ListaPrecio;
 import entidades.ListaPrecioDet;
+import entidades.ListaPrecioFormaPago;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,6 +27,7 @@ public class ListaPreciosResponse implements Payload {
     private BigDecimal porc1;    
     private String condiciones;  
     private SisMonedasResponse idMoneda;
+    private List<FormaPagoResponse> formasPago;
     private List<ListaPrecioDetResponse> listaPrecioDetCollection;
 
 
@@ -39,6 +42,7 @@ public class ListaPreciosResponse implements Payload {
         this.porc1 = l.getPorc1();
         this.condiciones = l.getCondiciones();
         this.idMoneda = new SisMonedasResponse(l.getIdMoneda());
+        this.formasPago = new ArrayList<>();
         this.listaPrecioDetCollection = new ArrayList<>();
     }
 
@@ -136,6 +140,27 @@ public class ListaPreciosResponse implements Payload {
 
     public void setIdMoneda(SisMonedasResponse idMoneda) {
         this.idMoneda = idMoneda;
+    }
+
+    public List<FormaPagoResponse> getFormasPago() {
+        return formasPago;
+    }
+
+    public void setFormasPago(List<FormaPagoResponse> formasPago) {
+        this.formasPago = formasPago;
+    }
+    
+    public void agregarFormasPago(Collection<ListaPrecioFormaPago> formasPago) {
+        for(ListaPrecioFormaPago l : formasPago) {
+            FormaPagoResponse lr = new FormaPagoResponse(l.getIdFormaPago());
+            if(l.getIdFormaPago().getFormaPagoDetCollection() != null && !l.getIdFormaPago().getFormaPagoDetCollection().isEmpty()) {
+                lr.agregarDetalles(l.getIdFormaPago().getFormaPagoDetCollection());
+            }
+            ListaPreciosResponse lpr = new ListaPreciosResponse(l.getIdListaPrecio());
+            lpr.agregarListaPrecioDet(l.getIdListaPrecio().getListaPrecioDetCollection());
+            lr.setListaPrecio(lpr);
+            this.formasPago.add(lr);
+        }
     }
     
     public void agregarListaPrecioDet(Collection<ListaPrecioDet> lista) {

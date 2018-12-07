@@ -5,14 +5,14 @@ import datos.AppCodigo;
 import datos.ContPlanCuentaResponse;
 import datos.FormaPagoDetResponse;
 import datos.FormaPagoResponse;
+import datos.ListaPreciosResponse;
 import datos.Payload;
 import datos.ServicioResponse;
 import entidades.Acceso;
 import entidades.ContPlanCuenta;
-import entidades.FormaPago;
-import entidades.FormaPagoDet;
 import entidades.ListaPrecio;
 import entidades.Usuario;
+import entidades.UsuarioListaPrecio;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -41,8 +41,8 @@ import utils.Utils;
  */
 
 @Stateless
-@Path("buscaFormaPago")
-public class BuscaFormaPago {
+@Path("buscaListaPrecio")
+public class BuscaListaPrecio {
     @Inject UsuarioFacade usuarioFacade;
     @Inject AccesoFacade accesoFacade;
     @Inject ListaPrecioFacade listaPrecioFacade;
@@ -101,14 +101,28 @@ public class BuscaFormaPago {
             
             //Filtro por lista activa
             if(activa == null) {
-                listaPrecios.addAll(user.getIdPerfil().getIdSucursal().getIdEmpresa().getListaPrecioCollection());
+                if(user.getUsuarioListaPrecioCollection() == null || user.getUsuarioListaPrecioCollection().isEmpty()) {
+                    respuesta.setControl(AppCodigo.ERROR, "No existen listas de precios disponibles para el usuario logeado");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                } 
+                for(UsuarioListaPrecio ul : user.getUsuarioListaPrecioCollection()) {
+                    listaPrecios.add(ul.getIdListaPrecios());
+                }
             } else {
                 //valido que la lista no venga vacia o nula 
-                if(listaPrecioFacade.getByActivaEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa(), activa).isEmpty() || listaPrecioFacade.getByActivaEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa(), activa) == null) {
-                    respuesta.setControl(AppCodigo.ERROR, "No existen condiciones de pagos disponibles");
+                if(user.getUsuarioListaPrecioCollection() == null || user.getUsuarioListaPrecioCollection().isEmpty()) {
+                    respuesta.setControl(AppCodigo.ERROR, "No existen listas de precios activas disponibles para el usuario logeado");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                } else {
-                    listaPrecios.addAll(listaPrecioFacade.getByActivaEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa(), activa));
+                }  
+                for(UsuarioListaPrecio ul : user.getUsuarioListaPrecioCollection()) {
+                    if(ul.getIdListaPrecios().getActiva()) {
+                        listaPrecios.add(ul.getIdListaPrecios());
+                    }
+                }
+                
+                if(listaPrecios.isEmpty()) {
+                    respuesta.setControl(AppCodigo.ERROR, "No existen listas de precios activas disponibles para el usuario logeado");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
             }
             
@@ -130,7 +144,7 @@ public class BuscaFormaPago {
             
             //Si la lista esta vacia devuelvo respuesta
             if(listaVigente.isEmpty()) {
-                respuesta.setControl(AppCodigo.ERROR, "No existen condiciones de pagos disponibles con la fecha ingresada");
+                respuesta.setControl(AppCodigo.ERROR, "No existen listas de precios disponibles con la fecha ingresada");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
@@ -155,7 +169,7 @@ public class BuscaFormaPago {
             
             //Si la lista esta vacia devuelvo respuesta
             if(listaVigente.isEmpty()) {
-                respuesta.setControl(AppCodigo.ERROR, "No existen condiciones de pagos disponibles para el cliente ingresado");
+                respuesta.setControl(AppCodigo.ERROR, "No existen listas de precios disponibles para el cliente ingresado");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
@@ -180,47 +194,62 @@ public class BuscaFormaPago {
             
             //Si la lista esta vacia devuelvo respuesta
             if(listaVigente.isEmpty()) {
-                respuesta.setControl(AppCodigo.ERROR, "No existen condiciones de pagos con cliente igual 0");
+                respuesta.setControl(AppCodigo.ERROR, "No existen listas de precios disponibles con cliente igual 0");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
             //Armo el array de la respuesta con las formas de pago
-            List<Payload> listaFormaPago = new ArrayList<>();
-            List<FormaPago> listForma = new ArrayList<>();
+            List<Payload> lista = new ArrayList<>();
+            List<ListaPreciosResponse> listPreciosFinal = new ArrayList<>();
             for(ListaPrecio l : listaVigente) {
-                for(FormaPago f : l.getFormaPagoCollection()) {                   
-                    listForma.add(f);
-                } 
+                ListaPreciosResponse lr = new ListaPreciosResponse(l);
+                if(l.getListaPrecioFormaPagoCollection() != null && !l.getListaPrecioFormaPagoCollection().isEmpty()) {
+                    lr.agregarFormasPago(l.getListaPrecioFormaPagoCollection());
+                    
+                }
+                if(l.getListaPrecioDetCollection() != null && !l.getListaPrecioDetCollection().isEmpty()) {
+                    lr.agregarListaPrecioDet(l.getListaPrecioDetCollection());
+                }
+                listPreciosFinal.add(lr);
             }
             
             //Si la lista esta vacia devuelvo respuesta
-            if(listForma.isEmpty()) {
-                respuesta.setControl(AppCodigo.ERROR, "No existen condiciones de pagos");
+            if(listPreciosFinal.isEmpty()) {
+                respuesta.setControl(AppCodigo.ERROR, "No existen listas de precios disponibles");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
 
-            if(!listForma.isEmpty()) {
-                for(FormaPago p : listForma) {
-                    FormaPagoResponse formaPagoResponse = new FormaPagoResponse(p);
-                    for(FormaPagoDet d : p.getFormaPagoDetCollection()) {
-                        FormaPagoDetResponse fpd = new FormaPagoDetResponse(d);
-                        if(d.getCtaContable() == null) {
-                            continue;
+            try {
+                if(!listPreciosFinal.isEmpty()) {
+                    for(ListaPreciosResponse p : listPreciosFinal) {
+                        if(p.getFormasPago() != null && !p.getFormasPago().isEmpty()) {
+                            for(FormaPagoResponse fp : p.getFormasPago()) {
+                                if(fp.getFormaPagoDet() != null && !fp.getFormaPagoDet().isEmpty()) {
+                                    for(FormaPagoDetResponse fpd : fp.getFormaPagoDet()) {
+                                        if(fpd.getCtaContable() == null) {
+                                            continue;
+                                        }
+                                        ContPlanCuenta cont = contPlanCuentaFacade.getCuentaContable(Integer.parseInt(fpd.getCtaContable()));
+                                        if(cont != null){
+                                            fpd.setPlanCuenta(new ContPlanCuentaResponse(cont));
+                                        } else {
+                                            ContPlanCuentaResponse conta = new ContPlanCuentaResponse(Integer.parseInt(fpd.getCtaContable()),fpd.getDetalle());
+                                            fpd.setPlanCuenta(conta);
+                                        }
+                                    }
+                                }
+                            }                        
                         }
-                        ContPlanCuenta cont = contPlanCuentaFacade.getCuentaContable(Integer.parseInt(d.getCtaContable()));
-                        if(cont != null){
-                            fpd.setPlanCuenta(new ContPlanCuentaResponse(cont));
-                        } else {
-                            ContPlanCuentaResponse conta = new ContPlanCuentaResponse(Integer.parseInt(d.getCtaContable()),d.getDetalle());
-                            fpd.setPlanCuenta(conta);
-                        }
-                        formaPagoResponse.getFormaPagoDet().add(fpd);
                     }
-                    listaFormaPago.add(formaPagoResponse);
                 }
-            }   
-            respuesta.setArraydatos(listaFormaPago);
-            respuesta.setControl(AppCodigo.OK, "Formas de Pago");
+                //Añado toda la coleccion a la respuesta
+                lista.addAll(listPreciosFinal);
+            } catch (Exception e){
+                respuesta.setControl(AppCodigo.ERROR, "No ese pudieron asignar las formas de pago a las listas de precios");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }           
+            respuesta.setArraydatos(lista);
+            respuesta.setControl(AppCodigo.OK, "Listas de Precios");
             return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();
         } catch (Exception e) {
             respuesta.setControl(AppCodigo.ERROR, e.getMessage());

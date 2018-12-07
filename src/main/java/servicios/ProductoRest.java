@@ -230,9 +230,13 @@ public class ProductoRest {
                 return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
             }
 
+            if(costoReposicion == BigDecimal.ZERO) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, el costo de reposicion debe ser distinto de 0");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
             //Me fijo que  descripcion, idRubro e idEmpresa no sean nulos
-            if(codProducto == null || idSubRubro == 0 || idUnidadCompra == 0 || idUnidadVenta == 0 || idIva == 0) {
-                respuesta.setControl(AppCodigo.ERROR, "Error");
+            if(codProducto == null || idSubRubro == null || idUnidadCompra == null || idUnidadVenta == null || idIva == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, algun campo esta vacio");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             

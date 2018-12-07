@@ -1,8 +1,8 @@
-
 package datos;
 
 import entidades.FormaPago;
 import entidades.FormaPagoDet;
+import entidades.ListaPrecioFormaPago;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -15,17 +15,18 @@ public class FormaPagoResponse implements Payload {
     private int idFormaPago;
     private String descripcion;
     private boolean editar;
-    private ListaPreciosResponse listaPrecio;
     private SisFormaPagoResponse tipo;
+    private ListaPreciosResponse listaPrecio;
     private List<FormaPagoDetResponse> formaPagoDet;
+    private List<ListaPreciosResponse> listaPrecios;
 
     public FormaPagoResponse(FormaPago f) {
         this.idFormaPago = f.getIdFormaPago();
         this.descripcion = f.getDescripcion();
         this.tipo = new SisFormaPagoResponse(f.getTipo());
-        this.listaPrecio = new ListaPreciosResponse(f.getIdListaPrecios());
         this.editar = true;
         this.formaPagoDet = new ArrayList<>();
+        this.listaPrecios = new ArrayList<>();
     }
     
     public int getIdFormaPago() {
@@ -58,16 +59,7 @@ public class FormaPagoResponse implements Payload {
 
     public void setTipo(SisFormaPagoResponse tipo) {
         this.tipo = tipo;
-    }
-    
-    
-    public ListaPreciosResponse getListaPrecio() {
-        return listaPrecio;
-    }
-
-    public void setListaPrecio(ListaPreciosResponse listaPrecio) {
-        this.listaPrecio = listaPrecio;
-    }
+    }   
 
     public List<FormaPagoDetResponse> getFormaPagoDet() {
         return formaPagoDet;
@@ -75,6 +67,21 @@ public class FormaPagoResponse implements Payload {
 
     public void setFormaPagoDet(List<FormaPagoDetResponse> formaPagoDet) {
         this.formaPagoDet = formaPagoDet;
+    }
+
+    public List<ListaPreciosResponse> getListaPrecios() {
+        return listaPrecios;
+    }
+
+    public void setListaPrecios(List<ListaPreciosResponse> listaPrecios) {
+        this.listaPrecios = listaPrecios;
+    }
+    
+    public void agregarListaPrecio(Collection<ListaPrecioFormaPago> lista) {
+        for(ListaPrecioFormaPago l :lista) {
+            ListaPreciosResponse lr = new ListaPreciosResponse(l.getIdListaPrecio());
+            this.listaPrecios.add(lr);
+        }
     }
     
     public void agregarDetalles(Collection<FormaPagoDet> formaPagos) {
@@ -84,6 +91,14 @@ public class FormaPagoResponse implements Payload {
         }
     }
 
+    public ListaPreciosResponse getListaPrecio() {
+        return listaPrecio;
+    }
+
+    public void setListaPrecio(ListaPreciosResponse listaPrecio) {
+        this.listaPrecio = listaPrecio;
+    }
+   
     
     @Override
     public String getClassName() {

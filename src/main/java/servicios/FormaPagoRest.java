@@ -5,6 +5,7 @@ import datos.AppCodigo;
 import datos.ContPlanCuentaResponse;
 import datos.FormaPagoDetResponse;
 import datos.FormaPagoResponse;
+import datos.ListaPreciosResponse;
 import datos.Payload;
 import datos.ServicioResponse;
 import entidades.Acceso;
@@ -12,8 +13,10 @@ import entidades.ContPlanCuenta;
 import entidades.FormaPago;
 import entidades.FormaPagoDet;
 import entidades.ListaPrecio;
+import entidades.ListaPrecioFormaPago;
 import entidades.SisFormaPago;
 import entidades.Usuario;
+import entidades.UsuarioListaPrecio;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
@@ -39,6 +42,7 @@ import persistencia.ContPlanCuentaFacade;
 import persistencia.FormaPagoDetFacade;
 import persistencia.FormaPagoFacade;
 import persistencia.ListaPrecioFacade;
+import persistencia.ListaPrecioFormaPagoFacade;
 import persistencia.SisFormaPagoFacade;
 import persistencia.UsuarioFacade;
 import utils.Utils;
@@ -58,6 +62,7 @@ public class FormaPagoRest {
     @Inject ListaPrecioFacade listaPrecioFacade;
     @Inject FormaPagoDetFacade formaPagoDetFacade;
     @Inject ContPlanCuentaFacade contPlanCuentaFacade;
+    @Inject ListaPrecioFormaPagoFacade listaPrecioFormaPagoFacade;
     
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
@@ -103,23 +108,15 @@ public class FormaPagoRest {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
-            //busco los SubRubros de la empresa del usuario
+            //busco las formas de pago de acuerdo a las listas de precios dadas de alta para el usuario
             List<Payload> formaPagos = new ArrayList<>();
-            for(ListaPrecio l : user.getIdPerfil().getIdSucursal().getIdEmpresa().getListaPrecioCollection()){
-                if(l.getFormaPagoCollection().isEmpty()) {
-                   continue;
-                }
-                for(FormaPago p : l.getFormaPagoCollection()) {
-                    FormaPagoResponse fp = new FormaPagoResponse(p);
-                    if(!p.getIdListaPrecios().getListaPrecioDetCollection().isEmpty()) {
-                        fp.getListaPrecio().agregarListaPrecioDet(p.getIdListaPrecios().getListaPrecioDetCollection());                        
-                    }
-//                    //Seteo editable en false si la coleccion de FactCab es distinta de vacia
-//                    if(!p.getFactFormaPagoCollection().isEmpty()){
-//                        fp.setEditar(false);
-//                    }                  
-                    if(!p.getFormaPagoDetCollection().isEmpty()) {
-                        for(FormaPagoDet d : p.getFormaPagoDetCollection()) {
+            for(UsuarioListaPrecio lu : user.getUsuarioListaPrecioCollection()){ 
+                for(ListaPrecioFormaPago lp : lu.getIdListaPrecios().getListaPrecioFormaPagoCollection()) {                   
+                    FormaPagoResponse fp = new FormaPagoResponse(lp.getIdFormaPago()); 
+                    ListaPreciosResponse lr = new ListaPreciosResponse(lp.getIdListaPrecio());
+                    fp.getListaPrecios().add(lr);
+                    if(!lp.getIdFormaPago().getFormaPagoDetCollection().isEmpty()) {
+                        for(FormaPagoDet d : lp.getIdFormaPago().getFormaPagoDetCollection()) {
                             FormaPagoDetResponse fpd = new FormaPagoDetResponse(d);
                             if(d.getCtaContable() == null) {
                                 continue;
@@ -165,7 +162,7 @@ public class FormaPagoRest {
             // Obtengo los atributos del body
             Integer tipo = (Integer) Utils.getKeyFromJsonObject("tipo", jsonBody, "Integer");
             String descripcion = (String) Utils.getKeyFromJsonObject("descripcion", jsonBody, "String");
-            Integer idListaPrecio = (Integer) Utils.getKeyFromJsonObject("idListaPrecio", jsonBody,"Integer");
+            List<JsonElement> listasPrecios = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("listaPrecios", jsonBody, "ArrayList");
             List<JsonElement> formaPagoDet = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("formaPagoDet", jsonBody, "ArrayList");
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -204,14 +201,7 @@ public class FormaPagoRest {
             }
             
             SisFormaPago sisFormaPago = sisFormaPagoFacade.getByIdSisFormaPago(tipo);
-            ListaPrecio listaPrecio = listaPrecioFacade.find(idListaPrecio);
-            
-            //Pregunto si existe el la lista de precios
-            if(listaPrecio == null) {
-                respuesta.setControl(AppCodigo.ERROR, "No existe la lista de precios");
-                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-            }
-            
+           
             //Pregunto si existe el sisFormaPago
             if(sisFormaPago == null) {
                 respuesta.setControl(AppCodigo.ERROR, "No existe el Tipo de Forma de Pago");
@@ -222,11 +212,10 @@ public class FormaPagoRest {
             formaPago.setIdEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
             formaPago.setTipo(sisFormaPago);
             formaPago.setDescripcion(descripcion);
-            formaPago.setIdListaPrecios(listaPrecio);
             boolean transaccion;
             transaccion = formaPagoFacade.setFormaPagoNuevo(formaPago);
             if(!transaccion) {
-                respuesta.setControl(AppCodigo.ERROR, "No se crear la Forma de Pago");
+                respuesta.setControl(AppCodigo.ERROR, "No se puido crear la Forma de Pago");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             if(formaPagoDet != null) {
@@ -256,6 +245,27 @@ public class FormaPagoRest {
                     }                
                 }
             }
+            if(listasPrecios != null) {
+                for(JsonElement j : listasPrecios) {
+                    Integer idListaPrecio = (Integer) Utils.getKeyFromJsonObject("idListaPrecio", j.getAsJsonObject(),"Integer");
+                    ListaPrecio listaPrecio = listaPrecioFacade.find(idListaPrecio);            
+                    //Pregunto si existe el la lista de precios
+                    if(listaPrecio == null) {
+                        respuesta.setControl(AppCodigo.ERROR, "No existe la lista de precios");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                    
+                    ListaPrecioFormaPago lf = new ListaPrecioFormaPago();
+                    lf.setIdFormaPago(formaPago);
+                    lf.setIdListaPrecio(listaPrecio);
+                    boolean transaccion2;
+                    transaccion2 = listaPrecioFormaPagoFacade.setListaPrecioFormaPagoNuevo(lf);
+                    if(!transaccion2) {
+                        respuesta.setControl(AppCodigo.ERROR, "No se pudo crear la forma de pago con la lista de precios" );
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                }
+            }
             respuesta.setControl(AppCodigo.CREADO, "Forma de Pago creada con exito");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         
@@ -281,7 +291,7 @@ public class FormaPagoRest {
             Integer idFormaPago = (Integer) Utils.getKeyFromJsonObject("idFormaPago", jsonBody, "Integer");
             Integer tipo = (Integer) Utils.getKeyFromJsonObject("tipo", jsonBody, "Integer");
             String descripcion = (String) Utils.getKeyFromJsonObject("descripcion", jsonBody, "String");
-            Integer idListaPrecio = (Integer) Utils.getKeyFromJsonObject("idListaPrecio", jsonBody,"Integer");
+            List<JsonElement> listasPrecios = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("listaPrecios", jsonBody, "ArrayList");
             List<JsonElement> formaPagoDet = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("formaPagoDet", jsonBody, "ArrayList");
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -320,13 +330,7 @@ public class FormaPagoRest {
             }
             
             SisFormaPago sisFormaPago = sisFormaPagoFacade.getByIdSisFormaPago(tipo);
-            ListaPrecio listaPrecio = listaPrecioFacade.find(idListaPrecio);
-            
-            //Pregunto si existe el la lista de precios
-            if(listaPrecio == null) {
-                respuesta.setControl(AppCodigo.ERROR, "No existe la lista de precios");
-                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-            }
+           
             //Pregunto si existe el Tipo
             if(sisFormaPago == null) {
                 respuesta.setControl(AppCodigo.ERROR, "No existe el Tipo");
@@ -344,8 +348,8 @@ public class FormaPagoRest {
             boolean transaccion;
             formaPago.setTipo(sisFormaPago);
             formaPago.setDescripcion(descripcion);
-            formaPago.setIdListaPrecios(listaPrecio);
             formaPago.getFormaPagoDetCollection().clear();
+            formaPago.getListaPrecioFormaPagoCollection().clear();
             transaccion = formaPagoFacade.editFormaPago(formaPago);
             if(!transaccion) {
                 respuesta.setControl(AppCodigo.ERROR, "No se pudo editar la Forma de Pago");
@@ -363,7 +367,6 @@ public class FormaPagoRest {
                         respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta, algun campo esta vacio");
                         return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                     }
-
                     FormaPagoDet formaPagoDetalles = new FormaPagoDet();
                     formaPagoDetalles.setCantDias(cantDias);
                     formaPagoDetalles.setCtaContable(ctaContable);
@@ -376,6 +379,27 @@ public class FormaPagoRest {
                         respuesta.setControl(AppCodigo.ERROR, "No se pudo editar el detalle:" + formaPagoDetalles.getDetalle());
                         return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                     }                
+                }
+            }
+            if(listasPrecios != null) {
+                for(JsonElement j : listasPrecios) {
+                    Integer idListaPrecio = (Integer) Utils.getKeyFromJsonObject("idListaPrecio", j.getAsJsonObject(),"Integer");
+                    ListaPrecio listaPrecio = listaPrecioFacade.find(idListaPrecio);            
+                    //Pregunto si existe el la lista de precios
+                    if(listaPrecio == null) {
+                        respuesta.setControl(AppCodigo.ERROR, "No existe la lista de precios");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                    
+                    ListaPrecioFormaPago lf = new ListaPrecioFormaPago();
+                    lf.setIdFormaPago(formaPago);
+                    lf.setIdListaPrecio(listaPrecio);
+                    boolean transaccion2;
+                    transaccion2 = listaPrecioFormaPagoFacade.editListaPrecioFormaPago(lf);
+                    if(!transaccion2) {
+                        respuesta.setControl(AppCodigo.ERROR, "No se pudo crear la forma de pago con la lista de precios" );
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
                 }
             }
             respuesta.setControl(AppCodigo.GUARDADO, "Forma de Pago editada con exito");

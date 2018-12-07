@@ -1,5 +1,10 @@
 package datos;
 
+import entidades.UsuarioListaPrecio;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 /**
  *
  * @author Franco Sili
@@ -11,6 +16,7 @@ public class UsuarioResponse implements Payload{
     private String telefono;
     private PerfilResponse perfil;
     private String clave;
+    private List<ListaPreciosResponse> listaPrecios;
 
     public UsuarioResponse(entidades.Usuario u) {
         this.id = u.getIdUsuarios();
@@ -19,6 +25,7 @@ public class UsuarioResponse implements Payload{
         this.perfil = new PerfilResponse(u.getIdPerfil());
         this.telefono = u.getTelefono();
         this.clave = u.getClave();
+        this.listaPrecios = new ArrayList<>();
         
     }
     
@@ -68,6 +75,21 @@ public class UsuarioResponse implements Payload{
 
     public void setClave(String clave) {
         this.clave = clave;
+    }
+
+    public List<ListaPreciosResponse> getListaPrecios() {
+        return listaPrecios;
+    }
+
+    public void setListaPrecios(List<ListaPreciosResponse> listaPrecios) {
+        this.listaPrecios = listaPrecios;
+    }
+    
+    public void agregarListaPrecios(Collection<UsuarioListaPrecio> lista) {
+        for(UsuarioListaPrecio l : lista) {
+            ListaPreciosResponse lr  = new ListaPreciosResponse(l.getIdListaPrecios());
+            this.listaPrecios.add(lr);
+        }
     }
 
     @Override
