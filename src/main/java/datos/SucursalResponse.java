@@ -1,8 +1,10 @@
 package datos;
 
 import entidades.Menu;
+import entidades.Permiso;
 import entidades.Sucursal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -15,7 +17,7 @@ public class SucursalResponse implements Payload {
     private String domicilio;
     private String codigoPostal;
     private EmpresaResponse empresa;
-    private List<MenuSucursalResponse> menuSucursal;
+    private List<PermisosResponse> permisos;
 
     public SucursalResponse (Sucursal sucursal) {
         this.idSucursal = sucursal.getIdSucursal();
@@ -23,7 +25,7 @@ public class SucursalResponse implements Payload {
         this.domicilio = sucursal.getDomicilio();
         this.codigoPostal = sucursal.getCodigoPostal();
         this.empresa = new EmpresaResponse(sucursal.getIdEmpresa());
-        this.menuSucursal = new ArrayList<>();    
+        this.permisos = new ArrayList<>();    
     }
     
     ////////////////////////////////////////////////////////////
@@ -69,19 +71,20 @@ public class SucursalResponse implements Payload {
     public void setEmpresa(EmpresaResponse empresa) {
         this.empresa = empresa;
     }
-    
-    
-    public List<MenuSucursalResponse> getMenuSucursal() {
-        return menuSucursal;
+
+    public List<PermisosResponse> getPermisos() {
+        return permisos;
     }
 
-    public void setMenuSucursal(List<MenuSucursalResponse> menuSucursal) {
-        this.menuSucursal = menuSucursal;
+    public void setPermisos(List<PermisosResponse> permisos) {
+        this.permisos = permisos;
     }
-    
-    public void agregarMenuSucursal(Menu menu) {
-       MenuSucursalResponse msr = new MenuSucursalResponse(menu);
-       this.menuSucursal.add(msr);
+     
+    public void agregarPermisos(Collection<Permiso> permisos) {
+       for(Permiso p : permisos) {
+            PermisosResponse msr = new PermisosResponse(p);
+            this.permisos.add(msr);
+        }
     }
 
     @Override

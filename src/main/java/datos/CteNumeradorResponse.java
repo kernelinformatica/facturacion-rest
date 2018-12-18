@@ -1,7 +1,6 @@
 package datos;
 
 import entidades.CteNumerador;
-import entidades.CteTipo;
 import java.util.Date;
 
 /**
@@ -10,19 +9,21 @@ import java.util.Date;
  */
 public class CteNumeradorResponse implements Payload {
     private Integer idCteNumerador;
+    private Integer numerador;
     private String descripcion;
     private Date fechaApertura;
     private Date fechaCierre;
-    private CteTipoResponse cteTipo;
-    private CteNumeroResponse numero;
+    private PtoVentaResponse ptoVenta;
+    private SisLetraSisCodAfipResponse letrasCodigos;
 
     public CteNumeradorResponse(CteNumerador c) {
         this.idCteNumerador = c.getIdCteNumerador();
+        this.numerador = c.getNumerador();
         this.descripcion = c.getDescripcion();
         this.fechaApertura = c.getFechaApertura();
         this.fechaCierre = c.getFechaCierre();
-        this.cteTipo = new CteTipoResponse(c.getIdCteTipo());
-        this.numero = new CteNumeroResponse(c.getIdCteNumero());
+        this.ptoVenta = new PtoVentaResponse(c.getIdPtoVenta());
+        this.letrasCodigos = new SisLetraSisCodAfipResponse(c.getIdCteTipoSisLetra());
     }
     
     public Integer getIdCteNumerador() {
@@ -41,14 +42,14 @@ public class CteNumeradorResponse implements Payload {
         this.descripcion = descripcion;
     }
 
-    public CteNumeroResponse getNumero() {
-        return numero;
+    public PtoVentaResponse getPtoVenta() {
+        return ptoVenta;
     }
 
-    public void setNumero(CteNumeroResponse numero) {
-        this.numero = numero;
+    public void setPtoVenta(PtoVentaResponse ptoVenta) {
+        this.ptoVenta = ptoVenta;
     }
-
+  
     public Date getFechaApertura() {
         return fechaApertura;
     }
@@ -65,16 +66,22 @@ public class CteNumeradorResponse implements Payload {
         this.fechaCierre = fechaCierre;
     }
 
-    public CteTipoResponse getCteTipo() {
-        return cteTipo;
+    public Integer getNumerador() {
+        return numerador;
     }
 
-    public void setCteTipo(CteTipoResponse cteTipo) {
-        this.cteTipo = cteTipo;
+    public void setNumerador(Integer numerador) {
+        this.numerador = numerador;
     }
-    
-    
-    
+
+    public SisLetraSisCodAfipResponse getLetrasCodigos() {
+        return letrasCodigos;
+    }
+
+    public void setLetrasCodigos(SisLetraSisCodAfipResponse letrasCodigos) {
+        this.letrasCodigos = letrasCodigos;
+    }
+           
     @Override
     public String getClassName() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.

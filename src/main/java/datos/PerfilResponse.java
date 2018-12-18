@@ -1,6 +1,7 @@
 package datos;
 
 import entidades.Perfil;
+import java.util.List;
 
 /**
  *
@@ -9,6 +10,7 @@ import entidades.Perfil;
 public class PerfilResponse implements Payload{
     private Integer idPerfil;
     private String descripcion;
+    private List<PermisosResponse> permisos;
     private SucursalResponse sucursal;
     
 

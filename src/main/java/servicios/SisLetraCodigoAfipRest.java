@@ -1,12 +1,12 @@
 package servicios;
 
 import datos.AppCodigo;
-import datos.CteNumeroResponse;
 import datos.Payload;
 import datos.ServicioResponse;
+import datos.SisLetraSisCodAfipResponse;
 import entidades.Acceso;
-import entidades.CteNumerador;
 import entidades.CteTipo;
+import entidades.CteTipoSisLetra;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
@@ -30,18 +30,17 @@ import persistencia.UsuarioFacade;
  *
  * @author FrancoSili
  */
-
 @Stateless
-@Path("cteNumero")
-public class NumeroRest {
+@Path("letraCodigo")
+public class SisLetraCodigoAfipRest {
     @Inject UsuarioFacade usuarioFacade;
     @Inject AccesoFacade accesoFacade;
     
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getNumero(  
-        @HeaderParam ("token") String token,  
+    public Response getLetraCodigo(  
+        @HeaderParam ("token") String token,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {
@@ -75,23 +74,26 @@ public class NumeroRest {
                 return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
             }
             
-            //valido que tenga Rubros disponibles
+            //Valido que halla 
             if(user.getIdPerfil().getIdSucursal().getIdEmpresa().getCteTipoCollection().isEmpty()) {
-                respuesta.setControl(AppCodigo.ERROR, "No hay Tipos de Comprobantes disponibles");
-                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                respuesta.setControl(AppCodigo.ERROR, "No hay tipos de comprobantes disponibles");
+                return Response.status(Response.Status.NOT_FOUND).entity(respuesta.toJson()).build();
+            }
+           
+            //Armo la respuesta
+            List<Payload> resp = new ArrayList<>();
+            for(CteTipo c : user.getIdPerfil().getIdSucursal().getIdEmpresa().getCteTipoCollection()) {
+                if(c.getIdSisComprobante().getPropio() == 1) {
+                    for(CteTipoSisLetra cl : c.getCteTipoSisLetraCollection()) {
+                        SisLetraSisCodAfipResponse sl = new SisLetraSisCodAfipResponse(cl);
+                        resp.add(sl);
+                    }
+                }
             }
             
-            //busco los numeradores de la empresa del usuario
-            List<Payload> numeradores = new ArrayList<>();
-            for(CteTipo p : user.getIdPerfil().getIdSucursal().getIdEmpresa().getCteTipoCollection()){
-                for(CteNumerador c : p.getCteNumeradorCollection()) {
-                    CteNumeroResponse t = new CteNumeroResponse(c.getIdCteNumero());
-                    numeradores.add(t);
-                }               
-            }           
-            respuesta.setArraydatos(numeradores);
-            respuesta.setControl(AppCodigo.OK, "Lista de Numeros");
-            return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+            respuesta.setArraydatos(resp);
+            respuesta.setControl(AppCodigo.OK, "Lista de Comprobantes y letras");
+            return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();       
         } catch (Exception e) {
             respuesta.setControl(AppCodigo.ERROR, e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();

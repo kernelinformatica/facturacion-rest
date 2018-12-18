@@ -52,12 +52,12 @@ public class ApplicationConfig extends Application {
         resources.add(servicios.ModeloCabRest.class);
         resources.add(servicios.ModeloImputacionRest.class);
         resources.add(servicios.NumeradorRest.class);
-        resources.add(servicios.NumeroRest.class);
         resources.add(servicios.PadronRest.class);
         resources.add(servicios.PendientesCancelarRest.class);
         resources.add(servicios.PerfilRest.class);
         resources.add(servicios.ProductoRest.class);
         resources.add(servicios.ProveedoresRest.class);
+        resources.add(servicios.PtoVentaRest.class);
         resources.add(servicios.RubroRest.class);
         resources.add(servicios.SisCanjeRest.class);
         resources.add(servicios.SisCategoriaRest.class);
@@ -66,6 +66,7 @@ public class ApplicationConfig extends Application {
         resources.add(servicios.SisEstadoRest.class);
         resources.add(servicios.SisFormaPagoRest.class);
         resources.add(servicios.SisIVARest.class);
+        resources.add(servicios.SisLetraCodigoAfipRest.class);
         resources.add(servicios.SisLetraRest.class);
         resources.add(servicios.SisModuloRest.class);
         resources.add(servicios.SisMonedaRest.class);

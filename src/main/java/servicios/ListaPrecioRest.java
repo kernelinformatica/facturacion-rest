@@ -12,6 +12,7 @@ import entidades.ListaPrecioDet;
 import entidades.Producto;
 import entidades.SisMonedas;
 import entidades.Usuario;
+import entidades.UsuarioListaPrecio;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
@@ -95,17 +96,20 @@ public class ListaPrecioRest {
             }
             
             //Valido que haya Listas de precios para esa empresa.
-            if(user.getIdPerfil().getIdSucursal().getIdEmpresa().getListaPrecioCollection().isEmpty()) {
-                respuesta.setControl(AppCodigo.ERROR, "No hay Listas de precios disponibles");
+            if(user.getUsuarioListaPrecioCollection().isEmpty()) {
+                respuesta.setControl(AppCodigo.ERROR, "No hay Listas de precios disponibles para el usuario logueado");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
             //busco los SubRubros de la empresa del usuario
             List<Payload> listaPreciosResponse = new ArrayList<>();
-            for(ListaPrecio s : user.getIdPerfil().getIdSucursal().getIdEmpresa().getListaPrecioCollection()) {
-                ListaPreciosResponse sr = new ListaPreciosResponse(s);
-                if(!s.getListaPrecioDetCollection().isEmpty()) {
-                    sr.agregarListaPrecioDet(s.getListaPrecioDetCollection());
+            for(UsuarioListaPrecio ulp : user.getUsuarioListaPrecioCollection()) {
+                ListaPreciosResponse sr = new ListaPreciosResponse(ulp.getIdListaPrecios());
+                if(!ulp.getIdListaPrecios().getListaPrecioDetCollection().isEmpty()) {
+                    sr.agregarListaPrecioDet(ulp.getIdListaPrecios().getListaPrecioDetCollection());
+                }
+                if(!ulp.getIdListaPrecios().getListaPrecioFormaPagoCollection().isEmpty()) {
+                    sr.agregarFormasPago(ulp.getIdListaPrecios().getListaPrecioFormaPagoCollection());
                 }
                 listaPreciosResponse.add(sr);
             }

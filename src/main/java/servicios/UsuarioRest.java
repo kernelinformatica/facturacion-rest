@@ -5,18 +5,21 @@ import com.google.gson.JsonObject;
 import datos.AppCodigo;
 import datos.LoginResponse;
 import datos.Payload;
+import datos.PermisosResponse;
 import datos.ServicioResponse;
 import datos.UsuarioResponse;
 import entidades.Acceso;
 import entidades.ListaPrecio;
 import entidades.MenuSucursal;
 import entidades.Perfil;
+import entidades.Permiso;
 import entidades.Sucursal;
 import entidades.Usuario;
 import entidades.UsuarioListaPrecio;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -99,9 +102,13 @@ public class UsuarioRest {
             
             // Genero la respuesta
             LoginResponse lr = new LoginResponse(usuario, acceso);
-            for(MenuSucursal ms : usuario.getIdPerfil().getIdSucursal().getMenuSucursalCollection()) {
-                lr.getPerfil().getSucursal().agregarMenuSucursal(ms.getIdMenu());
+            if(!usuario.getIdPerfil().getPermisoCollection().isEmpty()) {
+                lr.getPerfil().getSucursal().agregarPermisos(usuario.getIdPerfil().getPermisoCollection());               
             }
+            
+            //Ordeno la lista
+            Collections.sort(lr.getPerfil().getSucursal().getPermisos(), (o1, o2) -> o1.getMenu().getOrden().compareTo(o2.getMenu().getOrden()));
+            
             respuesta.setDatos(lr);
             respuesta.setControl(AppCodigo.OK, "");
         } else {
@@ -130,7 +137,7 @@ public class UsuarioRest {
             Integer perfil = (Integer) Utils.getKeyFromJsonObject("perfil", jsonBody, "Integer");
             String telefono = (String) Utils.getKeyFromJsonObject("telefono", jsonBody, "String");
             String mail = (String) Utils.getKeyFromJsonObject("mail", jsonBody, "String");
-            List<JsonElement> listasPrecios = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("formaPagoDet", jsonBody, "ArrayList");
+            List<JsonElement> listasPrecios = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("listaPrecios", jsonBody, "ArrayList");
 
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -184,11 +191,10 @@ public class UsuarioRest {
                 respuesta.setControl(AppCodigo.ERROR, "El perfil no existe");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            //Encripto la clave
-            String claveEncriptada = Utils.getMD5(clave);
+
             boolean transaccion;
             Usuario newUser = new Usuario();
-            newUser.setClave(claveEncriptada);
+            newUser.setClave(clave);
             newUser.setIdPerfil(perfilEncontrado);
             newUser.setMail(mail);
             newUser.setNombre(nombreConcatenado);
@@ -201,7 +207,7 @@ public class UsuarioRest {
             
             if(listasPrecios != null) {
                 for(JsonElement j : listasPrecios) {
-                    Integer idListaPrecio = (Integer) Utils.getKeyFromJsonObject("idListaPrecio", jsonBody,"Integer");
+                    Integer idListaPrecio = (Integer) Utils.getKeyFromJsonObject("idListaPrecio", j.getAsJsonObject(),"Integer");
                     ListaPrecio listaPrecio = listaPrecioFacade.find(idListaPrecio);            
                     //Pregunto si existe el la lista de precios
                     if(listaPrecio == null) {
@@ -210,7 +216,7 @@ public class UsuarioRest {
                     }
                     
                     UsuarioListaPrecio lf = new UsuarioListaPrecio();
-                    lf.setIdUsuarios(usuario);
+                    lf.setIdUsuarios(newUser);
                     lf.setIdListaPrecios(listaPrecio);
                     boolean transaccion2;
                     transaccion2 = usuarioListaPrecioFacade.setUsuarioListaPrecioNuevo(lf);
@@ -221,7 +227,7 @@ public class UsuarioRest {
                 }
             }
             
-            String cuerpoMail = "Nombre de Usuario: " + nombreConcatenado + "\n" + "Clave: " + clave;
+            String cuerpoMail = "Usuario Creado con Exito!!! \n"+ "Nombre de Usuario: " + nombreConcatenado + "\n";
             //envio el mail
             servicioUtils.enviarMail(
                     parametros.get("KERNEL_SMTP_USER"),
@@ -321,7 +327,7 @@ public class UsuarioRest {
             Integer perfil = (Integer) Utils.getKeyFromJsonObject("perfil", jsonBody, "Integer");
             String telefono = (String) Utils.getKeyFromJsonObject("telefono", jsonBody, "String");
             String mail = (String) Utils.getKeyFromJsonObject("mail", jsonBody, "String");
-            List<JsonElement> listasPrecios = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("formaPagoDet", jsonBody, "ArrayList");
+            List<JsonElement> listasPrecios = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("listaPrecios", jsonBody, "ArrayList");
 
             
             //valido que token no sea null
@@ -382,7 +388,7 @@ public class UsuarioRest {
             
             if(listasPrecios != null) {
                 for(JsonElement j : listasPrecios) {
-                    Integer idListaPrecio = (Integer) Utils.getKeyFromJsonObject("idListaPrecio", jsonBody,"Integer");
+                    Integer idListaPrecio = (Integer) Utils.getKeyFromJsonObject("idListaPrecio", j.getAsJsonObject(),"Integer");
                     ListaPrecio listaPrecio = listaPrecioFacade.find(idListaPrecio);            
                     //Pregunto si existe el la lista de precios
                     if(listaPrecio == null) {

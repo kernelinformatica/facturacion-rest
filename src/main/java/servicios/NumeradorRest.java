@@ -7,8 +7,9 @@ import datos.Payload;
 import datos.ServicioResponse;
 import entidades.Acceso;
 import entidades.CteNumerador;
-import entidades.CteNumero;
+import entidades.PtoVenta;
 import entidades.CteTipo;
+import entidades.CteTipoSisLetra;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
@@ -32,8 +33,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
 import persistencia.CteNumeradorFacade;
-import persistencia.CteNumeroFacade;
+import persistencia.PtoVentaFacade;
 import persistencia.CteTipoFacade;
+import persistencia.CteTipoSisLetraFacade;
 import persistencia.UsuarioFacade;
 import utils.Utils;
 
@@ -47,8 +49,8 @@ import utils.Utils;
 public class NumeradorRest {
     @Inject UsuarioFacade usuarioFacade;
     @Inject AccesoFacade accesoFacade;
-    @Inject CteTipoFacade cteTipoFacade;
-    @Inject CteNumeroFacade cteNumeroFacade;
+    @Inject CteTipoSisLetraFacade cteTipoSisLetraFacade;
+    @Inject PtoVentaFacade ptoVentaFacade;
     @Inject CteNumeradorFacade cteNumeradorFacade;
     
     @GET
@@ -98,9 +100,10 @@ public class NumeradorRest {
             //busco los numeradores de la empresa del usuario
             List<Payload> numeradores = new ArrayList<>();
             for(CteTipo p : user.getIdPerfil().getIdSucursal().getIdEmpresa().getCteTipoCollection()){
-                for(CteNumerador c : p.getCteNumeradorCollection()) {
-                    CteNumeradorResponse t = new CteNumeradorResponse(c);
-                    numeradores.add(t);
+                for(CteTipoSisLetra c : p.getCteTipoSisLetraCollection()) {
+                    for(CteNumerador n : c.getCteNumeradorCollection()) {
+                    CteNumeradorResponse t = new CteNumeradorResponse(n);
+                    numeradores.add(t);}
                 }               
             }
             
@@ -125,14 +128,14 @@ public class NumeradorRest {
             // Obtengo el body de la request
             JsonObject jsonBody = Utils.getJsonObjectFromRequest(request);
             
-            // Obtengo los atributos del body            
-            Integer ptoVenta = (Integer) Utils.getKeyFromJsonObject("ptoVenta", jsonBody, "Integer");
-            Integer numero = (Integer) Utils.getKeyFromJsonObject("numero", jsonBody, "Integer");
+            // Obtengo los atributos del body                       
+            Integer numerador = (Integer) Utils.getKeyFromJsonObject("numerador", jsonBody, "Integer");
             String descripcion = (String) Utils.getKeyFromJsonObject("descripcion", jsonBody, "String");
             Date fechaApertura = (Date) Utils.getKeyFromJsonObject("fechaApertura", jsonBody, "Date");
             Date fechaCierre = (Date) Utils.getKeyFromJsonObject("fechaCierre", jsonBody, "Date");
-            Integer idCteTipo = (Integer) Utils.getKeyFromJsonObject("idCteTipo", jsonBody, "Integer");
-            Integer idCteNumero = (Integer) Utils.getKeyFromJsonObject("idCteNumero", jsonBody, "Integer");
+            Integer idCteTipoSisLetra = (Integer) Utils.getKeyFromJsonObject("idCteTipoSisLetra", jsonBody, "Integer");
+            Integer idPtoVenta = (Integer) Utils.getKeyFromJsonObject("idPtoVenta", jsonBody, "Integer");
+            Integer ptoVenta = (Integer) Utils.getKeyFromJsonObject("ptoVenta", jsonBody, "Integer");
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -165,31 +168,40 @@ public class NumeradorRest {
             }
 
             //Me fijo que  los campos no sean nulos
-            if(fechaApertura == null || fechaCierre == null || idCteTipo == null) {
+            if(fechaApertura == null || fechaCierre == null || idCteTipoSisLetra == null || numerador == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, algun campo esta vacio");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
-            CteTipo cteTipo = cteTipoFacade.find(idCteTipo);
-            if(cteTipo == null) {
+            CteTipoSisLetra cteTipoSisLetra = cteTipoSisLetraFacade.find(idCteTipoSisLetra);
+            if(cteTipoSisLetra == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, no existe el tipo de comprobante seleccionado");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
             boolean transaccion;
             boolean transaccion1;
-            if(idCteNumero == null && ptoVenta != null && numero != null) {            
-                CteNumero cteNumero = new CteNumero();
+            if(idPtoVenta == null && ptoVenta != null) {            
+                //Alta de un nuevo Pto de venta
+                PtoVenta valido = ptoVentaFacade.findByEmpresaSucursalPto(user.getIdPerfil().getIdSucursal().getIdEmpresa(),user.getIdPerfil().getIdSucursal(),ptoVenta);
+                if(valido != null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no se puede dar de alta el pto de venta: "+ ptoVenta + "ya existe");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                PtoVenta ptoVta = new PtoVenta();                
+                ptoVta.setPtoVenta(ptoVenta);
+                ptoVta.setIdEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa());
+                ptoVta.setIdSucursal(user.getIdPerfil().getIdSucursal());
+                
                 CteNumerador cteNumerador = new CteNumerador();
-                cteNumero.setNumero(numero);
-                cteNumero.setPtoVenta(ptoVenta);
                 cteNumerador.setDescripcion(descripcion);
                 cteNumerador.setFechaApertura(fechaApertura);
                 cteNumerador.setFechaCierre(fechaCierre);
-                cteNumerador.setIdCteNumero(cteNumero);
-                cteNumerador.setIdCteTipo(cteTipo);
+                cteNumerador.setIdCteTipoSisLetra(cteTipoSisLetra);
+                cteNumerador.setIdPtoVenta(ptoVta);
+                cteNumerador.setNumerador(numerador);
                 try {
-                    transaccion = cteNumeroFacade.setCteNumeroNuevo(cteNumero);
+                    transaccion = ptoVentaFacade.setPtoVentaNuevo(ptoVta);
                     transaccion1 = cteNumeradorFacade.setCteNumeradorNuevo(cteNumerador);
                     if(!transaccion || !transaccion1) {
                         respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Numerador");
@@ -201,18 +213,19 @@ public class NumeradorRest {
                     respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Numerador");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
-            } else if(idCteNumero != null){
-                CteNumero cteNumero = cteNumeroFacade.find(idCteNumero);
-                if(cteNumero == null) {
-                    respuesta.setControl(AppCodigo.ERROR, "Error, no existe el nuemero seleccionado");
+            } else if(idPtoVenta != null){
+                PtoVenta ptoVta = ptoVentaFacade.find(idPtoVenta);
+                if(ptoVta == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no existe el Punto de Venta seleccionado");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
                 CteNumerador cteNumerador = new CteNumerador();
                 cteNumerador.setDescripcion(descripcion);
                 cteNumerador.setFechaApertura(fechaApertura);
                 cteNumerador.setFechaCierre(fechaCierre);
-                cteNumerador.setIdCteNumero(cteNumero);
-                cteNumerador.setIdCteTipo(cteTipo);
+                cteNumerador.setIdCteTipoSisLetra(cteTipoSisLetra);
+                cteNumerador.setIdPtoVenta(ptoVta);
+                cteNumerador.setNumerador(numerador);
                 transaccion1 = cteNumeradorFacade.setCteNumeradorNuevo(cteNumerador);
                 if(!transaccion1) {
                     respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Numerador");
@@ -243,13 +256,13 @@ public class NumeradorRest {
             
             // Obtengo los atributos del body
             Integer idCteNumerador = (Integer) Utils.getKeyFromJsonObject("idCteNumerador", jsonBody, "Integer");            
-            Integer ptoVenta = (Integer) Utils.getKeyFromJsonObject("ptoVenta", jsonBody, "Integer");
-            Integer numero = (Integer) Utils.getKeyFromJsonObject("numero", jsonBody, "Integer");
+            Integer numerador = (Integer) Utils.getKeyFromJsonObject("numerador", jsonBody, "Integer");
             String descripcion = (String) Utils.getKeyFromJsonObject("descripcion", jsonBody, "String");
             Date fechaApertura = (Date) Utils.getKeyFromJsonObject("fechaApertura", jsonBody, "Date");
             Date fechaCierre = (Date) Utils.getKeyFromJsonObject("fechaCierre", jsonBody, "Date");
-            Integer idCteTipo = (Integer) Utils.getKeyFromJsonObject("idCteTipo", jsonBody, "Integer");
-            Integer idCteNumero = (Integer) Utils.getKeyFromJsonObject("idCteNumero", jsonBody, "Integer");
+            Integer idCteTipoSisLetra = (Integer) Utils.getKeyFromJsonObject("idCteTipoSisLetra", jsonBody, "Integer");
+            Integer idPtoVenta = (Integer) Utils.getKeyFromJsonObject("idPtoVenta", jsonBody, "Integer");
+            Integer ptoVenta = (Integer) Utils.getKeyFromJsonObject("ptoVenta", jsonBody, "Integer");
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -282,7 +295,7 @@ public class NumeradorRest {
             }
 
             //Me fijo que  los campos no sean nulos
-            if(fechaApertura == null || fechaCierre == null || idCteTipo == null || idCteNumerador == null) {
+            if(fechaApertura == null || fechaCierre == null || idCteTipoSisLetra == null || idCteNumerador == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, algun campo esta vacio");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
@@ -293,47 +306,66 @@ public class NumeradorRest {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
-            CteTipo cteTipo = cteTipoFacade.find(idCteTipo);
-            if(cteTipo == null) {
+            CteTipoSisLetra cteTipoSisLetra = cteTipoSisLetraFacade.find(idCteTipoSisLetra);
+            if(cteTipoSisLetra == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, no existe el tipo de comprobante seleccionado");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
 
+            boolean transaccion;
             boolean transaccion1;
-            if(idCteNumero == null && ptoVenta != null && numero != null) {            
+            if(idPtoVenta == null && ptoVenta != null) {            
+                //Alta de un nuevo Pto de venta
+                PtoVenta valido = ptoVentaFacade.findByEmpresaSucursalPto(user.getIdPerfil().getIdSucursal().getIdEmpresa(),user.getIdPerfil().getIdSucursal(),ptoVenta);
+                if(valido != null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no se puede dar de alta el pto de venta: "+ ptoVenta + "ya existe");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                PtoVenta ptoVta = new PtoVenta();                
+                ptoVta.setPtoVenta(ptoVenta);
+                ptoVta.setIdEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa());
+                ptoVta.setIdSucursal(user.getIdPerfil().getIdSucursal());
+
                 cteNumerador.setDescripcion(descripcion);
                 cteNumerador.setFechaApertura(fechaApertura);
                 cteNumerador.setFechaCierre(fechaCierre);
-                cteNumerador.setIdCteTipo(cteTipo);
-                cteNumerador.getIdCteNumero().setNumero(numero);
-                cteNumerador.getIdCteNumero().setPtoVenta(ptoVenta);
+                cteNumerador.setIdCteTipoSisLetra(cteTipoSisLetra);
+                cteNumerador.setIdPtoVenta(ptoVta);
+                cteNumerador.setNumerador(numerador);
+                try {
+                    transaccion = ptoVentaFacade.setPtoVentaNuevo(ptoVta);
+                    transaccion1 = cteNumeradorFacade.editCteNumerador(cteNumerador);
+                    if(!transaccion || !transaccion1) {
+                        respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Numerador");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                    respuesta.setControl(AppCodigo.CREADO, "Numerador creado con exito");
+                    return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+                } catch (Exception ex) {
+                    respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Numerador");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+            } else if(idPtoVenta != null){
+                PtoVenta ptoVta = ptoVentaFacade.find(idPtoVenta);
+                if(ptoVta == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no existe el Punto de Venta seleccionado");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                cteNumerador.setDescripcion(descripcion);
+                cteNumerador.setFechaApertura(fechaApertura);
+                cteNumerador.setFechaCierre(fechaCierre);
+                cteNumerador.setIdCteTipoSisLetra(cteTipoSisLetra);
+                cteNumerador.setIdPtoVenta(ptoVta);
+                cteNumerador.setNumerador(numerador);
                 transaccion1 = cteNumeradorFacade.editCteNumerador(cteNumerador);
                 if(!transaccion1) {
-                    respuesta.setControl(AppCodigo.ERROR, "No se pudo editar el Numerador");
+                    respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Numerador");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
-                respuesta.setControl(AppCodigo.CREADO, "Numerador editado con exito");
-                return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
-            } else if(idCteNumero != null) {
-                CteNumero cteNumero = cteNumeroFacade.find(idCteNumero);
-                if(cteNumero == null) {
-                    respuesta.setControl(AppCodigo.ERROR, "Error, no existe el nuemero seleccionado");
-                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                }
-                cteNumerador.setDescripcion(descripcion);
-                cteNumerador.setFechaApertura(fechaApertura);
-                cteNumerador.setFechaCierre(fechaCierre);
-                cteNumerador.setIdCteTipo(cteTipo);
-                cteNumerador.setIdCteNumero(cteNumero);            
-                transaccion1 = cteNumeradorFacade.editCteNumerador(cteNumerador);           
-                if(!transaccion1) {
-                    respuesta.setControl(AppCodigo.ERROR, "No se pudo editar el Numerador");
-                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                }
-                respuesta.setControl(AppCodigo.CREADO, "Numerador editado con exito");
+                respuesta.setControl(AppCodigo.GUARDADO, "Numerador creado con exito");
                 return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
             }
-            respuesta.setControl(AppCodigo.ERROR, "No se pudo editar el Numerador");
+            respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Numerador");
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
         } catch (Exception ex) { 
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
@@ -396,26 +428,16 @@ public class NumeradorRest {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             boolean transaccion;
-            boolean transaccion2;
-            if(cteNumerador.getIdCteNumero().getCteNumeradorCollection().size() > 1) {
-                transaccion = cteNumeradorFacade.deleteCteNumerador(cteNumerador);
-                if(!transaccion) {
-                    respuesta.setControl(AppCodigo.ERROR, "No se pudo borrar el Numerador");
-                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                }
-            } else {
                 try {
                     transaccion = cteNumeradorFacade.deleteCteNumerador(cteNumerador);
-                    transaccion2 = cteNumeroFacade.deleteCteNumero(cteNumerador.getIdCteNumero());
-                    if(!transaccion || !transaccion2) {
+                    if(!transaccion) {
                         respuesta.setControl(AppCodigo.ERROR, "No se pudo borrar el Numerador");
                         return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                     }
                 } catch (Exception e) {
                     respuesta.setControl(AppCodigo.ERROR, e.getMessage());
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                } 
-            }               
+                }                           
             respuesta.setControl(AppCodigo.OK, "Numerador borrado con exito");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception e) {

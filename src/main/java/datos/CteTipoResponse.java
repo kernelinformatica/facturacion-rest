@@ -1,9 +1,7 @@
 package datos;
 
-import entidades.CteNumerador;
 import entidades.CteTipo;
 import entidades.CteTipoSisLetra;
-import entidades.SisLetra;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -17,14 +15,13 @@ public class CteTipoResponse implements Payload {
     int codigoComp; 
     String descCorta;
     String descripcion; 
-    boolean cursoLegal; 
-    SisCodigoAfipResponse codigoAfip; 
+    boolean cursoLegal;  
     String surenu;
     String observaciones;
     boolean requiereFormaPago;
     SisComprobanteResponse comprobante;
-    List<CteNumeradorResponse> numerador;
-    List<SisLetraResponse> letras;
+    List<SisLetraSisCodAfipResponse> letrasCodigos;
+    
     
     public CteTipoResponse(CteTipo c) {
         this.idCteTipo = c.getIdCteTipo();
@@ -32,13 +29,11 @@ public class CteTipoResponse implements Payload {
         this.descCorta = c.getDescCorta();
         this.descripcion = c.getDescripcion();
         this.cursoLegal = c.getCursoLegal();
-        this.codigoAfip = new SisCodigoAfipResponse(c.getCodigoAfip());
         this.surenu = c.getSurenu();
         this.observaciones = c.getObservaciones();
         this.comprobante = new SisComprobanteResponse(c.getIdSisComprobante());
         this.requiereFormaPago = c.getRequiereFormaPago();
-        this.numerador = new ArrayList<>();
-        this.letras = new ArrayList<>();
+        this.letrasCodigos = new ArrayList<>();
     }
 
     public Integer getIdCteTipo() {
@@ -81,14 +76,6 @@ public class CteTipoResponse implements Payload {
         this.cursoLegal = cursoLegal;
     }
 
-    public SisCodigoAfipResponse getCodigoAfip() {
-        return codigoAfip;
-    }
-
-    public void setCodigoAfip(SisCodigoAfipResponse codigoAfip) {
-        this.codigoAfip = codigoAfip;
-    }
-
     public String getSurenu() {
         return surenu;
     }
@@ -113,34 +100,14 @@ public class CteTipoResponse implements Payload {
     public void setComprobante(SisComprobanteResponse comprobante) {
         this.comprobante = comprobante;
     }
-
-    public List<CteNumeradorResponse> getNumerador() {
-        return numerador;
-    }
-
-    public void setNumerador(List<CteNumeradorResponse> numerador) {
-        this.numerador = numerador;
-    }
-
-    public List<SisLetraResponse> getLetras() {
-        return letras;
-    }
-
-    public void setLetras(List<SisLetraResponse> letras) {
-        this.letras = letras;
-    }
     
-    public void agregarNumeradores(Collection<CteNumerador> cteNumeradorCollection) {
-        for(CteNumerador c : cteNumeradorCollection) {
-            CteNumeradorResponse cte = new CteNumeradorResponse(c);
-            this.numerador.add(cte);
-        }
-    }
-    
-    public void agregarLetras(Collection<CteTipoSisLetra> letras) {
+    public void agregarLetrasCodigos(Collection<CteTipoSisLetra> letras) {
         for(CteTipoSisLetra l : letras) {
-            SisLetraResponse slr = new SisLetraResponse(l.getIdSisLetra());
-            this.letras.add(slr);
+            SisLetraSisCodAfipResponse slr = new SisLetraSisCodAfipResponse(l);
+            if(!l.getCteNumeradorCollection().isEmpty()) {
+                slr.agregarNumeradores(l.getCteNumeradorCollection());
+            }
+            this.letrasCodigos.add(slr);
         }
     }
 

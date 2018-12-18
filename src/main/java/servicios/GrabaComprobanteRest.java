@@ -6,7 +6,7 @@ import datos.AppCodigo;
 import datos.DatosResponse;
 import datos.ServicioResponse;
 import entidades.Acceso;
-import entidades.CteNumero;
+import entidades.CteNumerador;
 import entidades.CteTipo;
 import entidades.Deposito;
 import entidades.FactCab;
@@ -43,7 +43,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
-import persistencia.CteNumeroFacade;
+import persistencia.CteNumeradorFacade;
 import persistencia.CteTipoFacade;
 import persistencia.DepositoFacade;
 import persistencia.FactCabFacade;
@@ -85,7 +85,7 @@ public class GrabaComprobanteRest {
     @Inject FactFormaPagoFacade factFormaPagoFacade;
     @Inject FormaPagoDetFacade formaPagoDetFacade;
     @Inject SisTipoOperacionFacade  sisTipoOperacionFacade;
-    @Inject CteNumeroFacade cteNumeroFacade;
+    @Inject CteNumeradorFacade cteNumeradorFacade;
     @Inject SisTipoModeloFacade sisTipoModeloFacade;
           
     @POST
@@ -127,6 +127,7 @@ public class GrabaComprobanteRest {
             Integer idFactCab = (Integer) Utils.getKeyFromJsonObject("idFactCab", jsonBody, "Integer");
             Integer idNumero = (Integer) Utils.getKeyFromJsonObject("idNumero", jsonBody, "Integer");
             Integer idVendedor = (Integer) Utils.getKeyFromJsonObject("idVendedor", jsonBody, "Integer");
+            Integer codigoAfip = (Integer) Utils.getKeyFromJsonObject("codigoAfip", jsonBody, "Integer");
             
             //Booleanos para ver que se guarda y que no.
             boolean factCabecera = (Boolean) Utils.getKeyFromJsonObject("factCabecera", jsonBody, "boolean");
@@ -145,6 +146,7 @@ public class GrabaComprobanteRest {
             Date fechaVencimientoFact = (Date) Utils.getKeyFromJsonObject("fechaVencimientoFact", jsonBody, "Date");
             Date fechaContaFact = (Date) Utils.getKeyFromJsonObject("fechaContaFact", jsonBody, "Date");
             Integer idNumeroFact = (Integer) Utils.getKeyFromJsonObject("idNumeroFact", jsonBody, "Integer");
+            Integer codigoAfipFact = (Integer) Utils.getKeyFromJsonObject("codigoAfipFact", jsonBody, "Integer");
                         
             //Grillas de articulos, subTotales, elementos trazables y formas de pago
             List<JsonElement> grillaArticulos = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("grillaArticulos", jsonBody, "ArrayList");          
@@ -248,9 +250,11 @@ public class GrabaComprobanteRest {
                 respuesta.setControl(AppCodigo.ERROR, "Error, sisTipoOperacion nulo");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
+            if(codigoAfip == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, codigo Afip nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }            
             
-            
-
             //----------Metodos de busquedas de clases por id----------//
             
             CteTipo cteTipo = cteTipoFacade.find(idCteTipo);
@@ -331,7 +335,7 @@ public class GrabaComprobanteRest {
                 factCab.setSitIVA(sisSitIva);
                 factCab.setIdSisTipoOperacion(sisTipoOperacion);
                 factCab.setIdVendedor(idVendedor);
-                //factCab.setIdDepositos(null);
+                factCab.setCodigoAfip(codigoAfip);
             } else {
                 if(idFactCab == null) {
                     respuesta.setControl(AppCodigo.ERROR, "El parametro de cabecera no puede ser nulo");
@@ -455,15 +459,15 @@ public class GrabaComprobanteRest {
                             prod.setIdProductos(producto);
                             prod.setItem(item);
                             
-                            CteNumero cteNumero = null;
+                            CteNumerador cteNumerador = null;
                             if(idNumero != null) {
-                                cteNumero = cteNumeroFacade.find(idNumero);
-                                if(cteNumero == null) {
+                                cteNumerador = cteNumeradorFacade.find(idNumero);
+                                if(cteNumerador == null) {
                                     respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el numero de comprobante");
                                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                                 }
-                                String ptoVenta = cteNumero.getPtoVenta().toString();
-                                String numeroVentaFormat = String.format("%08d",cteNumero.getNumero());
+                                String ptoVenta = cteNumerador.getIdPtoVenta().getPtoVenta().toString();
+                                String numeroVentaFormat = String.format("%08d",cteNumerador.getNumerador());
                                 String concatenado = ptoVenta.concat(numeroVentaFormat);
                                 prod.setNumero(Long.parseLong(concatenado,10));
                             } else {
@@ -606,35 +610,35 @@ public class GrabaComprobanteRest {
                     }
                     //Me fijo si guarda la factura del remito asociado
                     if(!grabaFactura) {
-                        CteNumero cteNumero = null;
+                        CteNumerador cteNumerador = null;
                         if(idNumero != null) {
-                            cteNumero = cteNumeroFacade.find(idNumero);
-                            if(cteNumero == null) {
+                            cteNumerador = cteNumeradorFacade.find(idNumero);
+                            if(cteNumerador == null) {
                                 respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el numero de comprobante");
                                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                             }
-                            String ptoVenta = cteNumero.getPtoVenta().toString();
-                            String numeroVentaFormat = String.format("%08d",cteNumero.getNumero());
+                            String ptoVenta = cteNumerador.getIdPtoVenta().getPtoVenta().toString();
+                            String numeroVentaFormat = String.format("%08d",cteNumerador.getNumerador());
                             String concatenado = ptoVenta.concat(numeroVentaFormat);
                             factCab.setNumero(Long.parseLong(concatenado,10));
-                        } 
-                        return this.persistirObjetos(factCab, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumero);
+                        }
+                        return this.persistirObjetos(factCab, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumerador);
                     } else if(tipoFact != null || letraFact != null || numeroFact != null || fechaVencimientoFact != null || fechaContaFact != null){                                              
-                        CteNumero cteNumero = null;
+                        CteNumerador cteNumerador = null;
                         if(idNumero != null) {
-                            cteNumero = cteNumeroFacade.find(idNumero);
-                            if(cteNumero == null) {
+                            cteNumerador = cteNumeradorFacade.find(idNumero);
+                            if(cteNumerador == null) {
                                 respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el numero de comprobante");
                                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                             }
-                            String ptoVenta = cteNumero.getPtoVenta().toString();
-                            String numeroVentaFormat = String.format("%08d",cteNumero.getNumero());
+                            String ptoVenta = cteNumerador.getIdPtoVenta().getPtoVenta().toString();
+                            String numeroVentaFormat = String.format("%08d",cteNumerador.getNumerador());
                             String concatenado = ptoVenta.concat(numeroVentaFormat);
                             factCab.setNumero(Long.parseLong(concatenado,10));
-                        } 
+                        }
                         
-                        //Persisto Primero los objetos del remito
-                        this.persistirObjetos(factCab, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumero);
+                       //Persisto Primero los objetos del remito
+                        this.persistirObjetos(factCab, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumerador);
                         
                         //Luego empiezo con los datos de la factura relacionada
                         CteTipo cteTipoFac = cteTipoFacade.find(tipoFact);
@@ -644,24 +648,23 @@ public class GrabaComprobanteRest {
                         }
                         
                         //Creo la nueva FactCab
-                        FactCab fc = new FactCab();
-                        
-                        //Busco el numerador del relacionado
-                        CteNumero cteNumeroRel = null;
+                        FactCab fc = new FactCab();                        
+                        //Busco el numerador del relacionado                        
+                        CteNumerador cteNumeradorRel = null;
                         if(idNumeroFact != null) {
-                            cteNumeroRel = cteNumeroFacade.find(idNumeroFact);
-                            if(cteNumeroRel == null) {
+                            cteNumeradorRel = cteNumeradorFacade.find(idNumeroFact);
+                            if(cteNumeradorRel == null) {
                                 respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el numero de comprobante");
                                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                             }
-                            String ptoVenta = cteNumeroRel.getPtoVenta().toString();
-                            String numeroVentaFormat = String.format("%08d",cteNumeroRel.getNumero());
+                            String ptoVenta = cteNumeradorRel.getIdPtoVenta().getPtoVenta().toString();
+                            String numeroVentaFormat = String.format("%08d",cteNumeradorRel.getNumerador());
                             String concatenado = ptoVenta.concat(numeroVentaFormat);
                             fc.setNumero(Long.parseLong(concatenado,10));
                         } else {
                             fc.setNumero(numeroFact.longValue());
                         }
-                        
+                        fc.setCodigoAfip(codigoAfipFact);
                         fc.setCai(cai);
                         fc.setCaiVto(caiVto);
                         fc.setCodBarra(codBarra);
@@ -685,7 +688,7 @@ public class GrabaComprobanteRest {
                         fc.setSitIVA(sisSitIva);
                         fc.setIdSisTipoOperacion(sisTipoOperacion);
                         fc.setIdVendedor(idVendedor);
-                        return this.generarFacturaRelacionada(fc, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumeroRel);
+                        return this.generarFacturaRelacionada(fc, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumeradorRel);
                     } else {
                         respuesta.setControl(AppCodigo.ERROR, "No pudo grabar la factura asociada, algun campo no es valido");
                         return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
@@ -700,7 +703,7 @@ public class GrabaComprobanteRest {
         }
     }
     
-    public Response persistirObjetos(FactCab factCab, List<FactDetalle> factDetalle, List<FactImputa> factImputa, List<Produmo> produmo, List<FactPie> factPie, List<Lote> listaLotes, List<FactFormaPago> factFormaPago, CteNumero cteNumero) {
+    public Response persistirObjetos(FactCab factCab, List<FactDetalle> factDetalle, List<FactImputa> factImputa, List<Produmo> produmo, List<FactPie> factPie, List<Lote> listaLotes, List<FactFormaPago> factFormaPago, CteNumerador cteNumerador) {
         ServicioResponse respuesta = new ServicioResponse();
         try {
             //Comienzo con la transaccion de FactCab
@@ -803,9 +806,9 @@ public class GrabaComprobanteRest {
                 }
             }
             //Edito el numero si es distinto de null
-            if(cteNumero != null) {
-                cteNumero.setNumero(cteNumero.getNumero()+1);
-                cteNumeroFacade.edit(cteNumero);
+            if(cteNumerador != null) {
+                cteNumerador.setNumerador(cteNumerador.getNumerador()+1);
+                cteNumeradorFacade.edit(cteNumerador);
             }
             if(factCab.getIdFactCab() != null) {
                 DatosResponse r = new DatosResponse(factCab.getIdFactCab());
@@ -819,7 +822,7 @@ public class GrabaComprobanteRest {
         }
     }
     
-    public Response generarFacturaRelacionada(FactCab factCab, List<FactDetalle> factDetalle, List<FactImputa> factImputa, List<Produmo> produmo, List<FactPie> factPie, List<Lote> listaLotes, List<FactFormaPago> factFormaPago, CteNumero cteNumero) {
+    public Response generarFacturaRelacionada(FactCab factCab, List<FactDetalle> factDetalle, List<FactImputa> factImputa, List<Produmo> produmo, List<FactPie> factPie, List<Lote> listaLotes, List<FactFormaPago> factFormaPago, CteNumerador cteNumerador) {
         ServicioResponse respuesta = new ServicioResponse();
         try {
             List<FactDetalle> listaDetalles = new ArrayList<>();
@@ -923,7 +926,7 @@ public class GrabaComprobanteRest {
             }
             
             //Persisto los objetos y devuelvo la respuesta          
-            return this.persistirObjetos(factCab, listaDetalles, listaImputa, produmo, listaPie, listaLotes, listaFormaPago, cteNumero);
+            return this.persistirObjetos(factCab, listaDetalles, listaImputa, produmo, listaPie, listaLotes, listaFormaPago, cteNumerador);
         } catch(Exception ex) {
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
