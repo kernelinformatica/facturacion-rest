@@ -118,6 +118,15 @@ public class CteTipoResponse implements Payload {
     public void setRequiereFormaPago(boolean requiereFormaPago) {
         this.requiereFormaPago = requiereFormaPago;
     }
+
+    public List<SisLetraSisCodAfipResponse> getLetrasCodigos() {
+        return letrasCodigos;
+    }
+
+    public void setLetrasCodigos(List<SisLetraSisCodAfipResponse> letrasCodigos) {
+        this.letrasCodigos = letrasCodigos;
+    }
+    
     
     
     @Override

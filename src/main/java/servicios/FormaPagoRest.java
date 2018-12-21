@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -110,11 +111,14 @@ public class FormaPagoRest {
             
             //busco las formas de pago de acuerdo a las listas de precios dadas de alta para el usuario
             List<Payload> formaPagos = new ArrayList<>();
+            List<FormaPagoResponse> formaPagosEncontradas = new ArrayList<>();
             for(UsuarioListaPrecio lu : user.getUsuarioListaPrecioCollection()){ 
-                for(ListaPrecioFormaPago lp : lu.getIdListaPrecios().getListaPrecioFormaPagoCollection()) {                   
-                    FormaPagoResponse fp = new FormaPagoResponse(lp.getIdFormaPago()); 
-                    ListaPreciosResponse lr = new ListaPreciosResponse(lp.getIdListaPrecio());
-                    fp.getListaPrecios().add(lr);
+                for(ListaPrecioFormaPago lp : lu.getIdListaPrecios().getListaPrecioFormaPagoCollection()) {                                              
+                    FormaPagoResponse fp = new FormaPagoResponse(lp.getIdFormaPago());
+                    for(ListaPrecioFormaPago lpfp : lp.getIdFormaPago().getListaPrecioFormaPagoCollection()) {
+                        ListaPreciosResponse lr = new ListaPreciosResponse(lpfp.getIdListaPrecio());                   
+                        fp.getListaPrecios().add(lr);
+                    }
                     if(!lp.getIdFormaPago().getFormaPagoDetCollection().isEmpty()) {
                         for(FormaPagoDet d : lp.getIdFormaPago().getFormaPagoDetCollection()) {
                             FormaPagoDetResponse fpd = new FormaPagoDetResponse(d);
@@ -131,13 +135,25 @@ public class FormaPagoRest {
                             fp.getFormaPagoDet().add(fpd);
                         }
                     }
-                    formaPagos.add(fp);
+                    // Aca busca si ya exsite
+                    FormaPagoResponse yaExiste = formaPagosEncontradas.stream()
+                        .filter(
+                            a -> a.getIdFormaPago() == fp.getIdFormaPago()
+                        )
+                        .findFirst()
+                        .orElse(null);
+                    if (yaExiste == null) {
+                        formaPagosEncontradas.add(fp);
+                        formaPagos.add(fp);
+                    }                    
                 }
             }
-            if(formaPagos.isEmpty()) {
+                       
+            if(formaPagosEncontradas.isEmpty()) {
                 respuesta.setControl(AppCodigo.ERROR, "No hay Formas de Pago disponibles");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
+            
             respuesta.setArraydatos(formaPagos);
             respuesta.setControl(AppCodigo.OK, "Lista de Formas de Pago");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();

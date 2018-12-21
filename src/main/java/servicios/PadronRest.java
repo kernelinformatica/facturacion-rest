@@ -12,6 +12,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -48,7 +49,8 @@ public class PadronRest {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getPadron(  
         @HeaderParam ("token") String token,
-        @QueryParam ("grupo") Integer grupo,    
+        @QueryParam ("grupo") Integer grupo,
+        @QueryParam ("elementos") String elementos,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {
@@ -83,7 +85,7 @@ public class PadronRest {
             }
             List<Payload> clientes = new ArrayList<>();
             
-            if(grupo == null) {
+            if(grupo == null && elementos != null) {
                 List<Padron> listaPadron = padronFacade.findAll();
 
                 //valido que tenga campos disponibles
@@ -92,11 +94,18 @@ public class PadronRest {
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
 
-                for(Padron p : listaPadron){
+                List<Padron> padornes = new ArrayList<>();
+                padornes = listaPadron.stream()
+                    .filter(
+                       a -> 
+                       a.getPadronApelli().contains(elementos) || 
+                       a.getPadronCodigo().toString().contains(elementos))    
+                      .collect(Collectors.toList());                 
+                for(Padron p: padornes) {
                     PadronResponse fp = new PadronResponse(p);
                     clientes.add(fp);
                 }
-            } else {
+            } else if(grupo != null && elementos != null){
                 List<Parametro> listaParametros = parametroFacade.getByGrupoEmpresa(grupo, user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
                 
                 if(listaParametros.isEmpty() || listaParametros == null) {
@@ -106,20 +115,55 @@ public class PadronRest {
                 
                 List<Padron> listaPadron = new ArrayList();
                 
+                List<Short> ids = new ArrayList<Short>(); 
                 for(Parametro p : listaParametros) {
-                    listaPadron.addAll(padronFacade.getPadronByCategoria(Integer.parseInt(p.getValor())));
+                    ids.add(Short.parseShort(p.getValor()));
                 }
                 
-                if(listaPadron.isEmpty() ||listaPadron == null) {
+                listaPadron.addAll(padronFacade.getPadronByCategoria(ids));
+                
+                if(listaPadron.isEmpty()) {
+                    respuesta.setControl(AppCodigo.ERROR, "Padron no disponible");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                List<Padron> padornes = new ArrayList<>();
+                padornes = listaPadron.stream()
+                    .filter(
+                       a -> 
+                       a.getPadronApelli().toLowerCase().contains(elementos.toLowerCase()) || 
+                       a.getPadronCodigo().toString().contains(elementos))    
+                      .collect(Collectors.toList()); 
+                
+                for(Padron p: padornes) {
+                    PadronResponse fp = new PadronResponse(p);
+                    clientes.add(fp);
+                }
+            } else if(grupo != null && elementos == null){
+                List<Parametro> listaParametros = parametroFacade.getByGrupoEmpresa(grupo, user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
+                
+                if(listaParametros.isEmpty() || listaParametros == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "No existe el grupo");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                
+                List<Padron> listaPadron = new ArrayList();
+                
+                List<Short> ids = new ArrayList<Short>(); 
+                for(Parametro p : listaParametros) {
+                    ids.add(Short.parseShort(p.getValor()));
+                }
+                
+                listaPadron.addAll(padronFacade.getPadronByCategoria(ids));
+                
+                if(listaPadron.isEmpty()) {
                     respuesta.setControl(AppCodigo.ERROR, "Padron no disponible");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
                 
-                for(Padron p : listaPadron) {
+                for(Padron p: listaPadron) {
                     PadronResponse fp = new PadronResponse(p);
                     clientes.add(fp);
                 }
-
             }
             respuesta.setArraydatos(clientes);
             respuesta.setControl(AppCodigo.OK, "Padron");

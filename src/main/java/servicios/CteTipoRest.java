@@ -6,13 +6,17 @@ import datos.AppCodigo;
 import datos.CteTipoResponse;
 import datos.Payload;
 import datos.ServicioResponse;
+import datos.SisLetraSisCodAfipResponse;
 import entidades.Acceso;
 import entidades.CteTipo;
 import entidades.CteTipoSisLetra;
 import entidades.SisCodigoAfip;
 import entidades.SisComprobante;
 import entidades.SisLetra;
+import entidades.SisModulo;
 import entidades.SisOperacionComprobante;
+import entidades.SisSitIVA;
+import entidades.SisSitIVALetras;
 import entidades.SisTipoOperacion;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
@@ -42,6 +46,8 @@ import persistencia.CteTipoSisLetraFacade;
 import persistencia.SisCodigoAfipFacade;
 import persistencia.SisComprobanteFacade;
 import persistencia.SisLetraFacade;
+import persistencia.SisModuloFacade;
+import persistencia.SisSitIVAFacade;
 import persistencia.SisTipoOperacionFacade;
 import persistencia.UsuarioFacade;
 import utils.Utils;
@@ -63,6 +69,8 @@ public class CteTipoRest {
     @Inject Utils utils;
     @Inject SisLetraFacade sisLetraFacade;
     @Inject CteTipoSisLetraFacade cteTipoSisLetraFacade; 
+    @Inject SisModuloFacade sisModuloFacade;
+    @Inject SisSitIVAFacade sisSitIvaFacade;
     
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
@@ -74,6 +82,7 @@ public class CteTipoRest {
         @QueryParam("idCteTipo") Integer idCteTipo,
         @QueryParam("sisTipoOperacion") Integer sisTipoOperacion,
         @QueryParam("condicion") String condicion,
+        @QueryParam("sisSitIva") String sisSitIva,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {
@@ -109,7 +118,7 @@ public class CteTipoRest {
             //Armo la respuesta de cteTipos
             List<Payload> cteTipos = new ArrayList<>();
             //devuelvo todos los cteTipo
-            if(sisModulo == null && sisComprobante == null && idCteTipo == null && sisTipoOperacion == null && condicion == null) {
+            if(sisModulo == null && sisComprobante == null && idCteTipo == null && sisTipoOperacion == null && condicion == null && sisSitIva == null) {
                 for(CteTipo p : user.getIdPerfil().getIdSucursal().getIdEmpresa().getCteTipoCollection()){
                     CteTipoResponse pr = new CteTipoResponse(p);
                     if(!p.getCteTipoSisLetraCollection().isEmpty() && p.getCteTipoSisLetraCollection() != null) {
@@ -118,7 +127,7 @@ public class CteTipoRest {
                     cteTipos.add(pr);
                 }
             //Devuelvo por condicion
-            } else if(sisModulo == null && sisComprobante == null && idCteTipo == null && sisTipoOperacion == null && condicion.equals("propio")) {
+            } else if(sisModulo == null && sisComprobante == null && idCteTipo == null && sisTipoOperacion == null && condicion.equals("propio") && sisSitIva == null) {
                 for(CteTipo p : user.getIdPerfil().getIdSucursal().getIdEmpresa().getCteTipoCollection()){
                     if(p.getIdSisComprobante().getPropio().equals(1)) {
                         CteTipoResponse pr = new CteTipoResponse(p);
@@ -129,7 +138,7 @@ public class CteTipoRest {
                     }
                 }    
             //Devuelvo cteTipo por modulo
-            } else if(sisModulo != null && sisComprobante == null && idCteTipo == null && sisTipoOperacion == null) {
+            } else if(sisModulo != null && sisComprobante == null && idCteTipo == null && sisTipoOperacion == null && sisSitIva == null) {
                 List<CteTipo> cteTipoList = new ArrayList<>();
                 if(sisModulo == 3) {
                     cteTipoList = cteTipoFacade.findAll();
@@ -152,7 +161,7 @@ public class CteTipoRest {
                     cteTipos.add(pr);
                 }                
             //Devuelvo cteTipo por comprobante
-            } else if(sisModulo == null && sisComprobante != null && idCteTipo == null && sisTipoOperacion == null) {
+            } else if(sisModulo == null && sisComprobante != null && idCteTipo == null && sisTipoOperacion == null && sisSitIva == null) {
                 SisComprobante sisComprobanteEncontrado = sisComprobanteFacade.find(sisComprobante);            
                 if(sisComprobanteEncontrado == null) {
                     respuesta.setControl(AppCodigo.ERROR, "Error, no existe el sis comprobante");
@@ -174,7 +183,7 @@ public class CteTipoRest {
                     cteTipos.add(cteTipoResponse);
                 }
             //Devuelvo los numeradores de ese cteTipo   
-            } else if(sisModulo == null && sisComprobante == null && idCteTipo != null && sisTipoOperacion == null) {
+            } else if(sisModulo == null && sisComprobante == null && idCteTipo != null && sisTipoOperacion == null && sisSitIva == null) {
                 CteTipo cteTipo = cteTipoFacade.find(idCteTipo);                
                 
                 if(cteTipo == null) {
@@ -193,7 +202,7 @@ public class CteTipoRest {
                 }
                 cteTipos.add(cteTipoResponse); 
             //Devuelvo el comprobante anterior para los relacionados
-            } else if(sisModulo != null && sisComprobante == null && idCteTipo != null && sisTipoOperacion == null) {
+            } else if(sisModulo != null && sisComprobante == null && idCteTipo != null && sisTipoOperacion == null && sisSitIva == null) {
                 CteTipo cteTipo = cteTipoFacade.find(idCteTipo);                
                 if(cteTipo == null) {
                     respuesta.setControl(AppCodigo.ERROR, "Error, no existe ese tipo de comprobamte");
@@ -214,7 +223,7 @@ public class CteTipoRest {
                     }
                     cteTipos.add(cteTip);
                 }                
-            } else if(sisModulo == null && sisComprobante == null && idCteTipo == null && sisTipoOperacion != null) {
+            } else if(sisModulo == null && sisComprobante == null && idCteTipo == null && sisTipoOperacion != null && sisSitIva == null) {
                 SisTipoOperacion tipoOperacion = sisTipoOperacionFacade.find(sisTipoOperacion);
                 
                 if(tipoOperacion == null) {
@@ -235,7 +244,7 @@ public class CteTipoRest {
                         for(CteTipo c : p.getIdSisComprobantes().getCteTipoCollection()) {
                             if(!listaTipos.isEmpty() && listaTipos.contains(c)) {
                                 continue;
-                            } else {
+                            } else if(c.getIdEmpresa().equals(user.getIdPerfil().getIdSucursal().getIdEmpresa())){
                                 listaTipos.add(c);
                             }
                         }                        
@@ -249,8 +258,53 @@ public class CteTipoRest {
                     if(!c.getCteTipoSisLetraCollection().isEmpty() && c.getCteTipoSisLetraCollection() != null) {
                         ctr.agregarLetrasCodigos(c.getCteTipoSisLetraCollection());
                     }
+                    
                     cteTipos.add(ctr);
                 }               
+            } else if(sisModulo == null && sisComprobante == null && idCteTipo == null && sisTipoOperacion != null && sisSitIva != null){
+                
+                SisTipoOperacion tipoOperacion = sisTipoOperacionFacade.find(sisTipoOperacion);               
+                if(tipoOperacion == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no existe el tipo de operacion");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                
+                SisSitIVA sitIva = sisSitIvaFacade.getByDescCorta(sisSitIva);
+                if(sitIva == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no existe la situacion de iva seleccionada");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                
+                List<CteTipo> listaTipos = new ArrayList<>();
+                //Filtro por tipo de operacion, modulo y empresa
+                for(SisOperacionComprobante p : tipoOperacion.getSisOperacionComprobanteCollection()) {
+                    if(p.getIdSisComprobantes().getCteTipoCollection().isEmpty()) {
+                        continue;
+                    } else {
+                        for(CteTipo c : p.getIdSisComprobantes().getCteTipoCollection()) {
+                            if(!listaTipos.isEmpty() && listaTipos.contains(c)) {
+                                continue;
+                            } else if(c.getIdEmpresa().equals(user.getIdPerfil().getIdSucursal().getIdEmpresa())){
+                                listaTipos.add(c);
+                            }
+                        }                        
+                    }                   
+                }
+                //Ordeno la lista
+                Collections.sort(listaTipos, (o1, o2) -> o1.getIdSisComprobante().getOrden().compareTo(o2.getIdSisComprobante().getOrden())); 
+                //Filtro las letras por tipo de situacion fiscal del cliente o proveedor
+                for(CteTipo c : listaTipos) {
+                    CteTipoResponse ctr = new CteTipoResponse(c);
+                    for(CteTipoSisLetra cl : c.getCteTipoSisLetraCollection()) {
+                        for(SisSitIVALetras si : sitIva.getSisSitIVALetrasCollection()) {
+                            if(si.getIdSisLetras().equals(cl.getIdSisLetra()) && si.getIdSisModulos().equals(c.getIdSisComprobante().getIdSisModulos())) {
+                                ctr.getLetrasCodigos().add(new SisLetraSisCodAfipResponse(cl));
+                            }
+                        }
+                    }
+                    cteTipos.add(ctr);
+                }
+                                
             } else {
                 respuesta.setControl(AppCodigo.ERROR, "No hay Tipos de Comprobantes disponibles");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
