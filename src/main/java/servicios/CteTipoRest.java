@@ -151,7 +151,8 @@ public class CteTipoRest {
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
                 //Ordeno la lista
-                Collections.sort(cteTipoList, (o1, o2) -> o1.getIdSisComprobante().getOrden().compareTo(o2.getIdSisComprobante().getOrden()));
+                //Collections.sort(cteTipoList, (o1, o2) -> o1.getIdSisComprobante().getOrden().compareTo(o2.getIdSisComprobante().getOrden()));
+                
                 //Armo la respuesta
                 for(CteTipo p : cteTipoList){
                     CteTipoResponse pr = new CteTipoResponse(p);
@@ -173,7 +174,8 @@ public class CteTipoRest {
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
                 //Ordeno la lista
-                Collections.sort(cteTipo, (o1, o2) -> o1.getIdSisComprobante().getOrden().compareTo(o2.getIdSisComprobante().getOrden()));
+                //Collections.sort(cteTipo, (o1, o2) -> o1.getIdSisComprobante().getOrden().compareTo(o2.getIdSisComprobante().getOrden()));
+               
                 //Armo la respuesta
                 for(CteTipo c : cteTipo) {
                     CteTipoResponse cteTipoResponse = new CteTipoResponse(c);
@@ -202,19 +204,28 @@ public class CteTipoRest {
                 }
                 cteTipos.add(cteTipoResponse); 
             //Devuelvo el comprobante anterior para los relacionados
-            } else if(sisModulo != null && sisComprobante == null && idCteTipo != null && sisTipoOperacion == null && sisSitIva == null) {
+            } else if(sisModulo != null && sisComprobante == null && idCteTipo != null && sisTipoOperacion != null && sisSitIva == null) {
                 CteTipo cteTipo = cteTipoFacade.find(idCteTipo);                
                 if(cteTipo == null) {
                     respuesta.setControl(AppCodigo.ERROR, "Error, no existe ese tipo de comprobamte");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
-                List<CteTipo> cteTipoAnteriores = cteTipoFacade.getComprobanteAnterior(cteTipo,sisModulo);
+                
+                SisTipoOperacion tipoOperacion = sisTipoOperacionFacade.find(sisTipoOperacion);               
+                if(tipoOperacion == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no existe el tipo de operacion");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                
+                List<CteTipo> cteTipoAnteriores = cteTipoFacade.getComprobanteAnterior(cteTipo,sisModulo, tipoOperacion);
                 if(cteTipoAnteriores.isEmpty()) {
                     respuesta.setControl(AppCodigo.ERROR, "Error, no hay comprobantes anteriores");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
+                
                 //Ordeno la lista
-                Collections.sort(cteTipoAnteriores, (o1, o2) -> o1.getIdSisComprobante().getOrden().compareTo(o2.getIdSisComprobante().getOrden()));
+                //Collections.sort(cteTipoAnteriores, (o1, o2) -> o1.getIdSisComprobante().getOrden().compareTo(o2.getIdSisComprobante().getOrden()));
+                
                 //Armo la respuesta
                 for(CteTipo c : cteTipoAnteriores) {
                     CteTipoResponse cteTip = new CteTipoResponse(c);
@@ -251,7 +262,8 @@ public class CteTipoRest {
                     }                   
                 }
                 //Ordeno la lista
-                Collections.sort(listaTipos, (o1, o2) -> o1.getIdSisComprobante().getOrden().compareTo(o2.getIdSisComprobante().getOrden()));               
+                //Collections.sort(listaTipos, (o1, o2) -> o1.getIdSisComprobante().getOrden().compareTo(o2.getIdSisComprobante().getOrden()));               
+                
                 //Armo la respuesta
                 for(CteTipo c : listaTipos) {
                     CteTipoResponse ctr = new CteTipoResponse(c);
@@ -260,7 +272,8 @@ public class CteTipoRest {
                     }
                     
                     cteTipos.add(ctr);
-                }               
+                }
+                //Devuelvo los comprobantes para compra y para venta
             } else if(sisModulo == null && sisComprobante == null && idCteTipo == null && sisTipoOperacion != null && sisSitIva != null){
                 
                 SisTipoOperacion tipoOperacion = sisTipoOperacionFacade.find(sisTipoOperacion);               
@@ -282,29 +295,49 @@ public class CteTipoRest {
                         continue;
                     } else {
                         for(CteTipo c : p.getIdSisComprobantes().getCteTipoCollection()) {
-                            if(!listaTipos.isEmpty() && listaTipos.contains(c)) {
-                                continue;
-                            } else if(c.getIdEmpresa().equals(user.getIdPerfil().getIdSucursal().getIdEmpresa())){
+                            //Pregunto si tiene el mismo idEmpresa en cteTipo y en SisOperacionComprobante 
+                            if(c.getIdEmpresa().equals(user.getIdPerfil().getIdSucursal().getIdEmpresa()) && c.getIdEmpresa().getIdEmpresa().equals(p.getIdEmpresa()) ){
                                 listaTipos.add(c);
                             }
                         }                        
                     }                   
                 }
-                //Ordeno la lista
-                Collections.sort(listaTipos, (o1, o2) -> o1.getIdSisComprobante().getOrden().compareTo(o2.getIdSisComprobante().getOrden())); 
+                List<CteTipoResponse> listaResponse = new ArrayList<>();
                 //Filtro las letras por tipo de situacion fiscal del cliente o proveedor
                 for(CteTipo c : listaTipos) {
                     CteTipoResponse ctr = new CteTipoResponse(c);
-                    for(CteTipoSisLetra cl : c.getCteTipoSisLetraCollection()) {
-                        for(SisSitIVALetras si : sitIva.getSisSitIVALetrasCollection()) {
-                            if(si.getIdSisLetras().equals(cl.getIdSisLetra()) && si.getIdSisModulos().equals(c.getIdSisComprobante().getIdSisModulos())) {
-                                ctr.getLetrasCodigos().add(new SisLetraSisCodAfipResponse(cl));
+                    //Agrego la condicion para los netos e Ivas
+                    if(!c.getIdSisComprobante().getSisOperacionComprobanteCollection().isEmpty()) {
+                        for(SisOperacionComprobante soc : c.getIdSisComprobante().getSisOperacionComprobanteCollection()) {
+                            if(soc.getIdSisComprobantes().getIdSisComprobantes().equals(c.getIdSisComprobante().getIdSisComprobantes())) {
+                                ctr.getComprobante().setIncluyeIva(soc.getIncluyeIva());
+                                ctr.getComprobante().setIncluyeNeto(soc.getIncluyeNeto());
+                                ctr.getComprobante().setOrden(soc.getOrden());
+                                ctr.getComprobante().setDifCotizacion(soc.getDifCotizacion());
+                                ctr.getComprobante().setReferencia(soc.getDescripcion());
                             }
                         }
                     }
-                    cteTipos.add(ctr);
-                }
-                                
+                    //Agrego las letras y codigo afip
+                    for(CteTipoSisLetra cl : c.getCteTipoSisLetraCollection()) {
+                        for(SisSitIVALetras si : sitIva.getSisSitIVALetrasCollection()) {
+                            if(si.getIdSisLetras().equals(cl.getIdSisLetra()) && si.getIdSisModulos().equals(c.getIdSisComprobante().getIdSisModulos())) {
+                                SisLetraSisCodAfipResponse sisLetCod = new SisLetraSisCodAfipResponse(cl);
+                                if(!cl.getCteNumeradorCollection().isEmpty()) {
+                                    sisLetCod.agregarNumeradores(cl.getCteNumeradorCollection());
+                                }
+                                ctr.getLetrasCodigos().add(sisLetCod);
+                            }
+                        }
+                    }
+                    listaResponse.add(ctr);
+                }                           
+                if(!listaResponse.isEmpty()) {
+                    //Ordeno la lista
+                    Collections.sort(listaResponse, (o1, o2) -> o1.getComprobante().getOrden().compareTo(o2.getComprobante().getOrden()));
+                    //Armo la respuesta
+                    cteTipos.addAll(listaResponse);
+                }                                
             } else {
                 respuesta.setControl(AppCodigo.ERROR, "No hay Tipos de Comprobantes disponibles");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();

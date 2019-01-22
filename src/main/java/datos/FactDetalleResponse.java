@@ -1,7 +1,10 @@
 package datos;
 
+import entidades.FactDetalle;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  *
@@ -42,6 +45,25 @@ public class FactDetalleResponse implements Payload{
         this.importe = importe;
         this.factCab = idFactCab;
         this.vendedor = vendedor;
+    }
+    
+    public FactDetalleResponse(FactDetalle d) {
+        this.comprobante = d.getIdFactCab().getIdCteTipo().getDescripcion();
+        this.numero = d.getIdFactCab().getNumero();
+        this.fechaEmision = d.getIdFactCab().getFechaEmision();
+        this.codProducto = d.getCodProducto();
+        this.articulo = d.getDetalle();
+        this.original = d.getCantidad();
+        this.pendiente = BigDecimal.ZERO;
+        this.precio = d.getPrecio();
+        this.dolar = d.getIdFactCab().getCotDolar();
+        this.moneda = d.getIdFactCab().getIdmoneda().getDescripcion();
+        this.porCalc = d.getPorcCalc();
+        this.ivaPorc = d.getIvaPorc();
+        this.deposito = d.getIdDepositos().getCodigoDep();
+        this.importe = d.getImporte();
+        this.factCab = d.getIdFactCab().getIdFactCab();
+        this.vendedor = "";
     }
 
     
@@ -173,9 +195,6 @@ public class FactDetalleResponse implements Payload{
         this.vendedor = vendedor;
     }
     
-    
-    
-
     @Override
     public String getClassName() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.

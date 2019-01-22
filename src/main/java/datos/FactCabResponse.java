@@ -40,6 +40,8 @@ public class FactCabResponse implements Payload{
     private Date fechaEmi;
     private String vendedor;
     private List<FactDetalleResponse> detalle;
+    private List<FactImputaResponse> imputa;
+    
     
 //    FactCabResponse(FactCab f) {
 //        this.idFactCab = f.getIdFactCab();
@@ -79,6 +81,7 @@ public class FactCabResponse implements Payload{
         this.imputada = imputada;
         this.modulo = modulo;
         this.vendedor = vendedor;
+        this.imputa = new ArrayList<>();
     }
 
     public FactCabResponse(Integer idFactCab) {
@@ -308,6 +311,15 @@ public class FactCabResponse implements Payload{
             this.detalle.add(fd);
         }
     }
+
+    public List<FactImputaResponse> getImputa() {
+        return imputa;
+    }
+
+    public void setImputa(List<FactImputaResponse> imputa) {
+        this.imputa = imputa;
+    }
+    
     
     
     @Override

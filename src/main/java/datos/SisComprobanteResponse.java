@@ -12,12 +12,15 @@ public class SisComprobanteResponse implements Payload{
     private String imputacion;
     private Integer orden;
     private SisModuloResponse modulo;
-
+    private Boolean incluyeNeto;
+    private Boolean incluyeIva;
+    private String referencia;
+    private Boolean difCotizacion;
+    
     public SisComprobanteResponse(SisComprobante s) {
        this.idSisComprobantes = s.getIdSisComprobantes();
        this.descripcion = s.getDescripcion();
        this.imputacion = s.getImputacion();
-       this.orden = s.getOrden();
        this.modulo = new SisModuloResponse(s.getIdSisModulos());
     }
     
@@ -59,6 +62,38 @@ public class SisComprobanteResponse implements Payload{
 
     public void setOrden(Integer orden) {
         this.orden = orden;
+    }
+
+    public Boolean getIncluyeNeto() {
+        return incluyeNeto;
+    }
+
+    public void setIncluyeNeto(Boolean incluyeNeto) {
+        this.incluyeNeto = incluyeNeto;
+    }
+
+    public Boolean getIncluyeIva() {
+        return incluyeIva;
+    }
+
+    public void setIncluyeIva(Boolean incluyeIva) {
+        this.incluyeIva = incluyeIva;
+    }
+
+    public String getReferencia() {
+        return referencia;
+    }
+
+    public void setReferencia(String referencia) {
+        this.referencia = referencia;
+    }
+
+    public Boolean getDifCotizacion() {
+        return difCotizacion;
+    }
+
+    public void setDifCotizacion(Boolean difCotizacion) {
+        this.difCotizacion = difCotizacion;
     }
     
     

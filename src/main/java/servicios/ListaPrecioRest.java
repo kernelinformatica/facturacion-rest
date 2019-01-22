@@ -3,10 +3,15 @@ package servicios;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import datos.AppCodigo;
+import datos.ContPlanCuentaResponse;
+import datos.FormaPagoDetResponse;
+import datos.FormaPagoResponse;
 import datos.ListaPreciosResponse;
 import datos.Payload;
 import datos.ServicioResponse;
 import entidades.Acceso;
+import entidades.ContPlanCuenta;
+import entidades.FormaPagoDet;
 import entidades.ListaPrecio;
 import entidades.ListaPrecioDet;
 import entidades.Producto;
@@ -35,6 +40,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
+import persistencia.ContPlanCuentaFacade;
 import persistencia.ListaPrecioDetFacade;
 import persistencia.ListaPrecioFacade;
 import persistencia.ProductoFacade;
@@ -56,6 +62,7 @@ public class ListaPrecioRest {
     @Inject ListaPrecioFacade listaPrecioFacade;
     @Inject ProductoFacade productoFacade;
     @Inject ListaPrecioDetFacade listaPrecioDetFacade; 
+    @Inject ContPlanCuentaFacade contPlanCuentaFacade;
     
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
@@ -110,6 +117,23 @@ public class ListaPrecioRest {
                 }
                 if(!ulp.getIdListaPrecios().getListaPrecioFormaPagoCollection().isEmpty()) {
                     sr.agregarFormasPago(ulp.getIdListaPrecios().getListaPrecioFormaPagoCollection());
+                   
+                    for(FormaPagoResponse p : sr.getFormasPago()) {
+                        if(!p.getFormaPagoDet().isEmpty()) {
+                            for(FormaPagoDetResponse d : p.getFormaPagoDet() ){
+                                if(d.getCtaContable() == null) {
+                                    continue;
+                                }
+                                ContPlanCuenta cont = contPlanCuentaFacade.getCuentaContable(Integer.parseInt(d.getCtaContable()));
+                                if(cont != null){
+                                    d.setPlanCuenta(new ContPlanCuentaResponse(cont));
+                                } else {
+                                    ContPlanCuentaResponse conta = new ContPlanCuentaResponse(Integer.parseInt(d.getCtaContable()),d.getDetalle());
+                                    d.setPlanCuenta(conta);
+                                }
+                            }
+                        }
+                    }                                       
                 }
                 listaPreciosResponse.add(sr);
             }
