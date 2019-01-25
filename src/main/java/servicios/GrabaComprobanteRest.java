@@ -20,6 +20,7 @@ import entidades.Master;
 import entidades.Producto;
 import entidades.Produmo;
 import entidades.SisMonedas;
+import entidades.SisOperacionComprobante;
 import entidades.SisTipoModelo;
 import entidades.SisTipoOperacion;
 import entidades.Usuario;
@@ -60,6 +61,7 @@ import persistencia.MasterFacade;
 import persistencia.ProductoFacade;
 import persistencia.ProdumoFacade;
 import persistencia.SisMonedasFacade;
+import persistencia.SisOperacionComprobanteFacade;
 import persistencia.SisTipoModeloFacade;
 import persistencia.SisTipoOperacionFacade;
 import persistencia.UsuarioFacade;
@@ -91,6 +93,7 @@ public class GrabaComprobanteRest {
     @Inject CteNumeradorFacade cteNumeradorFacade;
     @Inject SisTipoModeloFacade sisTipoModeloFacade;
     @Inject MasterFacade masterFacade;
+    @Inject SisOperacionComprobanteFacade sisOperacionComprobanteFacade;
           
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -132,6 +135,7 @@ public class GrabaComprobanteRest {
             Integer idNumero = (Integer) Utils.getKeyFromJsonObject("idNumero", jsonBody, "Integer");
             Integer idVendedor = (Integer) Utils.getKeyFromJsonObject("idVendedor", jsonBody, "Integer");
             Integer codigoAfip = (Integer) Utils.getKeyFromJsonObject("codigoAfip", jsonBody, "Integer");
+            Integer idSisOperacionComprobante = (Integer) Utils.getKeyFromJsonObject("idSisOperacionComprobante", jsonBody, "Integer");
             
             //Booleanos para ver que se guarda y que no.
             boolean factCabecera = (Boolean) Utils.getKeyFromJsonObject("factCabecera", jsonBody, "boolean");
@@ -410,6 +414,21 @@ public class GrabaComprobanteRest {
                             continue;
                         }
                         
+                        if(idSisOperacionComprobante == null) {
+                            respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, Comprobante no encontrado");
+                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                        }
+                            
+                        SisOperacionComprobante sisOperacionComprobante = sisOperacionComprobanteFacade.find(idSisOperacionComprobante);
+                        if(sisOperacionComprobante == null) {
+                            respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, Comprobante no encontrado");
+                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                        }
+
+                        if(!sisOperacionComprobante.getIncluyeNeto()) {
+                            importe = BigDecimal.ZERO;
+                        }
+                        
                         //Creo el factDetalle nuevo y seteo los valores
                         FactDetalle factDetalle = new FactDetalle();
                         factDetalle.setDetalle(articulo);
@@ -541,7 +560,7 @@ public class GrabaComprobanteRest {
                             BigDecimal totalComprobante = (BigDecimal) Utils.getKeyFromJsonObject("totalComprobante", je.getAsJsonObject(), "BigDecimal");
                             BigDecimal porcentaje = (BigDecimal) Utils.getKeyFromJsonObject("porcentaje", je.getAsJsonObject(), "BigDecimal");
                             Integer idSisTipoModelo = (Integer) Utils.getKeyFromJsonObject("idSisTipoModelo", je.getAsJsonObject(), "Integer");
-
+                            BigDecimal baseImponible = (BigDecimal) Utils.getKeyFromJsonObject("baseImponible", je.getAsJsonObject(), "BigDecimal");
                             //Pregunto por los que no pueden ser Null
                             if(cuenta == null || descripcionPie == null ||importe == null || totalComprobante == null || idSisTipoModelo == null) {
                                 respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, algun campo de la grilla es nulo");
@@ -554,9 +573,20 @@ public class GrabaComprobanteRest {
                                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                             }
                             
-//                            if(importe.equals(BigDecimal.ZERO)) {
-//                                continue;
-//                            }
+                            if(idSisOperacionComprobante == null) {
+                                respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, Comprobante no encontrado");
+                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                            }
+                            
+                            SisOperacionComprobante sisOperacionComprobante = sisOperacionComprobanteFacade.find(idSisOperacionComprobante);
+                            if(sisOperacionComprobante == null) {
+                                respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, Comprobante no encontrado");
+                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                            }
+                            
+                            if(!sisOperacionComprobante.getIncluyeIva()) {
+                                importe = BigDecimal.ZERO;
+                            }
                             //Creo el pie 
                             FactPie facturacionPie = new FactPie();
                             facturacionPie.setCtaContable(cuenta);
@@ -565,6 +595,7 @@ public class GrabaComprobanteRest {
                             facturacionPie.setIdFactCab(factCab);
                             facturacionPie.setPorcentaje(porcentaje);
                             facturacionPie.setIdSisTipoModelo(sisTipoModelo);
+                            facturacionPie.setBaseImponible(baseImponible);
                             listaPie.add(facturacionPie);
                         }
                     }

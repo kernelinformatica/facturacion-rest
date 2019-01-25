@@ -16,6 +16,7 @@ public class SisComprobanteResponse implements Payload{
     private Boolean incluyeIva;
     private String referencia;
     private Boolean difCotizacion;
+    private Integer idSisOperacionComprobante;
     
     public SisComprobanteResponse(SisComprobante s) {
        this.idSisComprobantes = s.getIdSisComprobantes();
@@ -94,6 +95,14 @@ public class SisComprobanteResponse implements Payload{
 
     public void setDifCotizacion(Boolean difCotizacion) {
         this.difCotizacion = difCotizacion;
+    }
+
+    public Integer getIdSisOperacionComprobante() {
+        return idSisOperacionComprobante;
+    }
+
+    public void setIdSisOperacionComprobante(Integer idSisOperacionComprobante) {
+        this.idSisOperacionComprobante = idSisOperacionComprobante;
     }
     
     

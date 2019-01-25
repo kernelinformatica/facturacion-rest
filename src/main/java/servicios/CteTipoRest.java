@@ -297,7 +297,14 @@ public class CteTipoRest {
                         for(CteTipo c : p.getIdSisComprobantes().getCteTipoCollection()) {
                             //Pregunto si tiene el mismo idEmpresa en cteTipo y en SisOperacionComprobante 
                             if(c.getIdEmpresa().equals(user.getIdPerfil().getIdSucursal().getIdEmpresa()) && c.getIdEmpresa().getIdEmpresa().equals(p.getIdEmpresa()) ){
-                                listaTipos.add(c);
+                                if(listaTipos.contains(c)) {
+                                    CteTipo cteTipoNuevo = new CteTipo(c);
+                                    cteTipoNuevo.setIdSisOperacionComprobante(p.getIdSisOperacionComprobantes());
+                                    listaTipos.add(cteTipoNuevo);
+                                } else {
+                                    c.setIdSisOperacionComprobante(p.getIdSisOperacionComprobantes());                               
+                                    listaTipos.add(c);
+                                }
                             }
                         }                        
                     }                   
@@ -309,13 +316,16 @@ public class CteTipoRest {
                     //Agrego la condicion para los netos e Ivas
                     if(!c.getIdSisComprobante().getSisOperacionComprobanteCollection().isEmpty()) {
                         for(SisOperacionComprobante soc : c.getIdSisComprobante().getSisOperacionComprobanteCollection()) {
-                            if(soc.getIdSisComprobantes().getIdSisComprobantes().equals(c.getIdSisComprobante().getIdSisComprobantes())) {
-                                ctr.getComprobante().setIncluyeIva(soc.getIncluyeIva());
-                                ctr.getComprobante().setIncluyeNeto(soc.getIncluyeNeto());
-                                ctr.getComprobante().setOrden(soc.getOrden());
-                                ctr.getComprobante().setDifCotizacion(soc.getDifCotizacion());
-                                ctr.getComprobante().setReferencia(soc.getDescripcion());
-                            }
+                            if(soc.getIdSisComprobantes().getIdSisComprobantes().equals(c.getIdSisComprobante().getIdSisComprobantes()) && 
+                               soc.getIdSisTipoOperacion().equals(tipoOperacion) &&
+                               soc.getIdSisOperacionComprobantes().equals(c.getIdSisOperacionComprobante())) {                              
+                                    ctr.getComprobante().setIncluyeIva(soc.getIncluyeIva());
+                                    ctr.getComprobante().setIncluyeNeto(soc.getIncluyeNeto());
+                                    ctr.getComprobante().setOrden(soc.getOrden());
+                                    ctr.getComprobante().setDifCotizacion(soc.getDifCotizacion());
+                                    ctr.getComprobante().setReferencia(soc.getDescripcion());
+                                    ctr.getComprobante().setIdSisOperacionComprobante(soc.getIdSisOperacionComprobantes());                                
+                            }                            
                         }
                     }
                     //Agrego las letras y codigo afip

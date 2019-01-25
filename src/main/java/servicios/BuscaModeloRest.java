@@ -121,7 +121,7 @@ public class BuscaModeloRest {
             for(JsonElement j : productos) {
                 Integer idProducto = (Integer) Utils.getKeyFromJsonObject("idProducto", j.getAsJsonObject(), "Integer");
                 BigDecimal precio = (BigDecimal) Utils.getKeyFromJsonObject("precio", j.getAsJsonObject(), "BigDecimal");
-                Integer cantidad = (Integer) Utils.getKeyFromJsonObject("cantidad", j.getAsJsonObject(), "Integer");
+                BigDecimal cantidad = (BigDecimal) Utils.getKeyFromJsonObject("cantidad", j.getAsJsonObject(), "BigDecimal");
                 BigDecimal subTotal = (BigDecimal) Utils.getKeyFromJsonObject("subTotal", j.getAsJsonObject(), "BigDecimal");
                 
                 if(idProducto == null || cantidad == null || precio == null) {
@@ -145,7 +145,7 @@ public class BuscaModeloRest {
                 //Me fijo si el subTotal es cero o nulo 
                 if(subTotal != null && subTotal.compareTo(BigDecimal.ZERO) != 0) {
                     precio = subTotal;
-                    cantidad = 1;
+                    cantidad = BigDecimal.ONE;
                 }
                                               
                 //Agrego a la lista de modelos response y calculo dependiendo operadores y tipo de modelo
@@ -154,7 +154,8 @@ public class BuscaModeloRest {
                 // - restar
                 // * multiplicar
                 // / dividir
-                // n                
+                // n
+                BigDecimal baseImponible = precio.multiply(cantidad);
                 for(ModeloDetalle p : producto.getIdModeloCab().getModeloDetalleCollection()) {
                     BigDecimal porcentaje = BigDecimal.ZERO;
                     if(p.getIdSisTipoModelo().getIdSisTipoModelo() == 1 || !p.getIdSisModulo().equals(mod)) {
@@ -166,19 +167,19 @@ public class BuscaModeloRest {
                         if(p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(1).getTipo())) {
                             switch (p.getOperador()) {
                                 case "+":
-                                    total = total.add(precio.add(new BigDecimal(cantidad)));
+                                    total = total.add(precio.add(cantidad));
                                     break;
                                 case "%":
-                                    total = total.add(precio.multiply(new BigDecimal(cantidad)).divide(cien));
+                                    total = total.add(precio.multiply(cantidad)).divide(cien);
                                     break;
                                 case "-":
-                                    total = total.add(precio.subtract(new BigDecimal(cantidad)));
+                                    total = total.add(precio.subtract(cantidad));
                                     break;
                                 case "*":
-                                    total = total.add(precio.multiply(new BigDecimal(cantidad)));
+                                    total = total.add(precio.multiply(cantidad));
                                     break;
                                 case "/":
-                                    total = total.add(precio.divide(new BigDecimal(cantidad)));
+                                    total = total.add(precio.divide(cantidad));
                                     break;
                                 case "n":
                                     total = precio;
@@ -187,7 +188,7 @@ public class BuscaModeloRest {
                                     break;
                             }
                         } else if(!p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(3).getTipo()) && !p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(1).getTipo())) {                            
-                            total = total.add(precio.multiply(new BigDecimal(cantidad)));
+                            total = total.add(precio.multiply(cantidad));
                             if(p.getValor().compareTo(BigDecimal.ZERO) == 0) {
                                 porcentaje = porcentaje.add(producto.getIdIVA().getPorcIVA());
                                 total = total.multiply(producto.getIdIVA().getPorcIVA().divide(new BigDecimal(100)));
@@ -196,7 +197,7 @@ public class BuscaModeloRest {
                                 total = total.multiply(p.getValor().divide(cien));
                             }
                         } else if(p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(3).getTipo())) {
-                            total = total.add(precio.multiply(new BigDecimal(cantidad)));
+                            total = total.add(precio.multiply(cantidad));
                             porcentaje = p.getValor();
                             switch (p.getOperador()) {                                   
                                 case "+":
@@ -221,7 +222,7 @@ public class BuscaModeloRest {
                                     break;
                             }
                         }
-                        ModeloDetalleResponse modeloResponse = new ModeloDetalleResponse(p, total, porcentaje);
+                        ModeloDetalleResponse modeloResponse = new ModeloDetalleResponse(p, total, porcentaje, baseImponible);
                         modelos.add(modeloResponse);
                     }
                 }
@@ -235,7 +236,7 @@ public class BuscaModeloRest {
             
             //Armo la lista de facturas response a partir de la lista de modelos obtenidas para todos los productos
             for(ModeloDetalleResponse mdr : modelos) {
-                FacturaResponse fr = new FacturaResponse(mdr.getCtaContable(), mdr.getDescripcion(), mdr.getTotalModelo(), mdr.getValor(), mdr.getTipoModelo().getOrden(), mdr.getTipoModelo().getIdTipoModelo());
+                FacturaResponse fr = new FacturaResponse(mdr.getCtaContable(), mdr.getDescripcion(), mdr.getTotalModelo(), mdr.getValor(), mdr.getTipoModelo().getOrden(), mdr.getTipoModelo().getIdTipoModelo(), mdr.getBaseImponible());
                 listaFacturas.add(fr);
             }
             //Separo por cuenta contable la lista de facturas y los seteo en el Map
@@ -254,6 +255,7 @@ public class BuscaModeloRest {
             for (Map.Entry<String,  List<FacturaResponse>> entry : map.entrySet()) {
                 BigDecimal total = BigDecimal.ZERO;
                 BigDecimal porcentaje = BigDecimal.ZERO;
+                BigDecimal baseImponible = BigDecimal.ZERO;
                 String descripcion = "";
                 String cuentaContable = "";
                 Integer orden = 0;
@@ -267,9 +269,10 @@ public class BuscaModeloRest {
                     porcentaje = fr.getPorcentaje();
                     orden = fr.getOrden();
                     idTipoModelo = fr.getIdSisTipoModelo();
+                    baseImponible = fr.getBaseImponible();
                 }
                 //Armo la respuesta final
-                FacturaResponse fr = new FacturaResponse(cuentaContable,descripcion,total,porcentaje,orden, idTipoModelo);
+                FacturaResponse fr = new FacturaResponse(cuentaContable,descripcion,total,porcentaje,orden, idTipoModelo, baseImponible);
                 listaFacturasLast.add(fr);
             }
             //Ordeno la lista de los detalles por numero de orden de la tabla sisTipoModelo            

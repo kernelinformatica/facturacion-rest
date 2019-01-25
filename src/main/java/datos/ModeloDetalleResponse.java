@@ -17,6 +17,7 @@ public class ModeloDetalleResponse implements Payload {
     private BigDecimal totalModelo;
     private BigDecimal valor;
     private String operador;
+    private BigDecimal baseImponible;
     private SisTipoModeloResponse tipoModelo;
     private ContPlanCuentaResponse planCuenta;
     private SisModuloResponse sisModulo;
@@ -34,7 +35,7 @@ public class ModeloDetalleResponse implements Payload {
         this.sisModulo = new SisModuloResponse(s.getIdSisModulo());
     }
     
-    public ModeloDetalleResponse(ModeloDetalle s, BigDecimal total, BigDecimal porcentaje) {
+    public ModeloDetalleResponse(ModeloDetalle s, BigDecimal total, BigDecimal porcentaje, BigDecimal baseImponible) {
         this.idModeloDetalle = s.getIdModeloDetalle();
         this.ctaContable = s.getCtaContable();
         this.orden = s.getOrden();
@@ -43,8 +44,9 @@ public class ModeloDetalleResponse implements Payload {
         this.prioritario = s.getPrioritario();
         this.totalModelo = total;
         this.valor = porcentaje;
+        this.baseImponible = baseImponible; 
         this.sisModulo = new SisModuloResponse(s.getIdSisModulo());
-        this.tipoModelo = new SisTipoModeloResponse(s.getIdSisTipoModelo());
+        this.tipoModelo = new SisTipoModeloResponse(s.getIdSisTipoModelo());       
     }
     
 //    public ModeloDetalleResponse(ModeloDetalle s, ContPlanCuentaResponse planCuenta) {
@@ -160,6 +162,15 @@ public class ModeloDetalleResponse implements Payload {
     public void setSisModulo(SisModuloResponse sisModulo) {
         this.sisModulo = sisModulo;
     }
+
+    public BigDecimal getBaseImponible() {
+        return baseImponible;
+    }
+
+    public void setBaseImponible(BigDecimal baseImponible) {
+        this.baseImponible = baseImponible;
+    }
+    
     
     
 }

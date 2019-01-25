@@ -8,14 +8,23 @@ import datos.PendientesCancelarResponse;
 import datos.ProductoResponse;
 import datos.ServicioResponse;
 import entidades.Acceso;
+import entidades.CteTipo;
+import entidades.FactCab;
+import entidades.FactDetalle;
+import entidades.FactPie;
 import entidades.ListaPrecio;
 import entidades.ListaPrecioDet;
 import entidades.ModeloDetalle;
+import entidades.Parametro;
 import entidades.Producto;
+import entidades.SisCotDolar;
 import entidades.SisModulo;
+import entidades.SisMonedas;
+import entidades.SisOperacionComprobante;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.security.NoSuchAlgorithmException;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -37,9 +46,15 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
+import persistencia.CteTipoFacade;
+import persistencia.FactCabFacade;
 import persistencia.ListaPrecioFacade;
+import persistencia.ParametroFacade;
 import persistencia.ProductoFacade;
+import persistencia.SisCotDolarFacade;
 import persistencia.SisModuloFacade;
+import persistencia.SisMonedasFacade;
+import persistencia.SisOperacionComprobanteFacade;
 import persistencia.UsuarioFacade;
 import utils.Utils;
 
@@ -57,6 +72,12 @@ public class PendientesCancelarRest {
     @Inject ProductoFacade productoFacade;
     @Inject SisModuloFacade sisModuloFacade;
     @Inject ListaPrecioFacade listaPrecioFacade;
+    @Inject SisMonedasFacade sisMonedasFacade;
+    @Inject SisCotDolarFacade sisCotDolarFacade;
+    @Inject SisOperacionComprobanteFacade sisOperacionComprobanteFacade;
+    @Inject FactCabFacade factCabFacade;
+    @Inject CteTipoFacade cteTipoFacade;
+    @Inject ParametroFacade parametroFacade;
     
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -78,6 +99,9 @@ public class PendientesCancelarRest {
             Integer idProducto = (Integer) Utils.getKeyFromJsonObject("idProducto", jsonBody, "Integer");
             Integer idDeposito = (Integer) Utils.getKeyFromJsonObject("idDeposito", jsonBody, "Integer");
             String despacho = (String) Utils.getKeyFromJsonObject("despacho", jsonBody, "String");
+            Integer idMoneda = (Integer) Utils.getKeyFromJsonObject("idMoneda", jsonBody, "Integer");
+            Integer idSisOperacionComprobante = (Integer) Utils.getKeyFromJsonObject("idSisOperacionComprobante", jsonBody, "Integer");
+            String letra = (String) Utils.getKeyFromJsonObject("letra", jsonBody, "String");
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -115,6 +139,12 @@ public class PendientesCancelarRest {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
+            SisMonedas moneda = sisMonedasFacade.find(idMoneda);
+            if(moneda == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, no la moneda");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            
             //seteo el nombre del store
             String noombreSP = "call s_comprobantesPendientes(?,?,?,?,?,?,?,?)";
             
@@ -144,6 +174,11 @@ public class PendientesCancelarRest {
                         break;
                     }
                     ProductoResponse producto = new ProductoResponse(prod);
+                    if(moneda.getDescripcion().equals("$AR") && rs.getString("moneda").equals("u$s")) {
+                        producto.setCostoReposicion(producto.getCostoReposicion().multiply(rs.getBigDecimal("dolar")));
+                    } else if((moneda.getDescripcion().equals("u$s") && rs.getString("moneda").equals("$AR"))) {
+                        producto.setCostoReposicion(producto.getCostoReposicion().divide(rs.getBigDecimal("dolar"),2, RoundingMode.HALF_UP));
+                    }
                     producto.getModeloCab().agregarModeloDetalleImputacion(prod.getIdModeloCab().getModeloDetalleCollection(),rs.getString("imputacion") );
                     PendientesCancelarResponse pendientesCancelar = new PendientesCancelarResponse(
                             rs.getString("comprobante"),
@@ -166,16 +201,113 @@ public class PendientesCancelarRest {
                             rs.getInt("itemImputa"),
                             rs.getBigDecimal("importe"),
                             producto);
+                    if(moneda.getDescripcion().equals("$AR") && rs.getString("moneda").equals("u$s")) {
+                        pendientesCancelar.setPrecio(pendientesCancelar.getPrecio().multiply(rs.getBigDecimal("dolar")));
+                    } else if((moneda.getDescripcion().equals("u$s") && rs.getString("moneda").equals("$AR"))) {
+                        pendientesCancelar.setPrecio(pendientesCancelar.getPrecio().divide(rs.getBigDecimal("dolar"),2, RoundingMode.HALF_UP));
+                    }
                     pendientes.add(pendientesCancelar);
                 }
             //Cierro la conexion    
             callableStatement.getConnection().close();
             
-            if(pendientes.isEmpty()) {
-                respuesta.setControl(AppCodigo.ERROR, "No hay Comprobantes Pendientes");
+            SisOperacionComprobante operacionComp = sisOperacionComprobanteFacade.find(idSisOperacionComprobante);
+            if(operacionComp == null) {
+                respuesta.setControl(AppCodigo.ERROR, "No existe la relacion para el comprobante seleccionado");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
+            
+            CteTipo cteTipoSeleccionado = cteTipoFacade.find(cteTipo);
+            if(cteTipoSeleccionado == null) {
+                respuesta.setControl(AppCodigo.ERROR, "No existe el CteTipo seleccionado");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            
+            if(pendientes.isEmpty() && !operacionComp.getDifCotizacion()) {
+                respuesta.setControl(AppCodigo.ERROR, "No hay Comprobantes Pendientes");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            } else if(operacionComp.getDifCotizacion() && facNumero != null) {
+                FactCab factCab = factCabFacade.getByNumeroEmpresa(facNumero, cteTipoSeleccionado,user.getIdPerfil().getIdSucursal().getIdEmpresa(),letra);
+                if(factCab == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "No existe la relacion para el comprobante seleccionado");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
                 
+                SisCotDolar cotDolar = sisCotDolarFacade.getLastCotizacion();
+                
+                BigDecimal total = new BigDecimal(0);
+                //Sumo los totales de los productos
+                for(FactDetalle d : factCab.getFactDetalleCollection()) {
+                    total = total.add(d.getImporte());
+                }
+                //Sumo los totales del pie del comprobante
+                for(FactPie p : factCab.getFactPieCollection()) {
+                    total = total.add(p.getImporte());
+                }
+                
+                BigDecimal diferencia = new BigDecimal(0);
+                if(factCab.getCotDolar().compareTo(cotDolar.getCotizacion()) < 0) {
+                    //Nota de devito, subio el dolar :(
+                    if(factCab.getIdmoneda().getDescripcion().equals("$AR")) {
+                        diferencia = total.divide(factCab.getCotDolar(),2, RoundingMode.HALF_UP);
+                        diferencia = diferencia.subtract(total.divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP));
+                        diferencia = diferencia.multiply(cotDolar.getCotizacion());
+                    } else if(factCab.getIdmoneda().getDescripcion().equals("u$s")) {
+                        diferencia = total.multiply(cotDolar.getCotizacion());
+                        diferencia = diferencia.subtract(total.multiply(factCab.getCotDolar()));
+                    }
+                } else if(factCab.getCotDolar().compareTo(cotDolar.getCotizacion()) > 0) {
+                    //Nota de credito, bajo el dolar!!
+                    if(factCab.getIdmoneda().getDescripcion().equals("$AR")) {
+                        diferencia = total.divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP);
+                        diferencia = diferencia.subtract(total.divide(factCab.getCotDolar(),2, RoundingMode.HALF_UP));
+                        diferencia = diferencia.multiply(cotDolar.getCotizacion());
+                    } else if(factCab.getIdmoneda().getDescripcion().equals("u$s")) {
+                        diferencia = total.multiply(cotDolar.getCotizacion());
+                        diferencia = diferencia.subtract(total.multiply(factCab.getCotDolar()));
+                    }
+                } else if(factCab.getCotDolar().compareTo(cotDolar.getCotizacion()) == 0) {
+                    //El dolar se mantuvo estable
+                    diferencia = BigDecimal.ONE;
+                }
+                
+                Parametro parametro = parametroFacade.getParametro("difCotDolar", user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
+                if(parametro == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "No existe el parametro para la bussqueda del prod: Dif. Cotizacion Dolar");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                Producto prod = productoFacade.getByCodigoProdEmpresa(parametro.getValor(), user.getIdPerfil().getIdSucursal().getIdEmpresa());              
+                if(prod == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "No existe el producto Dif.Cotizacion Dolar");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                //Armo la respuesta con el producto dif cot dolar
+                ProductoResponse producto = new ProductoResponse(prod);
+                producto.setCostoReposicion(diferencia);
+                
+                //Agrego las cuentas contables
+                producto.getModeloCab().agregarModeloDetalleTipo(prod.getIdModeloCab().getModeloDetalleCollection(), 1, factCab.getIdSisTipoOperacion().getIdSisModulos().getIdSisModulos());
+                
+                if(!prod.getLoteCollection().isEmpty()) {
+                    producto.setEditar(false);
+                }
+                
+                //Seteo el iva del producto dependiendo la cuenta contable que tiene asignada
+                for(ModeloDetalle r : prod.getIdModeloCab().getModeloDetalleCollection()) {
+                    if(r.getIdSisModulo().getIdSisModulos().equals(factCab.getIdSisTipoOperacion().getIdSisModulos().getIdSisModulos()) && 
+                        r.getValor().compareTo(BigDecimal.ZERO) != 0 &&
+                        r.getIdSisTipoModelo().getIdSisTipoModelo().equals(2)) {
+                        producto.getIVA().setPorcIVA(r.getValor());
+                        break;
+                    }
+                }
+                
+                PendientesCancelarResponse pendientesCancelar = new PendientesCancelarResponse(producto);
+                pendientesCancelar.setPrecio(diferencia);
+                pendientesCancelar.setPendiente(BigDecimal.ONE);
+                pendientes.add(pendientesCancelar);      
+            }
+                                     
             respuesta.setArraydatos(pendientes);
             respuesta.setControl(AppCodigo.OK, "Lista de Comprobantes Pendientes");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
@@ -194,6 +326,7 @@ public class PendientesCancelarRest {
         @QueryParam ("idSisTipoModelo") Integer idSisTipoModelo,
         @QueryParam ("modulo") Integer idModulo,
         @QueryParam ("listaPrecio") Integer idListaPrecios,
+        @QueryParam ("idMoneda") Integer idMoneda,
         @PathParam ("idProducto") Integer idProducto,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
@@ -239,13 +372,19 @@ public class PendientesCancelarRest {
             
             List<Payload> productosResponse = new ArrayList<>();
             
-            if(idModulo != null && idSisTipoModelo != null && idProducto != null &&  idListaPrecios == null) {
+            if(idModulo != null && idSisTipoModelo != null && idProducto != null &&  idListaPrecios == null && idMoneda != null) {
                 //Busco el modulo(Por lo general en este if viene el de compras)
                 SisModulo modulo = sisModuloFacade.find(idModulo);
                 if(modulo == null) {
                     respuesta.setControl(AppCodigo.ERROR, "Error, no existe el modulo");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                }             
+                }
+                
+                SisMonedas moneda = sisMonedasFacade.find(idMoneda);
+                if(moneda == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no la moneda");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
                 
                 //Busco el producto
                 Producto s = productoFacade.find(idProducto);                
@@ -256,6 +395,10 @@ public class PendientesCancelarRest {
                 
                 //Armo la respuesta
                 ProductoResponse sr = new ProductoResponse(s);
+                if(moneda.getDescripcion().equals("u$s")) {
+                    SisCotDolar cotDolar = sisCotDolarFacade.getLastCotizacion();
+                    sr.setCostoReposicion(sr.getCostoReposicion().divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP));
+                }
                 //Agrego las cuentas contables
                 sr.getModeloCab().agregarModeloDetalleTipo(s.getIdModeloCab().getModeloDetalleCollection(), idSisTipoModelo, idModulo);
                 
@@ -276,8 +419,12 @@ public class PendientesCancelarRest {
                 
                 //Armo la respuesta de pendientes de cancelar para que sea la misma que viene del store procedure
                 PendientesCancelarResponse pr = new PendientesCancelarResponse(sr);
+                if(moneda.getDescripcion().equals("u$s")) {
+                    SisCotDolar cotDolar = sisCotDolarFacade.getLastCotizacion();
+                    pr.setPrecio(pr.getPrecio().divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP));
+                }
                 productosResponse.add(pr);               
-            } else if(idListaPrecios != null && idModulo != null && idSisTipoModelo != null && idProducto != null) {
+            } else if(idListaPrecios != null && idModulo != null && idSisTipoModelo != null && idProducto != null && idMoneda != null) {
                 //Busco la lista de precios seleccionada
                 ListaPrecio listaPrecio = listaPrecioFacade.find(idListaPrecios);
                 if(listaPrecio == null) {
@@ -289,6 +436,12 @@ public class PendientesCancelarRest {
                 SisModulo modulo = sisModuloFacade.find(idModulo);
                 if(modulo == null) {
                     respuesta.setControl(AppCodigo.ERROR, "Error, no existe el modulo");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                
+                SisMonedas moneda = sisMonedasFacade.find(idMoneda);
+                if(moneda == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no la moneda");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
                 
@@ -323,7 +476,12 @@ public class PendientesCancelarRest {
                     //Armo la respuesta de pendientes de cancelar asi es igual a la del store procedure
                     PendientesCancelarResponse pr = new PendientesCancelarResponse(sr);
                     //seteo el precio de la lista de precios seleccionada
-                    pr.setPrecio(l.getPrecio());
+                    if(moneda.getDescripcion().equals("u$s")) {
+                        SisCotDolar cotDolar = sisCotDolarFacade.getLastCotizacion();
+                         pr.setPrecio(pr.getPrecio().divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP));
+                    } else {
+                        pr.setPrecio(l.getPrecio());
+                    }
                     productosResponse.add(pr);
                 }                
             } else {                  

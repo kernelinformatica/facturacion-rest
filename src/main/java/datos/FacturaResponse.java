@@ -11,6 +11,7 @@ public class FacturaResponse implements Payload{
     private String descripcion;  
     private BigDecimal importeTotal;
     private BigDecimal porcentaje;
+    private BigDecimal baseImponible;
     private Integer orden;
     private Integer idSisTipoModelo;
 
@@ -20,13 +21,14 @@ public class FacturaResponse implements Payload{
 //        this.importeTotal = importeTotal;        
 //    }
     
-    public FacturaResponse(String cuentaContable, String descripcion, BigDecimal importeTotal, BigDecimal porcentaje, Integer orden, Integer idSisTipoModelo) {
+    public FacturaResponse(String cuentaContable, String descripcion, BigDecimal importeTotal, BigDecimal porcentaje, Integer orden, Integer idSisTipoModelo, BigDecimal baseImponible) {
         this.cuentaContable = cuentaContable;
         this.descripcion = descripcion;
         this.importeTotal = importeTotal;
         this.porcentaje = porcentaje;
         this.orden = orden;
         this.idSisTipoModelo = idSisTipoModelo;
+        this.baseImponible = baseImponible;
     }
 
     public String getCuentaContable() {
@@ -81,4 +83,14 @@ public class FacturaResponse implements Payload{
     public void setIdSisTipoModelo(Integer idSisTipoModelo) {
         this.idSisTipoModelo = idSisTipoModelo;
     }    
+
+    public BigDecimal getBaseImponible() {
+        return baseImponible;
+    }
+
+    public void setBaseImponible(BigDecimal baseImponible) {
+        this.baseImponible = baseImponible;
+    }
+    
+    
 }
