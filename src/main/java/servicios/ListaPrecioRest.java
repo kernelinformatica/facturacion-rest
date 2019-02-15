@@ -46,6 +46,7 @@ import persistencia.ListaPrecioFacade;
 import persistencia.ProductoFacade;
 import persistencia.SisMonedasFacade;
 import persistencia.UsuarioFacade;
+import persistencia.UsuarioListaPrecioFacade;
 import utils.Utils;
 
 /**
@@ -63,6 +64,7 @@ public class ListaPrecioRest {
     @Inject ProductoFacade productoFacade;
     @Inject ListaPrecioDetFacade listaPrecioDetFacade; 
     @Inject ContPlanCuentaFacade contPlanCuentaFacade;
+    @Inject UsuarioListaPrecioFacade usuarioListaPrecioFacade;
     
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
@@ -220,7 +222,10 @@ public class ListaPrecioRest {
             }
             
             boolean transaccion;
+            boolean transa;
             ListaPrecio listaPrecio = new ListaPrecio();
+            UsuarioListaPrecio usuarioLista = new UsuarioListaPrecio();
+            
             listaPrecio.setCodigoLista(codLista);
             listaPrecio.setFechaAlta(fechaAlta);
             listaPrecio.setVigenciaDesde(vigenciaDesde);
@@ -232,9 +237,19 @@ public class ListaPrecioRest {
             listaPrecio.setPorc1(porc1);
             listaPrecio.setCondiciones(condiciones);
             listaPrecio.setIdMoneda(sisMonedas);
+            
+            usuarioLista.setIdListaPrecios(listaPrecio);
+            usuarioLista.setIdUsuarios(user);
+            
             transaccion = listaPrecioFacade.setListaPrecioNuevo(listaPrecio);
             if(!transaccion) {
                 respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta la Lsita de Precios, clave primaria repetida");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            
+            transa = usuarioListaPrecioFacade.setUsuarioListaPrecioNuevo(usuarioLista);
+            if(!transa) {
+                respuesta.setControl(AppCodigo.ERROR, "No se pudo asignar la lista de precios al usuario logueado");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             if(preciosDet.isEmpty()) {

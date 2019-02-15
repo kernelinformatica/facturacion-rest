@@ -1,7 +1,7 @@
 package datos;
 
-import entidades.FactImputa;
 import java.math.BigDecimal;
+import java.util.Date;
 
 /**
  *
@@ -9,66 +9,82 @@ import java.math.BigDecimal;
  */
 
 public class FactImputaResponse implements Payload {
-    private Integer idFactImputa;
-    private Integer masAsiento;
-    private BigDecimal importeImputado;
-    private Integer masAsientoImputado;
-    private BigDecimal cantidadImputada;
-    private FactDetalleResponse detalle;
-    private FactDetalleResponse detalleImputado;
+    private Integer idFactCab;
+    private Integer idCteTipo;
+    private String descCorta;
+    private Long numero;
+    private Date fechaEmision;
+    private Integer idPadron;
+    private Integer idSisTipoOperacion;
 
-    public FactImputaResponse(FactImputa f) {
-        this.idFactImputa = f.getIdFactImputa();
-        this.masAsiento = f.getMasAsiento();
-        this.importeImputado = f.getImporteImputado();
-        this.masAsientoImputado = f.getMasAsiento();
-        this.cantidadImputada = f.getCantidadImputada();
-        this.detalle = new FactDetalleResponse(f.getIdFactDetalle());
-        this.detalleImputado = new FactDetalleResponse(f.getIdFactDetalleImputa());
+    public FactImputaResponse(Integer idFactCab, Integer idCteTipo, String descCorta, Long numero, Date fechaEmision, Integer idPadron, Integer idSisTipoOperacion) {
+        this.idFactCab = idFactCab;
+        this.idCteTipo = idCteTipo;
+        this.descCorta = descCorta;
+        this.numero = numero;
+        this.fechaEmision = fechaEmision;
+        this.idPadron = idPadron;
+        this.idSisTipoOperacion = idSisTipoOperacion;
     }
+
+
     
-    
-
-    public Integer getIdFactImputa() {
-        return idFactImputa;
+    public Integer getIdFactCab() {
+        return idFactCab;
     }
 
-    public void setIdFactImputa(Integer idFactImputa) {
-        this.idFactImputa = idFactImputa;
+    public void setIdFactCab(Integer idFactCab) {
+        this.idFactCab = idFactCab;
     }
 
-    public Integer getMasAsiento() {
-        return masAsiento;
+    public String getDescCorta() {
+        return descCorta;
     }
 
-    public void setMasAsiento(Integer masAsiento) {
-        this.masAsiento = masAsiento;
+    public void setDescCorta(String descCorta) {
+        this.descCorta = descCorta;
     }
 
-    public BigDecimal getImporteImputado() {
-        return importeImputado;
+    public Long getNumero() {
+        return numero;
     }
 
-    public void setImporteImputado(BigDecimal importeImputado) {
-        this.importeImputado = importeImputado;
+    public void setNumero(Long numero) {
+        this.numero = numero;
     }
 
-    public Integer getMasAsientoImputado() {
-        return masAsientoImputado;
+    public Date getFechaEmision() {
+        return fechaEmision;
     }
 
-    public void setMasAsientoImputado(Integer masAsientoImputado) {
-        this.masAsientoImputado = masAsientoImputado;
+    public void setFechaEmision(Date fechaEmision) {
+        this.fechaEmision = fechaEmision;
     }
 
-    public BigDecimal getCantidadImputada() {
-        return cantidadImputada;
+    public Integer getIdCteTipo() {
+        return idCteTipo;
     }
 
-    public void setCantidadImputada(BigDecimal cantidadImputada) {
-        this.cantidadImputada = cantidadImputada;
+    public void setIdCteTipo(Integer idCteTipo) {
+        this.idCteTipo = idCteTipo;
     }
-    
+
+    public Integer getIdPadron() {
+        return idPadron;
+    }
+
+    public void setIdPadron(Integer idPadron) {
+        this.idPadron = idPadron;
+    }
+
+    public Integer getIdSisTipoOperacion() {
+        return idSisTipoOperacion;
+    }
+
+    public void setIdSisTipoOperacion(Integer idSisTipoOperacion) {
+        this.idSisTipoOperacion = idSisTipoOperacion;
+    }
+
     
     
     

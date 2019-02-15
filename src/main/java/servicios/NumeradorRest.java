@@ -173,6 +173,11 @@ public class NumeradorRest {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
+            if(fechaApertura.after(fechaCierre)) {
+                respuesta.setControl(AppCodigo.ERROR, "Fecha hasta debe ser mayor o igual a la fecha desde");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            
             CteTipoSisLetra cteTipoSisLetra = cteTipoSisLetraFacade.find(idCteTipoSisLetra);
             if(cteTipoSisLetra == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, no existe el tipo de comprobante seleccionado");
@@ -297,6 +302,11 @@ public class NumeradorRest {
             //Me fijo que  los campos no sean nulos
             if(fechaApertura == null || fechaCierre == null || idCteTipoSisLetra == null || idCteNumerador == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, algun campo esta vacio");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            
+            if(fechaApertura.after(fechaCierre)) {
+                respuesta.setControl(AppCodigo.ERROR, "Fecha hasta debe ser mayor o igual a la fecha desde");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             

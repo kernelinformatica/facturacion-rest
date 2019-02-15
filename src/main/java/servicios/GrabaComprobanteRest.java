@@ -15,10 +15,12 @@ import entidades.FactFormaPago;
 import entidades.FactImputa;
 import entidades.FactPie;
 import entidades.FormaPagoDet;
+import entidades.ListaPrecioDet;
 import entidades.Lote;
 import entidades.Master;
 import entidades.Producto;
 import entidades.Produmo;
+import entidades.SisCotDolar;
 import entidades.SisMonedas;
 import entidades.SisOperacionComprobante;
 import entidades.SisTipoModelo;
@@ -26,6 +28,7 @@ import entidades.SisTipoOperacion;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -34,6 +37,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -56,10 +60,13 @@ import persistencia.FactImputaFacade;
 import persistencia.FactPieFacade;
 import persistencia.FormaPagoDetFacade;
 import persistencia.FormaPagoFacade;
+import persistencia.ListaPrecioDetFacade;
+import persistencia.ListaPrecioFacade;
 import persistencia.LoteFacade;
 import persistencia.MasterFacade;
 import persistencia.ProductoFacade;
 import persistencia.ProdumoFacade;
+import persistencia.SisCotDolarFacade;
 import persistencia.SisMonedasFacade;
 import persistencia.SisOperacionComprobanteFacade;
 import persistencia.SisTipoModeloFacade;
@@ -94,6 +101,8 @@ public class GrabaComprobanteRest {
     @Inject SisTipoModeloFacade sisTipoModeloFacade;
     @Inject MasterFacade masterFacade;
     @Inject SisOperacionComprobanteFacade sisOperacionComprobanteFacade;
+    @Inject ListaPrecioFacade listaPrecioFacade;
+    @Inject SisCotDolarFacade sisCotDolarFacade;
           
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -301,7 +310,7 @@ public class GrabaComprobanteRest {
             
             //Pregunto si la sumatoria de pendientes es igual a 0
             if(sumatoriaPendientes.compareTo(BigDecimal.ZERO) == 0) {
-                respuesta.setControl(AppCodigo.ERROR, "La sumatoria de Pendientes es igual a 0");
+                respuesta.setControl(AppCodigo.ERROR, "La cantidad no puede ser nula");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
@@ -384,7 +393,9 @@ public class GrabaComprobanteRest {
                         String observacionDetalle = (String) Utils.getKeyFromJsonObject("observacionDetalle", j.getAsJsonObject(), "String");
                         String imputacion = (String) Utils.getKeyFromJsonObject("imputacion", j.getAsJsonObject(), "String");
                         Integer idFactDetalleImputa = (Integer) Utils.getKeyFromJsonObject("idFactDetalleImputa", j.getAsJsonObject(), "Integer");
-                        BigDecimal importe = (BigDecimal) Utils.getKeyFromJsonObject("importe", j.getAsJsonObject(), "BigDecimal");                       
+                        BigDecimal importe = (BigDecimal) Utils.getKeyFromJsonObject("importe", j.getAsJsonObject(), "BigDecimal"); 
+                        BigDecimal precioDesc = (BigDecimal) Utils.getKeyFromJsonObject("precioDesc", j.getAsJsonObject(), "BigDecimal"); 
+                        String unidadDescuento = (String) Utils.getKeyFromJsonObject("unidadDescuento", j.getAsJsonObject(), "String");
 
                         //Pregunto por los campos que son NOTNULL
                         if(idProducto == null || articulo == null || pendiente == null || precio == null || porCalc == null ||
@@ -394,7 +405,6 @@ public class GrabaComprobanteRest {
                             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                         }
                         
-
                         //Busco el deposito por id, si no encuentro alguno desarmo la transaccion.
                         Deposito deposito = depositoFacade.find(idDeposito);
                         if(deposito == null) {
@@ -408,6 +418,11 @@ public class GrabaComprobanteRest {
                             respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, el producto con id " + idProducto + " no existe");
                             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                         }
+                        
+                        if(!precio.equals(producto.getCostoReposicion()) && cteTipo.getIdSisComprobante().getIdSisModulos().getIdSisModulos().equals(1)) {
+                            producto.setCostoReposicion(precio);
+                            productoFacade.editProducto(producto);
+                        } 
                         
                         //Si la cantidad es igual a 0 no guarda ese articulo
                         if(pendiente.compareTo(BigDecimal.ZERO) == 0) {
@@ -429,6 +444,11 @@ public class GrabaComprobanteRest {
                             importe = BigDecimal.ZERO;
                         }
                         
+                        if(sisOperacionComprobante.getDifCotizacion() && importe.compareTo(BigDecimal.ZERO) < 0 && sisOperacionComprobante.getIdSisComprobantes().getIdSisComprobantes().equals(8)) {
+                            respuesta.setControl(AppCodigo.AVISO, "Debe emitir otro tipo de comprobante");
+                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                        }
+                        
                         //Creo el factDetalle nuevo y seteo los valores
                         FactDetalle factDetalle = new FactDetalle();
                         factDetalle.setDetalle(articulo);
@@ -448,6 +468,15 @@ public class GrabaComprobanteRest {
                         factDetalle.setTrazable(trazable);
                         factDetalle.setImporte(importe);
                         factDetalle.setCodProducto(producto.getCodProducto());
+                        factDetalle.setUnidadDescuento(unidadDescuento);
+                        factDetalle.setPrecioDesc(precioDesc);                                                     
+                        
+                        // Busco listaPrecioDet
+                        if (listaPrecio != null) {
+                            ListaPrecioDet detalleProd = listaPrecioFacade.findByIdProductoAndIdLista(listaPrecio, idProducto);
+                            factDetalle.setAuxListaPrecioDet(detalleProd);
+                        }
+                        
                         listaDetalles.add(factDetalle);
                         
                         //Empiezo la transaccion para la grabacion de FactImputa
@@ -503,6 +532,33 @@ public class GrabaComprobanteRest {
                         }                        
                         //Le sumo uno al contador de items
                         item++;
+                    }
+                    
+                    //Aca filtro por las cotas en la lista de precios seleccionada y el precio ingresado
+                    if(listaPrecio != null) {
+                        List<FactDetalle> detallesCotas = new ArrayList<>();
+                        for(FactDetalle det : listaDetalles) {
+                            BigDecimal precio = det.getPrecioDesc();
+                            if(sisMonedas.getDescripcion().equals("u$s") && det.getAuxListaPrecioDet().getIdListaPrecios().getIdMoneda().getDescripcion().equals("$AR")) {
+                                SisCotDolar sisCotDolar = sisCotDolarFacade.getLastCotizacion();
+                                precio = precio.multiply(sisCotDolar.getCotizacion());                              
+                            } else if(sisMonedas.getDescripcion().equals("$AR") && det.getAuxListaPrecioDet().getIdListaPrecios().getIdMoneda().getDescripcion().equals("u$s")) {
+                                SisCotDolar sisCotDolar = sisCotDolarFacade.getLastCotizacion();
+                                precio = precio.divide(sisCotDolar.getCotizacion(),2, RoundingMode.HALF_UP);
+                            }                          
+                            if(precio.compareTo(det.getAuxListaPrecioDet().getCotaInf()) < 0 ||
+                               precio.compareTo(det.getAuxListaPrecioDet().getCotaSup()) > 0) {
+                                detallesCotas.add(det);
+                            } 
+                        }
+                        String prod = "";                      
+                        if(detallesCotas.size() > 0) {
+                            for(FactDetalle d : detallesCotas) {
+                                prod = prod.concat(d.getDetalle()).concat(", ");    
+                            }
+                            respuesta.setControl(AppCodigo.ERROR, "Los productos: "+ prod + ", deben estar entre las cotas indicadas en la lista de precios");
+                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                        }
                     }
                     
                     //Termina el recorrido de la Grilla de articulos y empiezo con la de factFormaPago
@@ -617,6 +673,8 @@ public class GrabaComprobanteRest {
                                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                             }
                             
+                            
+                            
                             //Busco el producto por id
                             Producto prod = productoFacade.find(idProducto);
                             if(prod == null) {
@@ -626,6 +684,11 @@ public class GrabaComprobanteRest {
                             
                             //Armo el lote
                             Lote loteNuevo = new Lote();
+                            
+                            if(loteFacade.findByNroEmpresa(nroLote, user.getIdPerfil().getIdSucursal().getIdEmpresa()) != null) {
+                                loteNuevo = loteFacade.findByNroEmpresa(nroLote, user.getIdPerfil().getIdSucursal().getIdEmpresa());
+                            }
+                            
                             loteNuevo.setFechaElab(fechaElab);
                             loteNuevo.setFechaVto(fechaVto);
                             loteNuevo.setIdEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
@@ -634,6 +697,7 @@ public class GrabaComprobanteRest {
                             loteNuevo.setNroLote(nroLote);
                             loteNuevo.setSerie(serie);
                             loteNuevo.setVigencia(vigencia);
+                           
                             //Recorro produmo y si es el mismo producto le agreego el lote
                             for(Produmo p : listaProdumo) {
                                 if(p.getIdProductos().equals(prod)) {
@@ -803,7 +867,11 @@ public class GrabaComprobanteRest {
                 //Comienzo con la transaccion de Lotes
                 for(Lote l : listaLotes) {
                     boolean transaccion6;
-                    transaccion6 = loteFacade.setLoteNuevo(l);
+                    if(l.getIdLotes() == null) {
+                        transaccion6 = loteFacade.setLoteNuevo(l);
+                    } else {
+                        transaccion6 = loteFacade.editLote(l);
+                    }
                     //si la trnsaccion fallo devuelvo el mensaje
                     if(!transaccion6) {
                         respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el lote con el articulo: " + l.getIdproductos().getDescripcion());
@@ -891,6 +959,8 @@ public class GrabaComprobanteRest {
                 factDet.setPorcCalc(d.getPorcCalc());
                 factDet.setPrecio(d.getPrecio());
                 factDet.setTrazable(d.getTrazable());
+                factDet.setUnidadDescuento(d.getUnidadDescuento());
+                factDet.setPrecioDesc(d.getPrecioDesc());
                 listaDetalles.add(factDet);
             }
             

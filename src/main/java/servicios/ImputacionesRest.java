@@ -1,18 +1,16 @@
 package servicios;
 
 import datos.AppCodigo;
-import datos.FactCabResponse;
-import datos.FactDetalleResponse;
 import datos.FactImputaResponse;
 import datos.Payload;
 import datos.ServicioResponse;
 import entidades.Acceso;
 import entidades.FactCab;
-import entidades.FactDetalle;
-import entidades.FactImputa;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 import javax.ejb.Stateless;
@@ -30,6 +28,7 @@ import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
 import persistencia.FactCabFacade;
 import persistencia.UsuarioFacade;
+import utils.Utils;
 
 
 /**
@@ -42,6 +41,7 @@ public class ImputacionesRest {
     @Inject UsuarioFacade usuarioFacade;
     @Inject AccesoFacade accesoFacade;
     @Inject FactCabFacade factCabFacade;
+    @Inject Utils utils; 
     
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
@@ -93,43 +93,45 @@ public class ImputacionesRest {
                 respuesta.setControl(AppCodigo.ERROR, "No selecciono un comprobante");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
+            //seteo el nombre del store
+            String noombreSP = "call s_comprobantesImputados(?,?,?,?,?)";
             
-            if(factCab.getFactDetalleCollection().isEmpty()) {
-                respuesta.setControl(AppCodigo.ERROR, "No existen detalles para ese comprobante");
+            //invoco al store
+            CallableStatement callableStatement = this.utils.procedimientoAlmacenado(user, noombreSP);
+            
+            //valido que el Procedimiento Almacenado no sea null
+            if(callableStatement == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, no existe el procedimiento");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
-            String imputada = "SI";
-            String vendedor = "";
-            if(factCab.getIdVendedor() != null) {
-                vendedor = factCab.getIdVendedor().toString();
+            callableStatement.setInt(1,user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
+            callableStatement.setInt(2,factCab.getIdCteTipo().getIdCteTipo());
+            callableStatement.setString(3,factCab.getLetra());
+            callableStatement.setLong(4, factCab.getNumero());
+            callableStatement.setInt(5, factCab.getIdFactCab());
+            
+            //Ejecuto el procedimiento
+            ResultSet rs = callableStatement.executeQuery();
+            List<Payload> imputados = new ArrayList<>();
+            while (rs.next()) {
+                FactImputaResponse factImputa = new FactImputaResponse(
+                        rs.getInt("idFactCab"),
+                        rs.getInt("idCteTipo"),
+                        rs.getString("descCorta"),
+                        rs.getLong("numero"),
+                        rs.getDate("fechaEmision"),
+                        rs.getInt("idPadron"),
+                        rs.getInt("idSisTipoOperacion")
+                );
+                imputados.add(factImputa);
             }
             
-            List<FactCabResponse> listaCabeceras = new ArrayList<>();
-            List<Payload> respuestas = new ArrayList<>();
+            //Cierro la conexion    
+            callableStatement.getConnection().close();
             
-            for(FactDetalle fd : factCab.getFactDetalleCollection()) {
-                if(fd.getFactImputaCollection().isEmpty()) {
-                    continue;
-                }
-                for(FactImputa fci1 : fd.getFactImputaCollection()) {                  
-                    FactCabResponse factCabResponse = new FactCabResponse(fci1.getIdFactDetalleImputa().getIdFactCab().getIdFactCab(), fci1.getIdFactDetalleImputa().getIdFactCab().getIdCteTipo().getDescripcion(),fd.getIdFactCab().getNumero(),fci1.getIdFactDetalleImputa().getIdFactCab().getFechaEmision(),fd.getIdFactCab().getIdPadron(),fci1.getIdFactDetalleImputa().getIdFactCab().getNombre(),fd.getIdFactCab().getCuit(), fci1.getIdFactDetalleImputa().getIdFactCab().getCotDolar(), fci1.getIdFactDetalleImputa().getIdFactCab().getIdmoneda().getDescripcion(),imputada ,fci1.getIdFactDetalleImputa().getIdFactCab().getIdCteTipo().getIdSisComprobante().getIdSisModulos().getDescripcion(),vendedor);
-                    if(!listaCabeceras.isEmpty()) {
-                        factCabResponse = listaCabeceras.get(listaCabeceras.size()-1);
-                        FactImputaResponse firi = new FactImputaResponse(fci1);
-                        factCabResponse.getImputa().add(firi);
-                    } else {
-                        FactImputaResponse firi = new FactImputaResponse(fci1);
-                        factCabResponse.getImputa().add(firi);
-                        listaCabeceras.add(factCabResponse);
-                    }
-                }                
-            }                        
-            if(!listaCabeceras.isEmpty()) {
-                respuestas.addAll(listaCabeceras);
-            }
-            
-            respuesta.setArray(respuestas);
+            //genero la respuesta
+            respuesta.setArray(imputados);
             respuesta.setControl(AppCodigo.OK, "Imputaciones");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception e) {

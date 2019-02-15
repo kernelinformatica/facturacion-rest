@@ -27,8 +27,11 @@ public class PendientesCancelarResponse implements Payload{
     private Integer itemImputada;
     private BigDecimal importe;
     private ProductoResponse producto;
+    private Integer idListaPrecio;
+    private String codigoListaPrecio;
+    private String letra;
 
-    public PendientesCancelarResponse(String comprobante, String numero, BigDecimal original, BigDecimal pendiente, BigDecimal precio, BigDecimal dolar, String moneda, BigDecimal porCalc, BigDecimal ivaPorc, Integer deposito, Integer idFactDetalleImputa, Integer idFactCabImputada, BigDecimal descuento, String tipoDescuento, BigDecimal cantBultos, String despacho, String observaciones, Integer itemImputada,BigDecimal importe, ProductoResponse p) {
+    public PendientesCancelarResponse(String comprobante, String numero, BigDecimal original, BigDecimal pendiente, BigDecimal precio, BigDecimal dolar, String moneda, BigDecimal porCalc, BigDecimal ivaPorc, Integer deposito, Integer idFactDetalleImputa, Integer idFactCabImputada, BigDecimal descuento, String tipoDescuento, BigDecimal cantBultos, String despacho, String observaciones, Integer itemImputada,BigDecimal importe,Integer idListaPrecio, String codigoListaPrecio, String letra,ProductoResponse p) {
         this.comprobante = comprobante;
         this.numero = numero;
         this.original = original;
@@ -49,6 +52,9 @@ public class PendientesCancelarResponse implements Payload{
         this.itemImputada = itemImputada;
         this.producto = p;
         this.importe = importe;
+        this.idListaPrecio = idListaPrecio;
+        this.codigoListaPrecio = codigoListaPrecio;
+        this.letra = letra;
     }
     public PendientesCancelarResponse(ProductoResponse p) {
         this.comprobante = "";
@@ -224,6 +230,38 @@ public class PendientesCancelarResponse implements Payload{
 
     public void setItemImputada(Integer itemImputada) {
         this.itemImputada = itemImputada;
+    }
+
+    public BigDecimal getImporte() {
+        return importe;
+    }
+
+    public void setImporte(BigDecimal importe) {
+        this.importe = importe;
+    }
+
+    public Integer getIdListaPrecio() {
+        return idListaPrecio;
+    }
+
+    public void setIdListaPrecio(Integer idListaPrecio) {
+        this.idListaPrecio = idListaPrecio;
+    }
+
+    public String getLetra() {
+        return letra;
+    }
+
+    public void setLetra(String letra) {
+        this.letra = letra;
+    }
+
+    public String getCodigoListaPrecio() {
+        return codigoListaPrecio;
+    }
+
+    public void setCodigoListaPrecio(String codigoListaPrecio) {
+        this.codigoListaPrecio = codigoListaPrecio;
     }
     
     

@@ -34,6 +34,7 @@ public class ProductoResponse implements Payload {
     private boolean editar; 
     private ModeloCabResponse modeloCab;
     private MarcaResponse marca;
+    private SisMonedasResponse moneda;
     private List<CultivoResponse> cultivos;   
 
     public ProductoResponse(Producto p) {
@@ -59,6 +60,7 @@ public class ProductoResponse implements Payload {
         this.editar = true;
         this.modeloCab = new ModeloCabResponse(p.getIdModeloCab());
         this.marca = new MarcaResponse(p.getIdMarca());
+        this.moneda = new SisMonedasResponse(p.getIdMoneda());
         this.cultivos = new ArrayList<>();
     }
 
@@ -256,6 +258,22 @@ public class ProductoResponse implements Payload {
 
     public void setMarca(MarcaResponse marca) {
         this.marca = marca;
+    }
+
+    public SisMonedasResponse getMoneda() {
+        return moneda;
+    }
+
+    public void setMoneda(SisMonedasResponse moneda) {
+        this.moneda = moneda;
+    }
+
+    public List<CultivoResponse> getCultivos() {
+        return cultivos;
+    }
+
+    public void setCultivos(List<CultivoResponse> cultivos) {
+        this.cultivos = cultivos;
     }
     
     public void agregarCultivos(Collection<ProdCultivo> prodCultivo) {

@@ -7,6 +7,7 @@ import datos.CteTipoResponse;
 import datos.Payload;
 import datos.ServicioResponse;
 import datos.SisLetraSisCodAfipResponse;
+import datos.SisMonedasResponse;
 import entidades.Acceso;
 import entidades.CteTipo;
 import entidades.CteTipoSisLetra;
@@ -14,6 +15,7 @@ import entidades.SisCodigoAfip;
 import entidades.SisComprobante;
 import entidades.SisLetra;
 import entidades.SisModulo;
+import entidades.SisMonedas;
 import entidades.SisOperacionComprobante;
 import entidades.SisSitIVA;
 import entidades.SisSitIVALetras;
@@ -47,6 +49,7 @@ import persistencia.SisCodigoAfipFacade;
 import persistencia.SisComprobanteFacade;
 import persistencia.SisLetraFacade;
 import persistencia.SisModuloFacade;
+import persistencia.SisMonedasFacade;
 import persistencia.SisSitIVAFacade;
 import persistencia.SisTipoOperacionFacade;
 import persistencia.UsuarioFacade;
@@ -71,6 +74,7 @@ public class CteTipoRest {
     @Inject CteTipoSisLetraFacade cteTipoSisLetraFacade; 
     @Inject SisModuloFacade sisModuloFacade;
     @Inject SisSitIVAFacade sisSitIvaFacade;
+    @Inject SisMonedasFacade sisMonedasFacade;
     
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
@@ -324,8 +328,18 @@ public class CteTipoRest {
                                     ctr.getComprobante().setOrden(soc.getOrden());
                                     ctr.getComprobante().setDifCotizacion(soc.getDifCotizacion());
                                     ctr.getComprobante().setReferencia(soc.getDescripcion());
-                                    ctr.getComprobante().setIdSisOperacionComprobante(soc.getIdSisOperacionComprobantes());                                
-                            }                            
+                                    ctr.getComprobante().setIdSisOperacionComprobante(soc.getIdSisOperacionComprobantes());
+                                    ctr.getComprobante().setRelacionadosMultiples(soc.getRelacionadosMultiples());
+                                    ctr.getComprobante().setAdmiteRelacionMultiple(soc.getAdmiteRelacionMultiple());
+                                if(soc.getIdSisMoneda() == null) {
+                                    List<SisMonedas> todas = sisMonedasFacade.findAll();
+                                    ctr.getComprobante().agregarMonedas(todas);
+                                } else {
+                                    SisMonedas unica = sisMonedasFacade.find(soc.getIdSisMoneda());
+                                    SisMonedasResponse u = new SisMonedasResponse(unica);
+                                    ctr.getComprobante().getMonedas().add(u);
+                                }
+                            }                     
                         }
                     }
                     //Agrego las letras y codigo afip
@@ -334,7 +348,11 @@ public class CteTipoRest {
                             if(si.getIdSisLetras().equals(cl.getIdSisLetra()) && si.getIdSisModulos().equals(c.getIdSisComprobante().getIdSisModulos())) {
                                 SisLetraSisCodAfipResponse sisLetCod = new SisLetraSisCodAfipResponse(cl);
                                 if(!cl.getCteNumeradorCollection().isEmpty()) {
-                                    sisLetCod.agregarNumeradores(cl.getCteNumeradorCollection());
+                                    if(user.getIdPtoVenta() == null) {
+                                        sisLetCod.agregarNumeradores(cl.getCteNumeradorCollection());
+                                    } else {
+                                        sisLetCod.agregarNumeradores(cl.getCteNumeradorCollection(), user.getIdPtoVenta());
+                                    }
                                 }
                                 ctr.getLetrasCodigos().add(sisLetCod);
                             }

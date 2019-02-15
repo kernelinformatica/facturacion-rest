@@ -5,6 +5,7 @@ import entidades.CteTipoSisLetra;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 /**
  *
@@ -78,5 +79,14 @@ private CteTipoResponse cteTipo;
     @Override
     public String getClassName() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public void agregarNumeradores(Collection<CteNumerador> numeradores, Integer idPtoVenta) {
+        for(CteNumerador p : numeradores) {
+            if(Objects.equals(p.getIdPtoVenta().getIdPtoVenta(), idPtoVenta)) {
+                CteNumeradorResponse cnr = new CteNumeradorResponse(p);
+                this.numeradores.add(cnr);
+            }
+        }
     }
 }

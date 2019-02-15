@@ -27,8 +27,12 @@ public class FactDetalleResponse implements Payload{
     private BigDecimal importe;
     private int factCab;
     private String vendedor;
+    private String descuento;
+    private BigDecimal precioDesc;
+    private String unidadDescuento;
+    
 
-    public FactDetalleResponse(String comprobante, long numero, Date fechaEmision, String codProducto, String articulo, BigDecimal original, BigDecimal pendiente, BigDecimal precio, BigDecimal dolar, String moneda, BigDecimal porCalc, BigDecimal ivaPorc, int deposito, BigDecimal importe, int idFactCab, String vendedor) {
+    public FactDetalleResponse(String comprobante, long numero, Date fechaEmision, String codProducto, String articulo, BigDecimal original, BigDecimal pendiente, BigDecimal precio, BigDecimal dolar, String moneda, BigDecimal porCalc, BigDecimal ivaPorc, int deposito, BigDecimal importe, int idFactCab, String vendedor,String descuento, BigDecimal precioDesc, String unidadDescuento) {
         this.comprobante = comprobante;
         this.numero = numero;
         this.fechaEmision = fechaEmision;
@@ -45,6 +49,9 @@ public class FactDetalleResponse implements Payload{
         this.importe = importe;
         this.factCab = idFactCab;
         this.vendedor = vendedor;
+        this.descuento = descuento;
+        this.precioDesc = precioDesc;
+        this.unidadDescuento = unidadDescuento;
     }
     
     public FactDetalleResponse(FactDetalle d) {
@@ -194,6 +201,32 @@ public class FactDetalleResponse implements Payload{
     public void setVendedor(String vendedor) {
         this.vendedor = vendedor;
     }
+
+    public String getDescuento() {
+        return descuento;
+    }
+
+    public void setDescuento(String descuento) {
+        this.descuento = descuento;
+    }
+
+    public BigDecimal getPrecioDesc() {
+        return precioDesc;
+    }
+
+    public void setPrecioDesc(BigDecimal precioDesc) {
+        this.precioDesc = precioDesc;
+    }
+
+    public String getUnidadDescuento() {
+        return unidadDescuento;
+    }
+
+    public void setUnidadDescuento(String unidadDescuento) {
+        this.unidadDescuento = unidadDescuento;
+    }
+    
+    
     
     @Override
     public String getClassName() {

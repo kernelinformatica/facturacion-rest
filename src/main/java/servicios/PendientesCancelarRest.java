@@ -101,7 +101,9 @@ public class PendientesCancelarRest {
             String despacho = (String) Utils.getKeyFromJsonObject("despacho", jsonBody, "String");
             Integer idMoneda = (Integer) Utils.getKeyFromJsonObject("idMoneda", jsonBody, "Integer");
             Integer idSisOperacionComprobante = (Integer) Utils.getKeyFromJsonObject("idSisOperacionComprobante", jsonBody, "Integer");
+            Integer idSisTipoOperacion = (Integer) Utils.getKeyFromJsonObject("idSisTipoOperacion", jsonBody, "Integer");
             String letra = (String) Utils.getKeyFromJsonObject("letra", jsonBody, "String");
+            Integer idListaPrecio = (Integer) Utils.getKeyFromJsonObject("idListaPrecio", jsonBody, "Integer");
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -139,14 +141,21 @@ public class PendientesCancelarRest {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
+            if(idMoneda == null) {
+                idMoneda = 1;
+            }
             SisMonedas moneda = sisMonedasFacade.find(idMoneda);
             if(moneda == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, no la moneda");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
+            if(idListaPrecio == null) {
+                idListaPrecio = 0;
+            }
+                   
             //seteo el nombre del store
-            String noombreSP = "call s_comprobantesPendientes(?,?,?,?,?,?,?,?)";
+            String noombreSP = "call s_comprobantesPendientes(?,?,?,?,?,?,?,?,?,?,?)";
             
             //invoco al store
             CallableStatement callableStatement = this.utils.procedimientoAlmacenado(user, noombreSP);
@@ -165,6 +174,9 @@ public class PendientesCancelarRest {
             callableStatement.setInt(6, idProducto);
             callableStatement.setInt(7,idDeposito);
             callableStatement.setString(8,despacho);
+            callableStatement.setInt(9,0);
+            callableStatement.setInt(10,idSisTipoOperacion);
+            callableStatement.setInt(11,idListaPrecio);
             
             ResultSet rs = callableStatement.executeQuery();
             List<Payload> pendientes = new ArrayList<>();
@@ -200,6 +212,9 @@ public class PendientesCancelarRest {
                             rs.getString("observaciones"),
                             rs.getInt("itemImputa"),
                             rs.getBigDecimal("importe"),
+                            rs.getInt("idListaPrecios"),
+                            rs.getString("condiciones"),
+                            rs.getString("letra"),
                             producto);
                     if(moneda.getDescripcion().equals("$AR") && rs.getString("moneda").equals("u$s")) {
                         pendientesCancelar.setPrecio(pendientesCancelar.getPrecio().multiply(rs.getBigDecimal("dolar")));
@@ -210,104 +225,113 @@ public class PendientesCancelarRest {
                 }
             //Cierro la conexion    
             callableStatement.getConnection().close();
-            
-            SisOperacionComprobante operacionComp = sisOperacionComprobanteFacade.find(idSisOperacionComprobante);
-            if(operacionComp == null) {
-                respuesta.setControl(AppCodigo.ERROR, "No existe la relacion para el comprobante seleccionado");
-                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-            }
-            
+          
             CteTipo cteTipoSeleccionado = cteTipoFacade.find(cteTipo);
             if(cteTipoSeleccionado == null) {
                 respuesta.setControl(AppCodigo.ERROR, "No existe el CteTipo seleccionado");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
-            if(pendientes.isEmpty() && !operacionComp.getDifCotizacion()) {
-                respuesta.setControl(AppCodigo.ERROR, "No hay Comprobantes Pendientes");
-                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-            } else if(operacionComp.getDifCotizacion() && facNumero != null) {
-                FactCab factCab = factCabFacade.getByNumeroEmpresa(facNumero, cteTipoSeleccionado,user.getIdPerfil().getIdSucursal().getIdEmpresa(),letra);
-                if(factCab == null) {
+            if(idSisTipoOperacion != 0 && idSisTipoOperacion != null) {
+                if(idSisOperacionComprobante == null) {
+                    idSisOperacionComprobante = sisOperacionComprobanteFacade.findIdByEmpresaSisCompSisOp(user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa(), cteTipoSeleccionado.getIdSisComprobante().getIdSisComprobantes(),idSisTipoOperacion);
+                }
+            
+                SisOperacionComprobante operacionComp = sisOperacionComprobanteFacade.find(idSisOperacionComprobante);
+                if(operacionComp == null) {
                     respuesta.setControl(AppCodigo.ERROR, "No existe la relacion para el comprobante seleccionado");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
-                
-                SisCotDolar cotDolar = sisCotDolarFacade.getLastCotizacion();
-                
-                BigDecimal total = new BigDecimal(0);
-                //Sumo los totales de los productos
-                for(FactDetalle d : factCab.getFactDetalleCollection()) {
-                    total = total.add(d.getImporte());
-                }
-                //Sumo los totales del pie del comprobante
-                for(FactPie p : factCab.getFactPieCollection()) {
-                    total = total.add(p.getImporte());
-                }
-                
-                BigDecimal diferencia = new BigDecimal(0);
-                if(factCab.getCotDolar().compareTo(cotDolar.getCotizacion()) < 0) {
-                    //Nota de devito, subio el dolar :(
-                    if(factCab.getIdmoneda().getDescripcion().equals("$AR")) {
-                        diferencia = total.divide(factCab.getCotDolar(),2, RoundingMode.HALF_UP);
-                        diferencia = diferencia.subtract(total.divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP));
-                        diferencia = diferencia.multiply(cotDolar.getCotizacion());
-                    } else if(factCab.getIdmoneda().getDescripcion().equals("u$s")) {
-                        diferencia = total.multiply(cotDolar.getCotizacion());
-                        diferencia = diferencia.subtract(total.multiply(factCab.getCotDolar()));
-                    }
-                } else if(factCab.getCotDolar().compareTo(cotDolar.getCotizacion()) > 0) {
-                    //Nota de credito, bajo el dolar!!
-                    if(factCab.getIdmoneda().getDescripcion().equals("$AR")) {
-                        diferencia = total.divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP);
-                        diferencia = diferencia.subtract(total.divide(factCab.getCotDolar(),2, RoundingMode.HALF_UP));
-                        diferencia = diferencia.multiply(cotDolar.getCotizacion());
-                    } else if(factCab.getIdmoneda().getDescripcion().equals("u$s")) {
-                        diferencia = total.multiply(cotDolar.getCotizacion());
-                        diferencia = diferencia.subtract(total.multiply(factCab.getCotDolar()));
-                    }
-                } else if(factCab.getCotDolar().compareTo(cotDolar.getCotizacion()) == 0) {
-                    //El dolar se mantuvo estable
-                    diferencia = BigDecimal.ONE;
-                }
-                
-                Parametro parametro = parametroFacade.getParametro("difCotDolar", user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
-                if(parametro == null) {
-                    respuesta.setControl(AppCodigo.ERROR, "No existe el parametro para la bussqueda del prod: Dif. Cotizacion Dolar");
+            
+                if(pendientes.isEmpty() && !operacionComp.getDifCotizacion()) {
+                    respuesta.setControl(AppCodigo.ERROR, "No hay Comprobantes Pendientes");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                }
-                Producto prod = productoFacade.getByCodigoProdEmpresa(parametro.getValor(), user.getIdPerfil().getIdSucursal().getIdEmpresa());              
-                if(prod == null) {
-                    respuesta.setControl(AppCodigo.ERROR, "No existe el producto Dif.Cotizacion Dolar");
-                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                }
-                //Armo la respuesta con el producto dif cot dolar
-                ProductoResponse producto = new ProductoResponse(prod);
-                producto.setCostoReposicion(diferencia);
-                
-                //Agrego las cuentas contables
-                producto.getModeloCab().agregarModeloDetalleTipo(prod.getIdModeloCab().getModeloDetalleCollection(), 1, factCab.getIdSisTipoOperacion().getIdSisModulos().getIdSisModulos());
-                
-                if(!prod.getLoteCollection().isEmpty()) {
-                    producto.setEditar(false);
-                }
-                
-                //Seteo el iva del producto dependiendo la cuenta contable que tiene asignada
-                for(ModeloDetalle r : prod.getIdModeloCab().getModeloDetalleCollection()) {
-                    if(r.getIdSisModulo().getIdSisModulos().equals(factCab.getIdSisTipoOperacion().getIdSisModulos().getIdSisModulos()) && 
-                        r.getValor().compareTo(BigDecimal.ZERO) != 0 &&
-                        r.getIdSisTipoModelo().getIdSisTipoModelo().equals(2)) {
-                        producto.getIVA().setPorcIVA(r.getValor());
-                        break;
+                } else if(operacionComp.getDifCotizacion() && facNumero != null) {
+                    if(!pendientes.isEmpty()) {
+                        pendientes.clear();
                     }
+
+                    FactCab factCab = factCabFacade.getByNumeroEmpresa(facNumero, cteTipoSeleccionado,user.getIdPerfil().getIdSucursal().getIdEmpresa(),letra);
+                    if(factCab == null) {
+                        respuesta.setControl(AppCodigo.ERROR, "No existe la relacion para el comprobante seleccionado");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+
+                    SisCotDolar cotDolar = sisCotDolarFacade.getLastCotizacion();
+
+                    BigDecimal total = new BigDecimal(0);
+                    //Sumo los totales de los productos
+                    for(FactDetalle d : factCab.getFactDetalleCollection()) {
+                        total = total.add(d.getImporte());
+                    }
+                    //Sumo los totales del pie del comprobante
+                    for(FactPie p : factCab.getFactPieCollection()) {
+                        total = total.add(p.getImporte());
+                    }
+
+                    BigDecimal diferencia = new BigDecimal(0);
+                    if(factCab.getCotDolar().compareTo(cotDolar.getCotizacion()) < 0) {
+                        //Nota de devito, subio el dolar :(
+                        if(factCab.getIdmoneda().getDescripcion().equals("$AR")) {
+                            diferencia = total.divide(factCab.getCotDolar(),2, RoundingMode.HALF_UP);
+                            diferencia = diferencia.subtract(total.divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP));
+                            diferencia = diferencia.multiply(cotDolar.getCotizacion());
+                        } else if(factCab.getIdmoneda().getDescripcion().equals("u$s")) {
+                            diferencia = total.multiply(cotDolar.getCotizacion());
+                            diferencia = diferencia.subtract(total.multiply(factCab.getCotDolar()));
+                        }
+                    } else if(factCab.getCotDolar().compareTo(cotDolar.getCotizacion()) > 0) {
+                        //Nota de credito, bajo el dolar!!
+                        if(factCab.getIdmoneda().getDescripcion().equals("$AR")) {
+                            diferencia = total.divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP);
+                            diferencia = diferencia.subtract(total.divide(factCab.getCotDolar(),2, RoundingMode.HALF_UP));
+                            diferencia = diferencia.multiply(cotDolar.getCotizacion());
+                        } else if(factCab.getIdmoneda().getDescripcion().equals("u$s")) {
+                            diferencia = total.multiply(cotDolar.getCotizacion());
+                            diferencia = diferencia.subtract(total.multiply(factCab.getCotDolar()));
+                        }
+                    } else if(factCab.getCotDolar().compareTo(cotDolar.getCotizacion()) == 0) {
+                        //El dolar se mantuvo estable
+                        diferencia = BigDecimal.ZERO;
+                    }
+
+                    Parametro parametro = parametroFacade.getParametro("difCotDolar", user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
+                    if(parametro == null) {
+                        respuesta.setControl(AppCodigo.ERROR, "No existe el parametro para la bussqueda del prod: Dif. Cotizacion Dolar");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                    Producto prod = productoFacade.getByCodigoProdEmpresa(parametro.getValor(), user.getIdPerfil().getIdSucursal().getIdEmpresa());              
+                    if(prod == null) {
+                        respuesta.setControl(AppCodigo.ERROR, "No existe el producto Dif.Cotizacion Dolar");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                    //Armo la respuesta con el producto dif cot dolar
+                    ProductoResponse producto = new ProductoResponse(prod);
+                    producto.setCostoReposicion(diferencia);
+
+                    //Agrego las cuentas contables
+                    producto.getModeloCab().agregarModeloDetalleTipo(prod.getIdModeloCab().getModeloDetalleCollection(), 1, factCab.getIdSisTipoOperacion().getIdSisModulos().getIdSisModulos());
+
+                    if(!prod.getLoteCollection().isEmpty()) {
+                        producto.setEditar(false);
+                    }
+
+                    //Seteo el iva del producto dependiendo la cuenta contable que tiene asignada
+                    for(ModeloDetalle r : prod.getIdModeloCab().getModeloDetalleCollection()) {
+                        if(r.getIdSisModulo().getIdSisModulos().equals(factCab.getIdSisTipoOperacion().getIdSisModulos().getIdSisModulos()) && 
+                            r.getValor().compareTo(BigDecimal.ZERO) != 0 &&
+                            r.getIdSisTipoModelo().getIdSisTipoModelo().equals(2)) {
+                            producto.getIVA().setPorcIVA(r.getValor());
+                            break;
+                        }
+                    }
+
+                    PendientesCancelarResponse pendientesCancelar = new PendientesCancelarResponse(producto);
+                    pendientesCancelar.setPrecio(diferencia);
+                    pendientesCancelar.setPendiente(BigDecimal.ONE);
+                    pendientes.add(pendientesCancelar);      
                 }
-                
-                PendientesCancelarResponse pendientesCancelar = new PendientesCancelarResponse(producto);
-                pendientesCancelar.setPrecio(diferencia);
-                pendientesCancelar.setPendiente(BigDecimal.ONE);
-                pendientes.add(pendientesCancelar);      
-            }
-                                     
+            }                        
             respuesta.setArraydatos(pendientes);
             respuesta.setControl(AppCodigo.OK, "Lista de Comprobantes Pendientes");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
@@ -392,13 +416,19 @@ public class PendientesCancelarRest {
                     respuesta.setControl(AppCodigo.ERROR, "Error, no existe el producto");
                     return Response.status(Response.Status.NOT_FOUND).entity(respuesta.toJson()).build();
                 }              
-                
+
                 //Armo la respuesta
-                ProductoResponse sr = new ProductoResponse(s);
-                if(moneda.getDescripcion().equals("u$s")) {
+                ProductoResponse sr = new ProductoResponse(s);                
+                
+                //Calculo el cambio de moneda de acuerdo a la moneda seleccionada y a la moneda asignada en el producto
+                if(moneda.getDescripcion().equals("u$s") && s.getIdMoneda().getDescripcion().equals("$AR")) {
                     SisCotDolar cotDolar = sisCotDolarFacade.getLastCotizacion();
                     sr.setCostoReposicion(sr.getCostoReposicion().divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP));
+                } else if(moneda.getDescripcion().equals("$AR") && s.getIdMoneda().getDescripcion().equals("u$s")) {
+                    SisCotDolar cotDolar = sisCotDolarFacade.getLastCotizacion();
+                    sr.setCostoReposicion(cotDolar.getCotizacion());
                 }
+                
                 //Agrego las cuentas contables
                 sr.getModeloCab().agregarModeloDetalleTipo(s.getIdModeloCab().getModeloDetalleCollection(), idSisTipoModelo, idModulo);
                 
@@ -419,10 +449,8 @@ public class PendientesCancelarRest {
                 
                 //Armo la respuesta de pendientes de cancelar para que sea la misma que viene del store procedure
                 PendientesCancelarResponse pr = new PendientesCancelarResponse(sr);
-                if(moneda.getDescripcion().equals("u$s")) {
-                    SisCotDolar cotDolar = sisCotDolarFacade.getLastCotizacion();
-                    pr.setPrecio(pr.getPrecio().divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP));
-                }
+                pr.setPrecio(sr.getCostoReposicion());
+                
                 productosResponse.add(pr);               
             } else if(idListaPrecios != null && idModulo != null && idSisTipoModelo != null && idProducto != null && idMoneda != null) {
                 //Busco la lista de precios seleccionada
@@ -476,11 +504,14 @@ public class PendientesCancelarRest {
                     //Armo la respuesta de pendientes de cancelar asi es igual a la del store procedure
                     PendientesCancelarResponse pr = new PendientesCancelarResponse(sr);
                     //seteo el precio de la lista de precios seleccionada
-                    if(moneda.getDescripcion().equals("u$s")) {
+                    if(moneda.getDescripcion().equals("u$s") && l.getIdListaPrecios().getIdMoneda().getDescripcion().equals("$AR")) {
                         SisCotDolar cotDolar = sisCotDolarFacade.getLastCotizacion();
-                         pr.setPrecio(pr.getPrecio().divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP));
+                        pr.setPrecio(sr.getCostoReposicion().divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP));
+                    } else if(moneda.getDescripcion().equals("$AR") && l.getIdListaPrecios().getIdMoneda().getDescripcion().equals("u$s")){
+                       SisCotDolar cotDolar = sisCotDolarFacade.getLastCotizacion();
+                       pr.setPrecio(sr.getCostoReposicion().multiply(cotDolar.getCotizacion()));
                     } else {
-                        pr.setPrecio(l.getPrecio());
+                        pr.setPrecio(sr.getCostoReposicion());
                     }
                     productosResponse.add(pr);
                 }                

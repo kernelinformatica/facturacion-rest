@@ -10,10 +10,13 @@ import datos.ServicioResponse;
 import entidades.Acceso;
 import entidades.ModeloDetalle;
 import entidades.Producto;
+import entidades.SisCotDolar;
 import entidades.SisModulo;
+import entidades.SisMonedas;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,7 +37,9 @@ import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
 import persistencia.ModeloDetalleFacade;
 import persistencia.ProductoFacade;
+import persistencia.SisCotDolarFacade;
 import persistencia.SisModuloFacade;
+import persistencia.SisMonedasFacade;
 import persistencia.SisTipoModeloFacade;
 import persistencia.UsuarioFacade;
 import utils.Utils;
@@ -53,6 +58,8 @@ public class BuscaModeloRest {
     @Inject ModeloDetalleFacade modeloFacade;
     @Inject SisTipoModeloFacade sisTipoModeloFacade;
     @Inject SisModuloFacade sisModuloFacade;
+    @Inject SisMonedasFacade sisMonedasFacade;
+    @Inject SisCotDolarFacade sisCotDolarFacade;
     
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -68,6 +75,7 @@ public class BuscaModeloRest {
                        
             // Obtengo los atributos del body
             Integer modulo = (Integer) Utils.getKeyFromJsonObject("modulo", jsonBody, "Integer");
+            Integer idMoneda = (Integer) Utils.getKeyFromJsonObject("idMoneda", jsonBody, "Integer");
             List<JsonElement> productos = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("productos", jsonBody, "ArrayList");
             
             //valido que token no sea null
@@ -116,7 +124,21 @@ public class BuscaModeloRest {
                 respuesta.setControl(AppCodigo.ERROR, "Error, no existe el modulo");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-                       
+            
+            if(idMoneda == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, no selecciono una moneda correctamente");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            
+            SisMonedas moneda = sisMonedasFacade.find(idMoneda);
+            if(moneda == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, no existe la moneda seleccionada");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }         
+            
+            SisCotDolar cotDolar = sisCotDolarFacade.getLastCotizacion();
+            
+            
             List<ModeloDetalleResponse> modelos = new ArrayList<>();
             for(JsonElement j : productos) {
                 Integer idProducto = (Integer) Utils.getKeyFromJsonObject("idProducto", j.getAsJsonObject(), "Integer");
@@ -147,7 +169,13 @@ public class BuscaModeloRest {
                     precio = subTotal;
                     cantidad = BigDecimal.ONE;
                 }
-                                              
+                             
+                //Si el precio por la cantidad es 0 no calculo nada
+                if(precio.multiply(cantidad).compareTo(BigDecimal.ZERO) == 0){
+                    continue;
+                }
+                
+                
                 //Agrego a la lista de modelos response y calculo dependiendo operadores y tipo de modelo
                 // % porcentual
                 // + sumar
@@ -201,6 +229,9 @@ public class BuscaModeloRest {
                             porcentaje = p.getValor();
                             switch (p.getOperador()) {                                   
                                 case "+":
+                                    if((moneda.getDescripcion().equals("u$s"))) {
+                                        porcentaje = p.getValor().divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP);
+                                    }
                                     total = porcentaje;
                                     break;
                                 case "%":
@@ -263,13 +294,13 @@ public class BuscaModeloRest {
                 //Recorro la lista dentro del Map
                 for(FacturaResponse fr : entry.getValue()) {
                     //Sumo los totales de acuerdo a la cuenta contable.
-                    total = total.add(fr.getImporteTotal());
+                    total = total.add(fr.getImporteTotal().setScale(2, BigDecimal.ROUND_HALF_EVEN));
                     descripcion = fr.getDescripcion();
                     cuentaContable = fr.getCuentaContable();
                     porcentaje = fr.getPorcentaje();
                     orden = fr.getOrden();
                     idTipoModelo = fr.getIdSisTipoModelo();
-                    baseImponible = fr.getBaseImponible();
+                    baseImponible = baseImponible.add(fr.getBaseImponible());
                 }
                 //Armo la respuesta final
                 FacturaResponse fr = new FacturaResponse(cuentaContable,descripcion,total,porcentaje,orden, idTipoModelo, baseImponible);

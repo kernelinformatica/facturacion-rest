@@ -6,6 +6,7 @@ import datos.AppCodigo;
 import datos.LoginResponse;
 import datos.Payload;
 import datos.PermisosResponse;
+import datos.PtoVentaResponse;
 import datos.ServicioResponse;
 import datos.UsuarioResponse;
 import entidades.Acceso;
@@ -13,6 +14,7 @@ import entidades.ListaPrecio;
 import entidades.MenuSucursal;
 import entidades.Perfil;
 import entidades.Permiso;
+import entidades.PtoVenta;
 import entidades.Sucursal;
 import entidades.Usuario;
 import entidades.UsuarioListaPrecio;
@@ -40,6 +42,7 @@ import persistencia.AccesoFacade;
 import persistencia.ListaPrecioFacade;
 import persistencia.ParametroGeneralFacade;
 import persistencia.PerfilFacade;
+import persistencia.PtoVentaFacade;
 import persistencia.SucursalFacade;
 import persistencia.UsuarioFacade;
 import persistencia.UsuarioListaPrecioFacade;
@@ -61,6 +64,7 @@ public class UsuarioRest {
     @Inject Utils servicioUtils;
     @Inject ListaPrecioFacade listaPrecioFacade;
     @Inject UsuarioListaPrecioFacade usuarioListaPrecioFacade;
+    @Inject PtoVentaFacade ptoVentaFacade;
     
     @POST
     @Path("/{usuario}")
@@ -137,6 +141,7 @@ public class UsuarioRest {
             Integer perfil = (Integer) Utils.getKeyFromJsonObject("perfil", jsonBody, "Integer");
             String telefono = (String) Utils.getKeyFromJsonObject("telefono", jsonBody, "String");
             String mail = (String) Utils.getKeyFromJsonObject("mail", jsonBody, "String");
+            Integer idPtoVenta = (Integer) Utils.getKeyFromJsonObject("idPtoVenta", jsonBody, "Integer");
             List<JsonElement> listasPrecios = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("listaPrecios", jsonBody, "ArrayList");
 
             //valido que token no sea null
@@ -199,6 +204,7 @@ public class UsuarioRest {
             newUser.setMail(mail);
             newUser.setNombre(nombreConcatenado);
             newUser.setTelefono(telefono);
+            newUser.setIdPtoVenta(idPtoVenta);
             transaccion = usuarioFacade.setUsuarioNuevo(newUser);
             if(!transaccion) {
                 respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el usuario");
@@ -296,6 +302,17 @@ public class UsuarioRest {
                         if(u.getUsuarioListaPrecioCollection() != null && !u.getUsuarioListaPrecioCollection().isEmpty()) {
                             parseUser.agregarListaPrecios(u.getUsuarioListaPrecioCollection());
                         }
+                        if(u.getIdPtoVenta() == null && !s.getCteNumeroCollection().isEmpty()) {
+                            parseUser.agregarPtoVentas(s.getCteNumeroCollection());
+                        } else if(u.getIdPtoVenta() != null && !s.getCteNumeroCollection().isEmpty()){
+                            PtoVenta ptoVentaObj = ptoVentaFacade.find(u.getIdPtoVenta());
+                            if(ptoVentaObj == null) {
+                                respuesta.setControl(AppCodigo.ERROR, "No existe el ptoVenta asignado al Usuario");
+                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                            }
+                            PtoVentaResponse r = new PtoVentaResponse(ptoVentaObj);
+                            parseUser.getPtoVentas().add(r);
+                        }
                         listaUsuariosResponse.add(parseUser);
                     }
                 }
@@ -327,6 +344,7 @@ public class UsuarioRest {
             Integer perfil = (Integer) Utils.getKeyFromJsonObject("perfil", jsonBody, "Integer");
             String telefono = (String) Utils.getKeyFromJsonObject("telefono", jsonBody, "String");
             String mail = (String) Utils.getKeyFromJsonObject("mail", jsonBody, "String");
+            Integer idPtoVenta = (Integer) Utils.getKeyFromJsonObject("idPtoVenta", jsonBody, "Integer");
             List<JsonElement> listasPrecios = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("listaPrecios", jsonBody, "ArrayList");
 
             
@@ -379,6 +397,7 @@ public class UsuarioRest {
             usuario.setMail(mail);
             usuario.setNombre(nombre);
             usuario.setTelefono(telefono);
+            usuario.setIdPtoVenta(idPtoVenta);
             usuario.getUsuarioListaPrecioCollection().clear();
             transaccion = usuarioFacade.editUsuario(usuario);
             if(!transaccion) {

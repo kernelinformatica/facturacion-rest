@@ -9,10 +9,12 @@ import java.math.BigDecimal;
 public class SubTotalResponse implements Payload {
     private BigDecimal subTotal;
     private BigDecimal subTotalIva;
+    private BigDecimal precioDesc;
 
-    public SubTotalResponse(BigDecimal subTotal, BigDecimal subTotalIva) {
+    public SubTotalResponse(BigDecimal subTotal, BigDecimal subTotalIva, BigDecimal precioDesc) {
         this.subTotal = subTotal;
         this.subTotalIva = subTotalIva;
+        this.precioDesc = precioDesc;
     }
 
     public SubTotalResponse() {
@@ -36,6 +38,15 @@ public class SubTotalResponse implements Payload {
         this.subTotalIva = subTotalIva;
     }
 
+    public BigDecimal getPrecioDesc() {
+        return precioDesc;
+    }
+
+    public void setPrecioDesc(BigDecimal precioDesc) {
+        this.precioDesc = precioDesc;
+    }
+
+    
     @Override
     public String getClassName() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.

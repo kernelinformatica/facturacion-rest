@@ -8,9 +8,12 @@ import datos.ServicioResponse;
 import entidades.Acceso;
 import entidades.ListaPrecioDet;
 import entidades.Producto;
+import entidades.SisCotDolar;
+import entidades.SisMonedas;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +34,7 @@ import persistencia.AccesoFacade;
 import persistencia.ListaPrecioDetFacade;
 import persistencia.ListaPrecioFacade;
 import persistencia.ProductoFacade;
+import persistencia.SisCotDolarFacade;
 import persistencia.SisMonedasFacade;
 import persistencia.UsuarioFacade;
 import utils.Utils;
@@ -49,6 +53,7 @@ public class FiltroListaPrecioRest {
     @Inject ListaPrecioFacade listaPrecioFacade;
     @Inject ProductoFacade productoFacade;
     @Inject ListaPrecioDetFacade listaPrecioDetFacade; 
+    @Inject SisCotDolarFacade sisCotDolarFacade;
     
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -71,6 +76,7 @@ public class FiltroListaPrecioRest {
             BigDecimal porcentajeCabecera = (BigDecimal) Utils.getKeyFromJsonObject("porcentajeCabecera", jsonBody, "BigDecimal");
             BigDecimal porcentajeInf = (BigDecimal) Utils.getKeyFromJsonObject("porcentajeInf", jsonBody, "BigDecimal");
             BigDecimal porcentajeSup = (BigDecimal) Utils.getKeyFromJsonObject("porcentajeSup", jsonBody, "BigDecimal");
+            Integer idMoneda = (Integer) Utils.getKeyFromJsonObject("idMoneda", jsonBody, "Integer");
             
             //Lista de productos filtrados
             List<Producto> productos = new ArrayList<>();
@@ -215,6 +221,17 @@ public class FiltroListaPrecioRest {
                 productos.addAll(provLista);
             }
             
+            if(idMoneda == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Debe seleccionar un tipo de moneda");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            
+            SisMonedas moneda = sisMonedasFacade.find(idMoneda);
+            if(moneda == null) {
+                respuesta.setControl(AppCodigo.ERROR, "No existe la moneda seleccionada");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            
             BigDecimal cero = new BigDecimal(0);
             
             //Valido que el porcentaje de la cabecera sea distinto a 0
@@ -239,17 +256,31 @@ public class FiltroListaPrecioRest {
                         BigDecimal precio = new BigDecimal(0);
                         precio = p.getCostoReposicion().multiply(porcentajeCabecera.divide(cien));
                         precio = precio.add(p.getCostoReposicion());
+                        if(moneda.getDescripcion().equals("u$s") && p.getIdMoneda().getDescripcion().equals("$AR")) {
+                            SisCotDolar cotDolar = sisCotDolarFacade.getLastCotizacion();
+                            precio = precio.divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP);
+                        } else if(moneda.getDescripcion().equals("$AR") && p.getIdMoneda().getDescripcion().equals("u$s")) {
+                            SisCotDolar cotDolar = sisCotDolarFacade.getLastCotizacion();
+                            precio = precio.multiply(cotDolar.getCotizacion());
+                        }
                         ListaPrecioDetResponse pr = new ListaPrecioDetResponse(precio,p.getPrecioVentaProv(),p.getPrecioVentaProv(),p);
                         productosResponse.add(pr);
                     }
-                } else if(porcentajeInf.compareTo(porcentajeSup) < 0){ 
+                } else if(porcentajeInf.compareTo(porcentajeSup) < 0 || porcentajeInf.equals(porcentajeSup)){ 
                     for(Producto p : productos) {
                         BigDecimal precio = new BigDecimal(0);
                         precio = p.getCostoReposicion().multiply(porcentajeCabecera.divide(cien));
                         precio = precio.add(p.getCostoReposicion());
+                        if(moneda.getDescripcion().equals("u$s") && p.getIdMoneda().getDescripcion().equals("$AR")) {
+                            SisCotDolar cotDolar = sisCotDolarFacade.getLastCotizacion();
+                            precio = precio.divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP);
+                        } else if(moneda.getDescripcion().equals("$AR") && p.getIdMoneda().getDescripcion().equals("u$s")) {
+                            SisCotDolar cotDolar = sisCotDolarFacade.getLastCotizacion();
+                            precio = precio.multiply(cotDolar.getCotizacion());
+                        }
                         BigDecimal precioInf = precio.multiply(porcentajeInf.divide(cien));
                         BigDecimal precioSup = precio.multiply(porcentajeSup.divide(cien));
-                        precioInf = precioInf.add(precio);
+                        precioInf = precio.subtract(precioInf);
                         precioSup = precioSup.add(precio);
                         ListaPrecioDetResponse pr = new ListaPrecioDetResponse(precio,precioInf,precioSup,p);
                         productosResponse.add(pr);

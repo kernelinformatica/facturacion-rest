@@ -1,5 +1,6 @@
 package datos;
 
+import entidades.PtoVenta;
 import entidades.UsuarioListaPrecio;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,7 +17,9 @@ public class UsuarioResponse implements Payload{
     private String telefono;
     private PerfilResponse perfil;
     private String clave;
+    private List<PtoVentaResponse> ptoVentas;
     private List<ListaPreciosResponse> listaPrecios;
+    
 
     public UsuarioResponse(entidades.Usuario u) {
         this.id = u.getIdUsuarios();
@@ -26,6 +29,7 @@ public class UsuarioResponse implements Payload{
         this.telefono = u.getTelefono();
         this.clave = u.getClave();
         this.listaPrecios = new ArrayList<>();
+        this.ptoVentas = new ArrayList<>();
         
     }
     
@@ -92,8 +96,25 @@ public class UsuarioResponse implements Payload{
         }
     }
 
-    @Override
+    public List<PtoVentaResponse> getPtoVentas() {
+        return ptoVentas;
+    }
+
+    public void setPtoVentas(List<PtoVentaResponse> ptoVentas) {
+        this.ptoVentas = ptoVentas;
+    }
+
+    public void agregarPtoVentas(Collection<PtoVenta> ptoVentas) {
+        for(PtoVenta p : ptoVentas) {
+            PtoVentaResponse r = new PtoVentaResponse(p);
+            this.getPtoVentas().add(r);
+        }
+    }
+    
+     @Override
     public String getClassName() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+
+   
 }

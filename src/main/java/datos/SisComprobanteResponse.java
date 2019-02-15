@@ -1,6 +1,9 @@
 package datos;
 
 import entidades.SisComprobante;
+import entidades.SisMonedas;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -14,9 +17,12 @@ public class SisComprobanteResponse implements Payload{
     private SisModuloResponse modulo;
     private Boolean incluyeNeto;
     private Boolean incluyeIva;
+    private Boolean relacionadosMultiples;
     private String referencia;
     private Boolean difCotizacion;
     private Integer idSisOperacionComprobante;
+    private Boolean admiteRelacionMultiple;
+    private List<SisMonedasResponse> monedas = new ArrayList<>();
     
     public SisComprobanteResponse(SisComprobante s) {
        this.idSisComprobantes = s.getIdSisComprobantes();
@@ -104,9 +110,39 @@ public class SisComprobanteResponse implements Payload{
     public void setIdSisOperacionComprobante(Integer idSisOperacionComprobante) {
         this.idSisOperacionComprobante = idSisOperacionComprobante;
     }
-    
-    
 
+    public Boolean getRelacionadosMultiples() {
+        return relacionadosMultiples;
+    }
+
+    public void setRelacionadosMultiples(Boolean relacionadosMultiples) {
+        this.relacionadosMultiples = relacionadosMultiples;
+    }
+
+    public Boolean getAdmiteRelacionMultiple() {
+        return admiteRelacionMultiple;
+    }
+
+    public void setAdmiteRelacionMultiple(Boolean admiteRelacionMultiple) {
+        this.admiteRelacionMultiple = admiteRelacionMultiple;
+    }
+
+    public List<SisMonedasResponse> getMonedas() {
+        return monedas;
+    }
+
+    public void setMonedas(List<SisMonedasResponse> monedas) {
+        this.monedas = monedas;
+    }
+    
+    public void agregarMonedas(List<SisMonedas> todas) {
+        for(SisMonedas t : todas) {
+            SisMonedasResponse sr = new SisMonedasResponse(t);
+            this.getMonedas().add(sr);
+        }
+    }
+    
+    
     @Override
     public String getClassName() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.

@@ -123,56 +123,38 @@ public class CalculoImportesSubtotales {
             if("%".equals(tipoDescuento)) {
                 BigDecimal total = new BigDecimal(0);
                 BigDecimal totalIva = new BigDecimal(0);
-                total = total.add(precio.multiply(new BigDecimal(cantidad)));
+                BigDecimal unitario = new BigDecimal(0);
+                total = total.add(precio.multiply(new BigDecimal(cantidad)));  
+                unitario = precio;
                 for(Map.Entry<Integer, Integer> entry : mapInteger.entrySet()) {
                     BigDecimal porcentaje = new BigDecimal(entry.getValue());
                     porcentaje = porcentaje.divide(new BigDecimal(100));
                     total = total.add(total.multiply(porcentaje));
+                    unitario = unitario.add(unitario.multiply(porcentaje));
                 }
                 BigDecimal porcentajeIva = new BigDecimal(0);
                 porcentajeIva = porcentajeIva.add(iva.divide(new BigDecimal(100)));
                 totalIva = totalIva.add(total.multiply(porcentajeIva.add(new BigDecimal(1))));
                 subTotal.setSubTotal(total.setScale(2, BigDecimal.ROUND_HALF_EVEN));
                 subTotal.setSubTotalIva(totalIva.setScale(2, BigDecimal.ROUND_HALF_EVEN));
-//            } else if("+".equals(tipoDescuento)){
-//                BigDecimal total = new BigDecimal(0);
-//                BigDecimal totalIva = new BigDecimal(0);
-//                total = total.add(precio.multiply(new BigDecimal(cantidad)));
-//                for(Map.Entry<Integer, Integer> entry : mapInteger.entrySet()) {
-//                    BigDecimal desc = new BigDecimal(entry.getValue());
-//                    total = total.add(desc);
-//                }
-//                BigDecimal porcentajeIva = new BigDecimal(0);
-//                porcentajeIva = porcentajeIva.add(iva.divide(new BigDecimal(100)));
-//                totalIva = totalIva.add(total.multiply(porcentajeIva.add(new BigDecimal(1))));
-//                subTotal.setSubTotal(total.setScale(2, BigDecimal.ROUND_HALF_EVEN));
-//                subTotal.setSubTotalIva(totalIva.setScale(2, BigDecimal.ROUND_HALF_EVEN));
-//            } else if("-".equals(tipoDescuento)){
-//                BigDecimal total = new BigDecimal(0);
-//                BigDecimal totalIva = new BigDecimal(0);
-//                total = total.add(precio.multiply(new BigDecimal(cantidad)));
-//                for(Map.Entry<Integer, Integer> entry : mapInteger.entrySet()) {
-//                    BigDecimal desc = new BigDecimal(entry.getValue());
-//                    total = total.add(desc.negate());
-//                }
-//                BigDecimal porcentajeIva = new BigDecimal(0);
-//                porcentajeIva = porcentajeIva.add(iva.divide(new BigDecimal(100)));
-//                totalIva = totalIva.add(total.multiply(porcentajeIva.add(new BigDecimal(1))));
-//                subTotal.setSubTotal(total.setScale(2, BigDecimal.ROUND_HALF_EVEN));
-//                subTotal.setSubTotalIva(totalIva.setScale(2, BigDecimal.ROUND_HALF_EVEN));
+                subTotal.setPrecioDesc(unitario.setScale(2, BigDecimal.ROUND_HALF_EVEN));
             } else {
                 BigDecimal total = new BigDecimal(0);
                 BigDecimal totalIva = new BigDecimal(0);
+                BigDecimal unitario = new BigDecimal(0);
                 total = total.add(precio.multiply(new BigDecimal(cantidad)));
+                unitario = precio;
                 for(Map.Entry<Integer, Integer> entry : mapInteger.entrySet()) {
                     BigDecimal desc = new BigDecimal(entry.getValue());
                     total = total.add(desc);
+                    unitario = unitario.add(desc);
                 }
                 BigDecimal porcentajeIva = new BigDecimal(0);
                 porcentajeIva = porcentajeIva.add(iva.divide(new BigDecimal(100)));
                 totalIva = totalIva.add(total.multiply(porcentajeIva.add(new BigDecimal(1))));
                 subTotal.setSubTotal(total.setScale(2, BigDecimal.ROUND_HALF_EVEN));
                 subTotal.setSubTotalIva(totalIva.setScale(2, BigDecimal.ROUND_HALF_EVEN));
+                subTotal.setPrecioDesc(unitario.setScale(2, BigDecimal.ROUND_HALF_EVEN));
             }
 
             respuesta.setDatos(subTotal);

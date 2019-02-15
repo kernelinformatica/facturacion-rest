@@ -15,6 +15,7 @@ import entidades.ModeloCab;
 import entidades.ProdCultivo;
 import entidades.Producto;
 import entidades.SisIVA;
+import entidades.SisMonedas;
 import entidades.SisUnidad;
 import entidades.SubRubro;
 import entidades.Usuario;
@@ -47,6 +48,7 @@ import persistencia.ModeloCabFacade;
 import persistencia.ProdCultivoFacade;
 import persistencia.ProductoFacade;
 import persistencia.SisIVAFacade;
+import persistencia.SisMonedasFacade;
 import persistencia.SisUnidadFacade;
 import persistencia.SubRubroFacade;
 import persistencia.UsuarioFacade;
@@ -70,6 +72,7 @@ public class ProductoRest {
     @Inject ListaPrecioFacade listaPrecioFacade;
     @Inject CultivoFacade cultivoFacade;
     @Inject ProdCultivoFacade prodCultivoFacade;
+    @Inject SisMonedasFacade sisMonedasFacade;
     
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
@@ -198,6 +201,7 @@ public class ProductoRest {
             Integer idUnidadCompra = (Integer) Utils.getKeyFromJsonObject("idUnidadCompra", jsonBody, "Integer");
             Integer idUnidadVenta = (Integer) Utils.getKeyFromJsonObject("idUnidadVenta", jsonBody, "Integer");
             Integer idMarca = (Integer) Utils.getKeyFromJsonObject("idMarca", jsonBody, "Integer");
+            Integer idMoneda = (Integer) Utils.getKeyFromJsonObject("idMoneda", jsonBody, "Integer");
             List<JsonElement> cultivos = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("cultivos", jsonBody, "ArrayList");
             
             //valido que token no sea null
@@ -235,8 +239,14 @@ public class ProductoRest {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             //Me fijo que  descripcion, idRubro e idEmpresa no sean nulos
-            if(codProducto == null || idSubRubro == null || idUnidadCompra == null || idUnidadVenta == null || idIva == null) {
+            if(codProducto == null || idSubRubro == null || idUnidadCompra == null || idUnidadVenta == null || idIva == null || idMoneda == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, algun campo esta vacio");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            
+            SisMonedas moneda = sisMonedasFacade.find(idMoneda);
+            if(moneda == null){
+                respuesta.setControl(AppCodigo.ERROR, "Error, no existe la moneda seleccionada");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
@@ -330,6 +340,7 @@ public class ProductoRest {
                 producto.setUnidadVenta(sisUnidadVenta);
                 producto.setIdEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
                 producto.setIdMarca(marca);
+                producto.setIdMoneda(moneda);
                 transaccion = productoFacade.setProductoNuevo(producto);
                 if(!transaccion) {
                     respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Producto, clave primaria repetida");
@@ -394,6 +405,7 @@ public class ProductoRest {
             Integer idUnidadCompra = (Integer) Utils.getKeyFromJsonObject("idUnidadCompra", jsonBody, "Integer");
             Integer idUnidadVenta = (Integer) Utils.getKeyFromJsonObject("idUnidadVenta", jsonBody, "Integer");
             Integer idMarca = (Integer) Utils.getKeyFromJsonObject("idMarca", jsonBody, "Integer");
+            Integer idMoneda = (Integer) Utils.getKeyFromJsonObject("idMoneda", jsonBody, "Integer");
             List<JsonElement> cultivos = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("cultivos", jsonBody, "ArrayList");
             
             //valido que token no sea null
@@ -427,7 +439,7 @@ public class ProductoRest {
             }
 
             //Me fijo que  descripcion, idRubro e idEmpresa no sean nulos
-            if(codProducto == null || idSubRubro == null || idUnidadCompra == null || idUnidadVenta == null || idIva == null || idProducto == null || modeloImputacion == null) {
+            if(codProducto == null || idSubRubro == null || idUnidadCompra == null || idUnidadVenta == null || idIva == null || idProducto == null || modeloImputacion == null || idMoneda == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, campos vacios");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
@@ -452,6 +464,13 @@ public class ProductoRest {
                     listaCultivos.add(cultivo);
                 }
             }
+            
+            SisMonedas moneda = sisMonedasFacade.find(idMoneda);
+            if(moneda == null){
+                respuesta.setControl(AppCodigo.ERROR, "Error, no existe la moneda seleccionada");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            
             
             Producto producto = productoFacade.find(idProducto);
             SubRubro subrubro = subRubroFacade.find(idSubRubro);
@@ -522,6 +541,7 @@ public class ProductoRest {
             producto.setUnidadCompra(sisUniudadCompra);
             producto.setUnidadVenta(sisUnidadVenta);
             producto.setIdMarca(marca);
+            producto.setIdMoneda(moneda);
             producto.getProdCultivoCollection().clear();
             transaccion = productoFacade.editProducto(producto);
             if(!transaccion) {
