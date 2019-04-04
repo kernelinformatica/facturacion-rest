@@ -6,6 +6,7 @@ import datos.AppCodigo;
 import datos.DatosResponse;
 import datos.ServicioResponse;
 import entidades.Acceso;
+import entidades.Contrato;
 import entidades.CteNumerador;
 import entidades.CteTipo;
 import entidades.Deposito;
@@ -18,6 +19,7 @@ import entidades.FormaPagoDet;
 import entidades.ListaPrecioDet;
 import entidades.Lote;
 import entidades.Master;
+import entidades.Padron;
 import entidades.Producto;
 import entidades.Produmo;
 import entidades.SisCotDolar;
@@ -37,7 +39,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -50,6 +51,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
+import persistencia.ContratoFacade;
 import persistencia.CteNumeradorFacade;
 import persistencia.CteTipoFacade;
 import persistencia.DepositoFacade;
@@ -60,10 +62,10 @@ import persistencia.FactImputaFacade;
 import persistencia.FactPieFacade;
 import persistencia.FormaPagoDetFacade;
 import persistencia.FormaPagoFacade;
-import persistencia.ListaPrecioDetFacade;
 import persistencia.ListaPrecioFacade;
 import persistencia.LoteFacade;
 import persistencia.MasterFacade;
+import persistencia.PadronFacade;
 import persistencia.ProductoFacade;
 import persistencia.ProdumoFacade;
 import persistencia.SisCotDolarFacade;
@@ -103,6 +105,8 @@ public class GrabaComprobanteRest {
     @Inject SisOperacionComprobanteFacade sisOperacionComprobanteFacade;
     @Inject ListaPrecioFacade listaPrecioFacade;
     @Inject SisCotDolarFacade sisCotDolarFacade;
+    @Inject PadronFacade padronFacade;
+    @Inject ContratoFacade contratoFacade;
           
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -145,6 +149,7 @@ public class GrabaComprobanteRest {
             Integer idVendedor = (Integer) Utils.getKeyFromJsonObject("idVendedor", jsonBody, "Integer");
             Integer codigoAfip = (Integer) Utils.getKeyFromJsonObject("codigoAfip", jsonBody, "Integer");
             Integer idSisOperacionComprobante = (Integer) Utils.getKeyFromJsonObject("idSisOperacionComprobante", jsonBody, "Integer");
+            Integer idContrato = (Integer) Utils.getKeyFromJsonObject("idContrato", jsonBody, "Integer");
             
             //Booleanos para ver que se guarda y que no.
             boolean factCabecera = (Boolean) Utils.getKeyFromJsonObject("factCabecera", jsonBody, "boolean");
@@ -314,16 +319,75 @@ public class GrabaComprobanteRest {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
-            //Valido que la fecha de emision no sea menor a la de un comprobante con el mismo tipo dado de alta.
-            List<FactCab> posteriores = factCabFacade.getByFechaEmpresaComp(fechaEmision,cteTipo,user.getIdPerfil().getIdSucursal().getIdEmpresa());
-            if(posteriores != null && !posteriores.isEmpty() && posteriores.size() > 0) {
-                if(posteriores.size() > 1) {
-                    Collections.sort(posteriores, (o1, o2) -> o1.getFechaEmision().compareTo(o2.getFechaEmision()));
-                }
-                SimpleDateFormat formateador = new SimpleDateFormat("dd/MM/yy");
-                respuesta.setControl(AppCodigo.ERROR, "Error al dar de alta el Comprobante, la fecha debe ser mayor a: "  + formateador.format(posteriores.get(posteriores.size()-1).getFechaEmision()));
+            //Compruebo si es ventas y si viene la lista de precios nula
+            if(cteTipo.getIdSisComprobante().getIdSisModulos().getIdSisModulos() == 2 && listaPrecio == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Debe seleccionar una lista de precios");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
+            
+            //Esta condicion solamente aplica para los emitidos por el sistema
+            if(cteTipo.getIdSisComprobante().getPropio() == 1 && idNumero != null) {                             
+                CteNumerador cteNumerador = cteNumeradorFacade.find(idNumero);
+                if(cteNumerador == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el numero de comprobante");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                String ptoVenta = cteNumerador.getIdPtoVenta().getPtoVenta().toString();          
+               
+                //Valido que la fecha de emision no sea menor a la de un comprobante con el mismo tipo dado de alta.
+                List<FactCab> posteriores = factCabFacade.getByFechaEmpresaCompLetra(fechaEmision,cteTipo,user.getIdPerfil().getIdSucursal().getIdEmpresa(),letra);
+                
+                if(posteriores != null && !posteriores.isEmpty() && posteriores.size() > 0) {
+                    List<FactCab> filtrados = new ArrayList<>();
+                    for(FactCab p : posteriores) {
+                        String num = String.valueOf(p.getNumero());
+                        String pto = num.substring(0,num.length()-8);
+                        if(pto.equals(ptoVenta)) {
+                            filtrados.add(p);
+                        }
+                    }
+                    if(filtrados.size() > 1) {
+                        Collections.sort(filtrados, (o1, o2) -> o1.getFechaEmision().compareTo(o2.getFechaEmision()));
+                    }
+                    SimpleDateFormat formateador = new SimpleDateFormat("dd/MM/yy");
+                    respuesta.setControl(AppCodigo.ERROR, "Error al dar de alta el Comprobante, la fecha debe ser mayor a: "  + formateador.format(filtrados.get(filtrados.size()-1).getFechaEmision()));
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+            }
+            
+            String direccion = "";
+            String codPostal = "";
+            if(idPadron != null) {
+                Padron padron = padronFacade.find(idPadron);
+                if(padron != null) {
+                    if(padron.getPadronDomici() !=  null) {
+                        direccion = padron.getPadronDomici();
+                    }
+                    if(padron.getPadronDomnro() != null) {
+                        direccion = direccion + " " + padron.getPadronDomnro(); 
+                    }
+                    if(padron.getPadronDompis() != null) {
+                        direccion = direccion + " " + padron.getPadronDompis();
+                    }
+                    if(padron.getPadronDomdto() != null) {
+                        direccion = direccion + " " + padron.getPadronDomdto();
+                    }                   
+                }
+                if(padron.getCodigoPostal() != null) {
+                    codPostal = padron.getCodigoPostal().toString();
+                }
+            }
+            
+            //Busco el contrato si es que lleva
+            if(idContrato != null) {
+                Contrato contrato = contratoFacade.find(idContrato);
+                if(contrato == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no xiste el contrato seleccionado");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+            }
+            
+            
             
             FactCab factCab = new FactCab();
             //Pregunto si se guarda una cabecera
@@ -331,7 +395,7 @@ public class GrabaComprobanteRest {
                 factCab.setCai(cai);
                 factCab.setCaiVto(caiVto);
                 factCab.setCodBarra(codBarra);
-                factCab.setCodigoPostal(codigoPostal);
+                factCab.setCodigoPostal(codPostal);
                 factCab.setCotDolar(cotDolar);
                 factCab.setCuit(cuit);
                 factCab.setFechaConta(fechaConta);
@@ -353,6 +417,8 @@ public class GrabaComprobanteRest {
                 factCab.setIdSisTipoOperacion(sisTipoOperacion);
                 factCab.setIdVendedor(idVendedor);
                 factCab.setCodigoAfip(codigoAfip);
+                factCab.setIdSisOperacionComprobantes(idSisOperacionComprobante);
+                factCab.setDomicilio(direccion);
             } else {
                 if(idFactCab == null) {
                     respuesta.setControl(AppCodigo.ERROR, "El parametro de cabecera no puede ser nulo");
@@ -365,6 +431,11 @@ public class GrabaComprobanteRest {
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
             }
+            
+            //Le agrego el numero a numero afip si es compra
+            if(cteTipo.getIdSisComprobante().getIdSisModulos().getIdSisModulos() == 1) {
+                factCab.setNumeroAfip(numero.longValue());
+            }
                 //Pregunto si guarda Detalles
                 if(factDet) {
                     //Armo la listas de Fact par luego parsearlas todas juntas
@@ -374,6 +445,7 @@ public class GrabaComprobanteRest {
                     List<FactPie> listaPie = new ArrayList<>();
                     List<Lote> listaLotes = new ArrayList<>();
                     List<FactFormaPago> listaFormaPago = new ArrayList<>();
+                    List<BigDecimal> listaComRel = new ArrayList<>();
                     //Contador para factDetalle
                     int item = 0;
                     //Recorro el array de grillaArticulos y creo facDetalle para cada articulo
@@ -396,6 +468,13 @@ public class GrabaComprobanteRest {
                         BigDecimal importe = (BigDecimal) Utils.getKeyFromJsonObject("importe", j.getAsJsonObject(), "BigDecimal"); 
                         BigDecimal precioDesc = (BigDecimal) Utils.getKeyFromJsonObject("precioDesc", j.getAsJsonObject(), "BigDecimal"); 
                         String unidadDescuento = (String) Utils.getKeyFromJsonObject("unidadDescuento", j.getAsJsonObject(), "String");
+                        BigDecimal comprobanteRel = (BigDecimal) Utils.getKeyFromJsonObject("comprobanteRel", j.getAsJsonObject(), "BigDecimal");
+                        Integer idLibro = (Integer) Utils.getKeyFromJsonObject("idLibro", j.getAsJsonObject(), "Integer");
+                        
+                        if(idLibro == null) {
+                            respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el detalle de la factura, idLibro nulo");
+                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                        }
 
                         //Pregunto por los campos que son NOTNULL
                         if(idProducto == null || articulo == null || pendiente == null || precio == null || porCalc == null ||
@@ -439,6 +518,10 @@ public class GrabaComprobanteRest {
                             respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, Comprobante no encontrado");
                             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                         }
+                        
+                        if(!sisOperacionComprobante.getAdmiteRelacionMultiple() && comprobanteRel != null) {
+                            listaComRel.add(comprobanteRel);
+                        }
 
                         if(!sisOperacionComprobante.getIncluyeNeto()) {
                             importe = BigDecimal.ZERO;
@@ -469,7 +552,8 @@ public class GrabaComprobanteRest {
                         factDetalle.setImporte(importe);
                         factDetalle.setCodProducto(producto.getCodProducto());
                         factDetalle.setUnidadDescuento(unidadDescuento);
-                        factDetalle.setPrecioDesc(precioDesc);                                                     
+                        factDetalle.setPrecioDesc(precioDesc); 
+                        factDetalle.setIdLibro(idLibro);
                         
                         // Busco listaPrecioDet
                         if (listaPrecio != null) {
@@ -534,6 +618,18 @@ public class GrabaComprobanteRest {
                         item++;
                     }
                     
+                    //Voy a fijarme si hay comprobantes relacionados y son distintos de acuerdo a la condicion de si permite relacionados multiples
+                    if(!listaComRel.isEmpty() && listaComRel.size() > 0) {
+                        //Ordeno la lista
+                        Collections.sort(listaComRel, (o1, o2) -> o1.compareTo(o2));
+                        for(int i=0; i < listaComRel.size();i++) {
+                            //Me fijo si es distinto al anterior
+                            if(i!= 0 && !listaComRel.get(i).equals(listaComRel.get(i-1))) {
+                                respuesta.setControl(AppCodigo.ERROR, "Error al cargar el comprobante, este tipo de operacion no admite la relacion de distintos comprobantes");
+                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                            }
+                        }
+                    }                    
                     //Aca filtro por las cotas en la lista de precios seleccionada y el precio ingresado
                     if(listaPrecio != null) {
                         List<FactDetalle> detallesCotas = new ArrayList<>();
@@ -617,9 +713,17 @@ public class GrabaComprobanteRest {
                             BigDecimal porcentaje = (BigDecimal) Utils.getKeyFromJsonObject("porcentaje", je.getAsJsonObject(), "BigDecimal");
                             Integer idSisTipoModelo = (Integer) Utils.getKeyFromJsonObject("idSisTipoModelo", je.getAsJsonObject(), "Integer");
                             BigDecimal baseImponible = (BigDecimal) Utils.getKeyFromJsonObject("baseImponible", je.getAsJsonObject(), "BigDecimal");
+                            String operador = (String) Utils.getKeyFromJsonObject("operador", je.getAsJsonObject(), "String");
+                            Integer idLibro = (Integer) Utils.getKeyFromJsonObject("idLibro", je.getAsJsonObject(), "Integer");
+                            
                             //Pregunto por los que no pueden ser Null
                             if(cuenta == null || descripcionPie == null ||importe == null || totalComprobante == null || idSisTipoModelo == null) {
                                 respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, algun campo de la grilla es nulo");
+                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                            }
+                            
+                            if(idLibro == null) {
+                                respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, idLibro nulo");
                                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                             }
                             
@@ -652,6 +756,8 @@ public class GrabaComprobanteRest {
                             facturacionPie.setPorcentaje(porcentaje);
                             facturacionPie.setIdSisTipoModelo(sisTipoModelo);
                             facturacionPie.setBaseImponible(baseImponible);
+                            facturacionPie.setOperador(operador);
+                            facturacionPie.setIdLibro(idLibro);
                             listaPie.add(facturacionPie);
                         }
                     }
@@ -672,9 +778,7 @@ public class GrabaComprobanteRest {
                                 respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el lote de la factura, algun campo de la grilla es nulo");
                                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                             }
-                            
-                            
-                            
+                                                                                   
                             //Busco el producto por id
                             Producto prod = productoFacade.find(idProducto);
                             if(prod == null) {
@@ -685,8 +789,8 @@ public class GrabaComprobanteRest {
                             //Armo el lote
                             Lote loteNuevo = new Lote();
                             
-                            if(loteFacade.findByNroEmpresa(nroLote, user.getIdPerfil().getIdSucursal().getIdEmpresa()) != null) {
-                                loteNuevo = loteFacade.findByNroEmpresa(nroLote, user.getIdPerfil().getIdSucursal().getIdEmpresa());
+                            if(loteFacade.findByNroEmpresaProducto(nroLote, user.getIdPerfil().getIdSucursal().getIdEmpresa(), prod) != null) {
+                                loteNuevo = loteFacade.findByNroEmpresaProducto(nroLote, user.getIdPerfil().getIdSucursal().getIdEmpresa(), prod);
                             }
                             
                             loteNuevo.setFechaElab(fechaElab);
@@ -706,6 +810,56 @@ public class GrabaComprobanteRest {
                             }                            
                             listaLotes.add(loteNuevo);
                             
+                            //Le sumo uno al item
+                            itemTrazabilidad ++;
+                        }
+                    } else if(lote && cteTipo.getIdSisComprobante().getStock().equals(1) && grillaTrazabilidad != null && cteTipo.getIdSisComprobante().getIdSisModulos().getIdSisModulos() == 2) {
+                        int itemTrazabilidad = 0;
+                        //No guardo el lote pero si lo agrego a la tabla produmo
+                        for(JsonElement gt : grillaTrazabilidad) {
+                            //Obtengo los atributos del body
+                            String nroLote = (String) Utils.getKeyFromJsonObject("nroLote", gt.getAsJsonObject(), "String");
+                            String serie = (String) Utils.getKeyFromJsonObject("serie", gt.getAsJsonObject(), "String");
+                            Date fechaElab = (Date) Utils.getKeyFromJsonObject("fechaElab", gt.getAsJsonObject(), "Date");
+                            Date fechaVto = (Date) Utils.getKeyFromJsonObject("fechaVto", gt.getAsJsonObject(), "Date");
+                            Boolean vigencia = (Boolean) Utils.getKeyFromJsonObject("vigencia", gt.getAsJsonObject(), "boolean");
+                            Integer idProducto = (Integer) Utils.getKeyFromJsonObject("idProducto", gt.getAsJsonObject(), "Integer");
+                            
+                            //Pregunto por los que no pueden ser null
+                            if(nroLote == null || serie == null || vigencia == null || idProducto == null) {
+                                respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el lote de la factura, algun campo de la grilla es nulo");
+                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                            }
+
+                            //Busco el producto por id
+                            Producto prod = productoFacade.find(idProducto);
+                            if(prod == null) {
+                                respuesta.setControl(AppCodigo.ERROR, "Error al cargar lote, el producto con id " + idProducto + " no existe");
+                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                            }
+                            
+                            //Armo el lote
+                            Lote loteNuevo = new Lote();
+                            
+                            if(loteFacade.findByNroEmpresaProducto(nroLote, user.getIdPerfil().getIdSucursal().getIdEmpresa(), prod) != null) {
+                                loteNuevo = loteFacade.findByNroEmpresaProducto(nroLote, user.getIdPerfil().getIdSucursal().getIdEmpresa(), prod);
+                            }
+                            
+                            loteNuevo.setFechaElab(fechaElab);
+                            loteNuevo.setFechaVto(fechaVto);
+                            loteNuevo.setIdEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
+                            loteNuevo.setIdproductos(prod);
+                            loteNuevo.setItem(itemTrazabilidad);
+                            loteNuevo.setNroLote(nroLote);
+                            loteNuevo.setSerie(serie);
+                            loteNuevo.setVigencia(vigencia);
+                           
+                            //Recorro produmo y si es el mismo producto le agreego el lote
+                            for(Produmo p : listaProdumo) {
+                                if(p.getIdProductos().equals(prod)) {
+                                    p.setNroLote(nroLote);
+                                }
+                            }                                                       
                             //Le sumo uno al item
                             itemTrazabilidad ++;
                         }
@@ -1072,6 +1226,7 @@ public class GrabaComprobanteRest {
         try{
             for(FactDetalle det : factDetalle) {
                 Master masterDetalle = new Master();
+                masterDetalle.setIdFactCab(factCab);
                 masterDetalle.setCodigoLibro(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdSisComprobante().getIdSisModulos().getIdSisModulos())));
                 masterDetalle.setCotizacion(factCab.getCotDolar());
                 masterDetalle.setFechayhora(fechaHoy);
@@ -1087,6 +1242,7 @@ public class GrabaComprobanteRest {
                 masterDetalle.setPadronCodigo(factCab.getIdPadron());
                 masterDetalle.setPlanCuentas(det.getImputacion());
                 masterDetalle.setTipoComp(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdCteTipo())));
+                masterDetalle.setMColumIva(Short.valueOf(Integer.toString(det.getIdLibro())));
                 
                 
                 //Parametros que van en 0
@@ -1095,7 +1251,6 @@ public class GrabaComprobanteRest {
                 masterDetalle.setConceptoCodigo(Short.valueOf("0"));
                 masterDetalle.setCondGan(Short.valueOf("0"));
                 masterDetalle.setCondIva(Short.valueOf("0"));
-                masterDetalle.setMColumIva(Short.valueOf("0"));
                 masterDetalle.setMUnidades(BigDecimal.ZERO);
                 masterDetalle.setNroCompAsoc(Long.valueOf("0"));
                 masterDetalle.setNroCompPreimp(Long.valueOf("0"));
@@ -1118,6 +1273,7 @@ public class GrabaComprobanteRest {
             }
             for(FactFormaPago fp : factFormaPago) {
                 Master masterFormaPago = new Master();
+                masterFormaPago.setIdFactCab(factCab);
                 masterFormaPago.setCodigoLibro(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdSisComprobante().getIdSisModulos().getIdSisModulos())));
                 masterFormaPago.setCotizacion(factCab.getCotDolar());
                 masterFormaPago.setFechayhora(fechaHoy);
@@ -1173,6 +1329,7 @@ public class GrabaComprobanteRest {
                     continue;
                 }
                 Master masterImputa = new Master();
+                masterImputa.setIdFactCab(factCab);
                 masterImputa.setCodigoLibro(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdSisComprobante().getIdSisModulos().getIdSisModulos())));
                 masterImputa.setCotizacion(factCab.getCotDolar());
                 masterImputa.setFechayhora(fechaHoy);
@@ -1188,6 +1345,7 @@ public class GrabaComprobanteRest {
                 masterImputa.setPadronCodigo(factCab.getIdPadron());
                 masterImputa.setPlanCuentas(fi.getCtaContable());
                 masterImputa.setTipoComp(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdCteTipo())));
+                masterImputa.setMColumIva(Short.valueOf(Integer.toString(fi.getIdLibro())));
                 
                 //Parametros que van en 0
                 masterImputa.setAutorizaCodigo(Short.valueOf("0"));                
@@ -1195,7 +1353,6 @@ public class GrabaComprobanteRest {
                 masterImputa.setConceptoCodigo(Short.valueOf("0"));
                 masterImputa.setCondGan(Short.valueOf("0"));
                 masterImputa.setCondIva(Short.valueOf("0"));
-                masterImputa.setMColumIva(Short.valueOf("0"));
                 masterImputa.setMUnidades(BigDecimal.ZERO);
                 masterImputa.setNroCompAsoc(Long.valueOf("0"));
                 masterImputa.setNroCompPreimp(Long.valueOf("0"));

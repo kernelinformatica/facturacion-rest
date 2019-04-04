@@ -3,6 +3,7 @@ package servicios;
 
 import java.util.Set;
 import javax.ws.rs.core.Application;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 /**
  *
@@ -14,6 +15,7 @@ public class ApplicationConfig extends Application {
     @Override
     public Set<Class<?>> getClasses() {
         Set<Class<?>> resources = new java.util.HashSet<>();
+        resources.add(MultiPartFeature.class);
         addRestResourceClasses(resources);
         return resources;
     }
@@ -38,9 +40,12 @@ public class ApplicationConfig extends Application {
         resources.add(servicios.ClienteRest.class);
         resources.add(servicios.ComprobanteGestAgroRest.class);
         resources.add(servicios.ContPlanCuentaRest.class);
+        resources.add(servicios.ContratoRest.class);
         resources.add(servicios.CteTipoRest.class);
         resources.add(servicios.CultivoRest.class);
         resources.add(servicios.DepositoRest.class);
+        resources.add(servicios.DescargarContratoRest.class);
+        resources.add(servicios.DescargarLibroIvaRest.class);
         resources.add(servicios.DescargarListadoRest.class);
         resources.add(servicios.DescargarPdfRest.class);
         resources.add(servicios.DescargarStockRest.class);
@@ -48,6 +53,7 @@ public class ApplicationConfig extends Application {
         resources.add(servicios.FormaPagoRest.class);
         resources.add(servicios.GrabaComprobanteRest.class);
         resources.add(servicios.ImputacionesRest.class);
+        resources.add(servicios.LibroRest.class);
         resources.add(servicios.ListaPrecioRest.class);
         resources.add(servicios.MarcaRest.class);
         resources.add(servicios.ModeloCabRest.class);
@@ -81,6 +87,7 @@ public class ApplicationConfig extends Application {
         resources.add(servicios.UsuarioRest.class);
         resources.add(servicios.VendedorRest.class);
         resources.add(utils.CrossRules.class);
+        
     }
     
 }

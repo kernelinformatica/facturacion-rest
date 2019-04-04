@@ -30,8 +30,9 @@ public class PendientesCancelarResponse implements Payload{
     private Integer idListaPrecio;
     private String codigoListaPrecio;
     private String letra;
+    private Integer idFactDetalle;
 
-    public PendientesCancelarResponse(String comprobante, String numero, BigDecimal original, BigDecimal pendiente, BigDecimal precio, BigDecimal dolar, String moneda, BigDecimal porCalc, BigDecimal ivaPorc, Integer deposito, Integer idFactDetalleImputa, Integer idFactCabImputada, BigDecimal descuento, String tipoDescuento, BigDecimal cantBultos, String despacho, String observaciones, Integer itemImputada,BigDecimal importe,Integer idListaPrecio, String codigoListaPrecio, String letra,ProductoResponse p) {
+    public PendientesCancelarResponse(String comprobante, String numero, BigDecimal original, BigDecimal pendiente, BigDecimal precio, BigDecimal dolar, String moneda, BigDecimal porCalc, BigDecimal ivaPorc, Integer deposito, Integer idFactDetalleImputa, Integer idFactCabImputada, BigDecimal descuento, String tipoDescuento, BigDecimal cantBultos, String despacho, String observaciones, Integer itemImputada,BigDecimal importe,Integer idListaPrecio, String codigoListaPrecio, String letra,Integer idFactDetalle, ProductoResponse p) {
         this.comprobante = comprobante;
         this.numero = numero;
         this.original = original;
@@ -55,6 +56,7 @@ public class PendientesCancelarResponse implements Payload{
         this.idListaPrecio = idListaPrecio;
         this.codigoListaPrecio = codigoListaPrecio;
         this.letra = letra;
+        this.idFactDetalle = idFactDetalle;
     }
     public PendientesCancelarResponse(ProductoResponse p) {
         this.comprobante = "";
@@ -262,6 +264,14 @@ public class PendientesCancelarResponse implements Payload{
 
     public void setCodigoListaPrecio(String codigoListaPrecio) {
         this.codigoListaPrecio = codigoListaPrecio;
+    }
+
+    public Integer getIdFactDetalle() {
+        return idFactDetalle;
+    }
+
+    public void setIdFactDetalle(Integer idFactDetalle) {
+        this.idFactDetalle = idFactDetalle;
     }
     
     

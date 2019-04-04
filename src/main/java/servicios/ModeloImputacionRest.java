@@ -10,6 +10,7 @@ import datos.Payload;
 import datos.ServicioResponse;
 import entidades.Acceso;
 import entidades.ContPlanCuenta;
+import entidades.Libro;
 import entidades.ModeloCab;
 import entidades.ModeloDetalle;
 import entidades.SisModulo;
@@ -37,6 +38,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
 import persistencia.ContPlanCuentaFacade;
+import persistencia.LibroFacade;
 import persistencia.ModeloCabFacade;
 import persistencia.ModeloDetalleFacade;
 import persistencia.SisModuloFacade;
@@ -58,6 +60,7 @@ public class ModeloImputacionRest {
     @Inject ModeloCabFacade modeloCabFacade; 
     @Inject ContPlanCuentaFacade  contPlanCuentaFacade;
     @Inject SisModuloFacade sisModuloFacade;
+    @Inject LibroFacade libroFacade;
     
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
@@ -216,9 +219,26 @@ public class ModeloImputacionRest {
                 String operador = (String) Utils.getKeyFromJsonObject("operador", j.getAsJsonObject(), "String");
                 Integer idSisTipoModelo = (Integer) Utils.getKeyFromJsonObject("idSisTipoModelo", j.getAsJsonObject(), "Integer");
                 Integer modulo = (Integer) Utils.getKeyFromJsonObject("modulo", j.getAsJsonObject(), "Integer");
+                Integer idLibro = (Integer) Utils.getKeyFromJsonObject("idLibro", j.getAsJsonObject(), "Integer");
                 
                 if(idSisTipoModelo == null) {
                     respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, algun campo esta vacio");
+                    return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+                }
+                
+                if(idLibro == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, idLibro nulo");
+                    return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+                }
+                
+                Libro libro = libroFacade.find(idLibro);
+                if(libro == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, libro no encontrado");
+                    return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+                }
+                
+                if(valor == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, valor tiene que ser distinto de nulo");
                     return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
                 }
                 
@@ -251,6 +271,7 @@ public class ModeloImputacionRest {
                 modeloDetalle.setPrioritario(prioritario);
                 modeloDetalle.setValor(valor);
                 modeloDetalle.setIdSisModulo(mod);
+                modeloDetalle.setIdLibro(libro);
                 transaccion2 = modeloDetalleFacade.setModeloDetalleNuevo(modeloDetalle);
                 if(!transaccion2) {
                     modeloCabFacade.deleteModeloCab(modeloCab);
@@ -349,6 +370,7 @@ public class ModeloImputacionRest {
                 String operador = (String) Utils.getKeyFromJsonObject("operador", j.getAsJsonObject(), "String");
                 Integer idSisTipoModelo = (Integer) Utils.getKeyFromJsonObject("idSisTipoModelo", j.getAsJsonObject(), "Integer");
                 Integer modulo = (Integer) Utils.getKeyFromJsonObject("modulo", j.getAsJsonObject(), "Integer");
+                Integer idLibro = (Integer) Utils.getKeyFromJsonObject("idLibro", j.getAsJsonObject(), "Integer");
                 
                 if(idSisTipoModelo == null) {
                     respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, algun campo esta vacio");
@@ -361,6 +383,18 @@ public class ModeloImputacionRest {
                     respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, el tipo de modelo con id " + sisTipoModelo + " no existe");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
+                
+                if(idLibro == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, idLibro nulo");
+                    return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+                }
+                
+                Libro libro = libroFacade.find(idLibro);
+                if(libro == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, libro no encontrado");
+                    return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+                }
+                
                 
                 if(modulo == null) {
                     respuesta.setControl(AppCodigo.ERROR, "Error, modulo nulo");
@@ -385,6 +419,7 @@ public class ModeloImputacionRest {
                 modeloDetalle.setPrioritario(prioritario);
                 modeloDetalle.setValor(valor);
                 modeloDetalle.setIdSisModulo(mod);
+                modeloDetalle.setIdLibro(libro);
                 transaccion2 = modeloDetalleFacade.setModeloDetalleNuevo(modeloDetalle);
                 
                 if(!transaccion2) {

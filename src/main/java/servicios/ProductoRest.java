@@ -81,6 +81,7 @@ public class ProductoRest {
         @HeaderParam ("token") String token,
         @QueryParam ("tipo") String tipo,
         @QueryParam ("listaPrecio") Integer idListaPrecio,
+        @QueryParam("aptoCanje") boolean aptoCanje,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {
@@ -142,9 +143,16 @@ public class ProductoRest {
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
                 //Armo la respuesta
+                
                 for(ListaPrecioDet d : lista.getListaPrecioDetCollection()) {
-                    ProductoResponse sr = new ProductoResponse(d.getIdProductos().getIdProductos(),d.getIdProductos().getDescripcion(),d.getIdProductos().getCodProducto());
-                    productosResponse.add(sr);
+                    //Filtro por aptoCanje
+                    if(aptoCanje && d.getIdProductos().getAptoCanje()) {
+                        ProductoResponse sr = new ProductoResponse(d.getIdProductos().getIdProductos(),d.getIdProductos().getDescripcion(),d.getIdProductos().getCodProducto());
+                        productosResponse.add(sr);
+                    } else if(!aptoCanje) {
+                        ProductoResponse sr = new ProductoResponse(d.getIdProductos().getIdProductos(),d.getIdProductos().getDescripcion(),d.getIdProductos().getCodProducto());
+                        productosResponse.add(sr);
+                    }
                 }               
             } else {
                 for(Producto s : productos) {

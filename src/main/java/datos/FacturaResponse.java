@@ -9,11 +9,13 @@ import java.math.BigDecimal;
 public class FacturaResponse implements Payload{
     private String cuentaContable;
     private String descripcion;  
+    private String operador;
     private BigDecimal importeTotal;
     private BigDecimal porcentaje;
     private BigDecimal baseImponible;
     private Integer orden;
     private Integer idSisTipoModelo;
+    private Integer idLibro;
 
 //    public FacturaResponse(String cuentaContable, String descripcion, String tipoModelo, BigDecimal importeTotal, BigDecimal porcentaje) {
 //        this.cuentaContable = cuentaContable;
@@ -21,7 +23,7 @@ public class FacturaResponse implements Payload{
 //        this.importeTotal = importeTotal;        
 //    }
     
-    public FacturaResponse(String cuentaContable, String descripcion, BigDecimal importeTotal, BigDecimal porcentaje, Integer orden, Integer idSisTipoModelo, BigDecimal baseImponible) {
+    public FacturaResponse(String cuentaContable, String descripcion, BigDecimal importeTotal, BigDecimal porcentaje, Integer orden, Integer idSisTipoModelo, BigDecimal baseImponible, String operador, Integer idLibro) {
         this.cuentaContable = cuentaContable;
         this.descripcion = descripcion;
         this.importeTotal = importeTotal;
@@ -29,6 +31,8 @@ public class FacturaResponse implements Payload{
         this.orden = orden;
         this.idSisTipoModelo = idSisTipoModelo;
         this.baseImponible = baseImponible;
+        this.operador = operador;
+        this.idLibro = idLibro;
     }
 
     public String getCuentaContable() {
@@ -91,6 +95,21 @@ public class FacturaResponse implements Payload{
     public void setBaseImponible(BigDecimal baseImponible) {
         this.baseImponible = baseImponible;
     }
-    
+
+    public String getOperador() {
+        return operador;
+    }
+
+    public void setOperador(String operador) {
+        this.operador = operador;
+    }
+
+    public Integer getIdLibro() {
+        return idLibro;
+    }
+
+    public void setIdLibro(Integer idLibro) {
+        this.idLibro = idLibro;
+    }
     
 }

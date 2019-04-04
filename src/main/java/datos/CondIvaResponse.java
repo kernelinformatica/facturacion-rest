@@ -11,14 +11,12 @@ public class CondIvaResponse {
     private String descripcion;
     private Short codAfip;
     private String descCorta;
-    private Short codOncca;
     
     public CondIvaResponse(CondIva c) {
         this.condiva = c.getCondiva();
         this.descripcion = c.getDescripcion();
         this.codAfip = c.getCodAfip();
         this.descCorta = c.getDescCorta();
-        this.codOncca = c.getCodOncca();
     }
 
     public Short getCondiva() {
@@ -51,13 +49,5 @@ public class CondIvaResponse {
 
     public void setDescCorta(String descCorta) {
         this.descCorta = descCorta;
-    }
-
-    public Short getCodOncca() {
-        return codOncca;
-    }
-
-    public void setCodOncca(Short codOncca) {
-        this.codOncca = codOncca;
     }
 }

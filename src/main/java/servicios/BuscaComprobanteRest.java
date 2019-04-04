@@ -69,6 +69,7 @@ public class BuscaComprobanteRest {
             Integer idEstado = (Integer) Utils.getKeyFromJsonObject("idEstado", jsonBody, "Integer");
             Integer idVendedor = (Integer) Utils.getKeyFromJsonObject("idVendedor", jsonBody, "Integer");
             Integer idSisTipoOperacion = (Integer) Utils.getKeyFromJsonObject("idSisTipoOperacion", jsonBody, "Integer");
+            String autorizada = (String) Utils.getKeyFromJsonObject("autorizada", jsonBody, "String");
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -107,7 +108,7 @@ public class BuscaComprobanteRest {
             }
                   
             //seteo el nombre del store cabecera
-            String nombreSP = "call s_buscaComprobantesCabecera(?,?,?,?,?,?,?,?,?,?,?,?)";
+            String nombreSP = "call s_buscaComprobantesCabecera(?,?,?,?,?,?,?,?,?,?,?,?,?)";
             
             //seteo el nombre del store detalle
             String nombreSPDetalle = "call s_buscaComprobantesDetalles(?,?,?,?,?,?,?,?,?,?,?,?)";
@@ -140,6 +141,7 @@ public class BuscaComprobanteRest {
             callableStatement.setInt(10, idEstado);
             callableStatement.setInt(11, idVendedor);
             callableStatement.setInt(12, idSisTipoOperacion);
+            callableStatement.setString(13, autorizada);
            
             //Seteo los parametros para los detalle
             callableStatementDetalle.setInt(1,user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
@@ -181,7 +183,9 @@ public class BuscaComprobanteRest {
                         rs.getString("vendedor"),
                         rs.getInt("idCteTipo"),
                         rs.getBigDecimal("importeNeto"),
-                        rs.getBigDecimal("importeTotal"));
+                        rs.getBigDecimal("importeTotal"),
+                        rs.getString("tipoOperacion"),
+                        rs.getString("autorizada"));
                 factCabResponses.add(factCab);
             }
             

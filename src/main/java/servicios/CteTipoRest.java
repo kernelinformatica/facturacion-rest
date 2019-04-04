@@ -331,6 +331,7 @@ public class CteTipoRest {
                                     ctr.getComprobante().setIdSisOperacionComprobante(soc.getIdSisOperacionComprobantes());
                                     ctr.getComprobante().setRelacionadosMultiples(soc.getRelacionadosMultiples());
                                     ctr.getComprobante().setAdmiteRelacionMultiple(soc.getAdmiteRelacionMultiple());
+                                    ctr.getComprobante().setUsaContrato(soc.getUsaContrato());
                                 if(soc.getIdSisMoneda() == null) {
                                     List<SisMonedas> todas = sisMonedasFacade.findAll();
                                     ctr.getComprobante().agregarMonedas(todas);

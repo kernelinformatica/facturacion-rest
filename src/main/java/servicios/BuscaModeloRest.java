@@ -267,7 +267,7 @@ public class BuscaModeloRest {
             
             //Armo la lista de facturas response a partir de la lista de modelos obtenidas para todos los productos
             for(ModeloDetalleResponse mdr : modelos) {
-                FacturaResponse fr = new FacturaResponse(mdr.getCtaContable(), mdr.getDescripcion(), mdr.getTotalModelo(), mdr.getValor(), mdr.getTipoModelo().getOrden(), mdr.getTipoModelo().getIdTipoModelo(), mdr.getBaseImponible());
+                FacturaResponse fr = new FacturaResponse(mdr.getCtaContable(), mdr.getDescripcion(), mdr.getTotalModelo(), mdr.getValor(), mdr.getTipoModelo().getOrden(), mdr.getTipoModelo().getIdTipoModelo(), mdr.getBaseImponible(),mdr.getOperador(), mdr.getLibro().getIdLibro());
                 listaFacturas.add(fr);
             }
             //Separo por cuenta contable la lista de facturas y los seteo en el Map
@@ -289,8 +289,10 @@ public class BuscaModeloRest {
                 BigDecimal baseImponible = BigDecimal.ZERO;
                 String descripcion = "";
                 String cuentaContable = "";
+                String operador = "";
                 Integer orden = 0;
                 Integer idTipoModelo = 0;
+                Integer idLibro = 0;
                 //Recorro la lista dentro del Map
                 for(FacturaResponse fr : entry.getValue()) {
                     //Sumo los totales de acuerdo a la cuenta contable.
@@ -301,9 +303,11 @@ public class BuscaModeloRest {
                     orden = fr.getOrden();
                     idTipoModelo = fr.getIdSisTipoModelo();
                     baseImponible = baseImponible.add(fr.getBaseImponible());
+                    operador = fr.getOperador();
+                    idLibro = fr.getIdLibro();
                 }
                 //Armo la respuesta final
-                FacturaResponse fr = new FacturaResponse(cuentaContable,descripcion,total,porcentaje,orden, idTipoModelo, baseImponible);
+                FacturaResponse fr = new FacturaResponse(cuentaContable,descripcion,total,porcentaje,orden, idTipoModelo, baseImponible, operador,idLibro);
                 listaFacturasLast.add(fr);
             }
             //Ordeno la lista de los detalles por numero de orden de la tabla sisTipoModelo            

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.3.0.final using JasperReports Library version 6.3.0  -->
-<!-- 2019-01-17T10:11:31 -->
+<!-- 2019-02-28T12:02:48 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="subTotales" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="0" bottomMargin="0" uuid="a6360234-fe13-4840-8453-12da960ad7de">
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
@@ -20,13 +20,17 @@
 		<![CDATA[select 
 FactPie.detalle as detallePie,
 FactPie.importe as importePie,
-FactPie.porcentaje as porcentajePie
+FactPie.porcentaje as porcentajePie,
+FactPie.baseImponible as baseImponible,
+FactPie.operador as operador
 from FactPie
 where FactPie.idFactCab = $P{idFactCab}]]>
 	</queryString>
 	<field name="detallePie" class="java.lang.String"/>
 	<field name="importePie" class="java.math.BigDecimal"/>
 	<field name="porcentajePie" class="java.math.BigDecimal"/>
+	<field name="baseImponible" class="java.math.BigDecimal"/>
+	<field name="operador" class="java.lang.String"/>
 	<variable name="subTotal" class="java.math.BigDecimal" calculation="Sum">
 		<variableExpression><![CDATA[$F{importePie}]]></variableExpression>
 	</variable>
@@ -39,7 +43,7 @@ where FactPie.idFactCab = $P{idFactCab}]]>
 	<columnHeader>
 		<band height="13">
 			<staticText>
-				<reportElement x="300" y="0" width="120" height="13" uuid="7d799362-b208-41a9-9aa4-caffae519f2f"/>
+				<reportElement x="180" y="0" width="240" height="13" uuid="7d799362-b208-41a9-9aa4-caffae519f2f"/>
 				<textElement verticalAlignment="Top">
 					<font size="10" isBold="true"/>
 				</textElement>
@@ -66,18 +70,22 @@ where FactPie.idFactCab = $P{idFactCab}]]>
 	<detail>
 		<band height="13" splitType="Stretch">
 			<textField>
-				<reportElement x="300" y="0" width="120" height="13" uuid="3928a440-1470-486c-8a42-3cf3500681c3"/>
+				<reportElement x="180" y="0" width="240" height="13" uuid="3928a440-1470-486c-8a42-3cf3500681c3"/>
 				<textElement>
-					<font size="10" isBold="true"/>
+					<font size="9" isBold="true"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{detallePie} +" "+ ($F{porcentajePie} == $V{cero}?  ":"  :  $F{porcentajePie} + " %")]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{detallePie} +" "+$F{porcentajePie}+" "+($F{operador}.equals("+")? "$":$F{operador})+ " s/ " +
+($F{importePie}.equals(BigDecimal.ZERO.setScale(3, java.math.RoundingMode.HALF_UP))?
+		BigDecimal.ZERO :
+		$F{baseImponible}.setScale(2, java.math.RoundingMode.HALF_UP)
+)]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="450" y="0" width="78" height="13" uuid="17ae3868-6d68-4dd0-b4d8-3325d4b47925"/>
 				<textElement textAlignment="Right">
 					<font size="10"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{importePie}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{importePie}.setScale(2, java.math.RoundingMode.HALF_UP)]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="420" y="0" width="30" height="13" uuid="16bf0916-8768-4049-9e9e-5465f187ae54"/>
@@ -91,7 +99,7 @@ where FactPie.idFactCab = $P{idFactCab}]]>
 	<summary>
 		<band height="13">
 			<staticText>
-				<reportElement x="300" y="0" width="120" height="13" uuid="651d7992-c412-4ce9-8bb5-558259eaa4e1"/>
+				<reportElement x="180" y="0" width="240" height="13" uuid="651d7992-c412-4ce9-8bb5-558259eaa4e1"/>
 				<textElement verticalAlignment="Top">
 					<font size="10" isBold="true"/>
 				</textElement>
@@ -110,7 +118,7 @@ where FactPie.idFactCab = $P{idFactCab}]]>
 					<font isBold="true"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$V{subTotal}.add($P{bruto})]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$V{subTotal}.add($P{bruto}).setScale(2, java.math.RoundingMode.HALF_UP)]]></textFieldExpression>
 			</textField>
 		</band>
 	</summary>

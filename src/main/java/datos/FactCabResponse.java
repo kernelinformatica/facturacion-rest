@@ -42,35 +42,33 @@ public class FactCabResponse implements Payload{
     private Integer idCteTipo;
     private BigDecimal importeNeto;
     private BigDecimal importeTotal;
+    private String tipoOperacion;
+    private String autorizada;
     private List<FactDetalleResponse> detalle;
     private List<FactImputaResponse> imputa;
     
     
-//    FactCabResponse(FactCab f) {
-//        this.idFactCab = f.getIdFactCab();
-//        this.letra = f.getLetra();
-//        this.numero = f.getNumero();
-//        this.fechaEmision = f.getFechaEmision();
-//        this.fechaVto = f.getFechaVto();
-//        this.fechaConta = f.getFechaConta();
-//        this.cai = f.getCai();
-//        this.caiVto = f.getCaiVto();
-//        this.codBarra = f.getCodBarra();
-//        this.idPadron = f.getIdPadron();
-//        this.nombre = f.getNombre();
-//        this.cuit = f.getCuit();
-//        this.codigoPostal = f.getCodigoPostal();
-//        this.idListaPrecios = f.getIdListaPrecios();
-//        this.cotDolar = f.getCotDolar();       
-//        this.fechaDolar = f.getFechaDolar();
-//        this.idDepositos = f.getIdDepositos();
-//        this.observaciones = f.getObservaciones();
-//        this.sitIVA = f.getSitIVA();
-//        this.cteTipo = new CteTipoResponse(f.getIdCteTipo());
-//        this.idmoneda = new SisMonedasResponse(f.getIdmoneda());
-//    }
+    FactCabResponse(FactCab f) {
+        this.idFactCab = f.getIdFactCab();
+        this.comprobante = f.getIdCteTipo().getDescripcion();
+        this.numero = f.getNumero();
+        this.fechaEmi = f.getFechaEmision();
+        this.idPadron = f.getIdPadron();
+        this.nombre = f.getNombre();
+        this.cuit = f.getCuit();
+        this.cotDolar = f.getCotDolar();       
+        this.moneda = f.getIdmoneda().getDescripcion();
+        this.modulo = f.getIdCteTipo().getIdSisComprobante().getIdSisModulos().getDescripcion();
+        this.vendedor = f.getIdVendedor().toString();       
+        this.importeNeto = BigDecimal.ZERO;
+        this.importeTotal = BigDecimal.ZERO;
+        this.tipoOperacion = " ";
+        this.autorizada = " ";
+        this.detalle = new ArrayList<>();
+        this.imputa = new ArrayList<>();
+    }
 
-    public FactCabResponse(Integer idFactCab, String comprobante,long numero, Date fechaEmision, Integer idPadron, String nombre, String cuit, BigDecimal cotDolar, String moneda, String imputada, String modulo, String vendedor, Integer idCteTipo, BigDecimal importeNeto, BigDecimal importeTotal) {
+    public FactCabResponse(Integer idFactCab, String comprobante,long numero, Date fechaEmision, Integer idPadron, String nombre, String cuit, BigDecimal cotDolar, String moneda, String imputada, String modulo, String vendedor, Integer idCteTipo, BigDecimal importeNeto, BigDecimal importeTotal, String tipoOperacion, String autorizada) {
         this.idFactCab = idFactCab;
         this.comprobante = comprobante;
         this.numero = numero;
@@ -88,6 +86,8 @@ public class FactCabResponse implements Payload{
         this.idCteTipo = idCteTipo;
         this.importeNeto = importeNeto;
         this.importeTotal = importeTotal;
+        this.tipoOperacion = tipoOperacion;
+        this.autorizada = autorizada;
     }
 
     public FactCabResponse(Integer idFactCab) {

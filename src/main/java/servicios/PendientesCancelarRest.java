@@ -104,6 +104,7 @@ public class PendientesCancelarRest {
             Integer idSisTipoOperacion = (Integer) Utils.getKeyFromJsonObject("idSisTipoOperacion", jsonBody, "Integer");
             String letra = (String) Utils.getKeyFromJsonObject("letra", jsonBody, "String");
             Integer idListaPrecio = (Integer) Utils.getKeyFromJsonObject("idListaPrecio", jsonBody, "Integer");
+            Integer modulo = (Integer) Utils.getKeyFromJsonObject("modulo", jsonBody, "Integer");
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -146,7 +147,12 @@ public class PendientesCancelarRest {
             }
             SisMonedas moneda = sisMonedasFacade.find(idMoneda);
             if(moneda == null) {
-                respuesta.setControl(AppCodigo.ERROR, "Error, no la moneda");
+                respuesta.setControl(AppCodigo.ERROR, "Error, no eciste la moneda seleccionada");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            
+            if(modulo == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, modulo nulo");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
@@ -181,16 +187,22 @@ public class PendientesCancelarRest {
             ResultSet rs = callableStatement.executeQuery();
             List<Payload> pendientes = new ArrayList<>();
                 while (rs.next()) {
+                    if(!rs.getBoolean("autorizado") && modulo == 2) {
+                        continue;
+                    }
+                    
                     Producto prod = productoFacade.find(rs.getInt("idProductos"));
                     if(prod == null) {
                         break;
                     }
+                    
                     ProductoResponse producto = new ProductoResponse(prod);
                     if(moneda.getDescripcion().equals("$AR") && rs.getString("moneda").equals("u$s")) {
                         producto.setCostoReposicion(producto.getCostoReposicion().multiply(rs.getBigDecimal("dolar")));
                     } else if((moneda.getDescripcion().equals("u$s") && rs.getString("moneda").equals("$AR"))) {
                         producto.setCostoReposicion(producto.getCostoReposicion().divide(rs.getBigDecimal("dolar"),2, RoundingMode.HALF_UP));
                     }
+                    
                     producto.getModeloCab().agregarModeloDetalleImputacion(prod.getIdModeloCab().getModeloDetalleCollection(),rs.getString("imputacion") );
                     PendientesCancelarResponse pendientesCancelar = new PendientesCancelarResponse(
                             rs.getString("comprobante"),
@@ -215,6 +227,7 @@ public class PendientesCancelarRest {
                             rs.getInt("idListaPrecios"),
                             rs.getString("condiciones"),
                             rs.getString("letra"),
+                            rs.getInt("idFactDetalle"),
                             producto);
                     if(moneda.getDescripcion().equals("$AR") && rs.getString("moneda").equals("u$s")) {
                         pendientesCancelar.setPrecio(pendientesCancelar.getPrecio().multiply(rs.getBigDecimal("dolar")));
@@ -253,7 +266,7 @@ public class PendientesCancelarRest {
 
                     FactCab factCab = factCabFacade.getByNumeroEmpresa(facNumero, cteTipoSeleccionado,user.getIdPerfil().getIdSucursal().getIdEmpresa(),letra);
                     if(factCab == null) {
-                        respuesta.setControl(AppCodigo.ERROR, "No existe la relacion para el comprobante seleccionado");
+                        respuesta.setControl(AppCodigo.ERROR, "No existe el comprobante, por favor corrobore el nro ingresado");
                         return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                     }
 

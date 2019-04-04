@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.3.0.final using JasperReports Library version 6.3.0  -->
-<!-- 2019-02-07T09:49:31 -->
+<!-- 2019-02-28T12:01:33 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="reporteComprobante" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="5" bottomMargin="20" isFloatColumnFooter="true" whenResourceMissingType="Empty" uuid="4806e2f6-ab00-41d0-b74f-73434a7c5917">
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="net.sf.jasperreports.print.create.bookmarks" value="false"/>
 	<parameter name="idFactCab" class="java.lang.Integer"/>
 	<parameter name="pathImagen" class="java.lang.String"/>
+	<parameter name="codigoVerificador" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[Select 
 LPAD(SUBSTRING(FactCab.numero,1,length(FactCab.numero)-8),4,'0') as prefijoComprobante,
@@ -14,10 +16,17 @@ FactCab.fechaEmision as fechaEmisionComprobante,
 FactCab.nombre as nombreCilente,
 FactCab.cai as caiComprobante,
 FactCab.fechaVto as fechaVencimientoComprobante,
-FactCab.sitIVA as situacionIva,
+FactCab.sitIVA as situacionIvaCliente,
 FactCab.idListaPrecios as listaPrecios,
 FactCab.letra as letra,
+FactCab.cai as cae,
+FactCab.caiVto as caeVto,
 FactCab.codigoAfip as codigoAfip,
+FactCab.cotDolar as cotDolar,
+FactCab.idPadron as ctaCtePadron,
+FactCab.domicilio as domicilioPadron,
+LPAD(SUBSTRING(FactCab.numeroAfip,1,length(FactCab.numeroAfip)-8),4,'0') as prefijoComprobanteAfip,
+SUBSTRING(FactCab.numeroAfip,-8) as numeroComprobanteAfip,
 FactDetalle.detalle as detalleProducto,
 FactDetalle.cantidad as cantidad,
 FactDetalle.precio as precio,
@@ -38,14 +47,24 @@ Empresas.iibb as ingBrutosEmpresa,
 Empresas.telefono as telefono,
 Empresas.codigoPostal as codigoPostal,
 Empresas.situacionIva as situacionIvaEmpresa,
+SisOperacionComprobantes.leyenda1 as leyenda1,
+SisOperacionComprobantes.leyenda2 as leyenda2,
+SisOperacionComprobantes.leyenda3 as leyenda3,
+SisOperacionComprobantes.leyenda4 as leyenda4,
 SisMonedas.descripcion as moneda,
-SisTipoOperacion.descripcion as tipoOperacion
+SisTipoOperacion.descripcion as tipoOperacion,
+LPAD(SUBSTRING(comprobanteImputado.numero,1,length(comprobanteImputado.numero)-8),4,'0') as prefijoComprobanteImputado,
+SUBSTRING(comprobanteImputado.numero,-8) as numeroComprobanteImputado
 From FactCab
 inner join CteTipo on FactCab.idCteTipo = CteTipo.idCteTipo
 inner join Empresas on CteTipo.idEmpresa = Empresas.idEmpresa
 inner join FactDetalle on FactCab.idFactCab = FactDetalle.idFactCab
 inner join SisMonedas on SisMonedas.idMoneda = FactCab.idmoneda
 inner join SisTipoOperacion on FactCab.idSisTipoOperacion = SisTipoOperacion.idSisTipoOperacion
+inner join SisOperacionComprobantes on FactCab.idSisOperacionComprobantes = SisOperacionComprobantes.idSisOperacionComprobantes
+left join FactImputa on FactDetalle.idFactDetalle = FactImputa.idFactDetalleImputa
+left join FactDetalle as detalleImputado on detalleImputado.idFactDetalle = FactImputa.idFactDetalle
+left join FactCab as comprobanteImputado on comprobanteImputado.idFactCab = detalleImputado.idFactCab
 where FactCab.idFactCab = $P{idFactCab}]]>
 	</queryString>
 	<field name="numeroComprobante" class="java.lang.String"/>
@@ -69,7 +88,7 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 	<field name="precio" class="java.math.BigDecimal"/>
 	<field name="codigoProducto" class="java.lang.String"/>
 	<field name="importe" class="java.math.BigDecimal"/>
-	<field name="situacionIva" class="java.lang.String"/>
+	<field name="situacionIvaCliente" class="java.lang.String"/>
 	<field name="listaPrecios" class="java.lang.String"/>
 	<field name="moneda" class="java.lang.String"/>
 	<field name="letra" class="java.lang.String"/>
@@ -81,34 +100,50 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 	<field name="precioDesc" class="java.math.BigDecimal"/>
 	<field name="unidadDescuento" class="java.lang.String"/>
 	<field name="tipoOperacion" class="java.lang.String"/>
+	<field name="prefijoComprobanteImputado" class="java.lang.String"/>
+	<field name="numeroComprobanteImputado" class="java.lang.String"/>
+	<field name="cae" class="java.lang.String"/>
+	<field name="caeVto" class="java.util.Date"/>
+	<field name="leyenda1" class="java.lang.String"/>
+	<field name="leyenda2" class="java.lang.String"/>
+	<field name="leyenda3" class="java.lang.String"/>
+	<field name="leyenda4" class="java.lang.String"/>
+	<field name="cotDolar" class="java.math.BigDecimal"/>
+	<field name="prefijoComprobanteAfip" class="java.lang.String"/>
+	<field name="numeroComprobanteAfip" class="java.lang.String"/>
+	<field name="ctaCtePadron" class="java.lang.Integer"/>
+	<field name="domicilioPadron" class="java.lang.String"/>
 	<variable name="bruto" class="java.math.BigDecimal" calculation="Sum">
 		<variableExpression><![CDATA[$F{importe}]]></variableExpression>
 	</variable>
+	<variable name="barCode" class="java.lang.String">
+		<variableExpression><![CDATA[$F{cuitEmpresa}+$F{codigoAfip}+$F{prefijoComprobante}+$F{cae}+(new SimpleDateFormat("yyyyMMdd").format($F{caeVto}))+$P{codigoVerificador}]]></variableExpression>
+	</variable>
 	<title>
-		<band height="109" splitType="Stretch">
+		<band height="101" splitType="Stretch">
 			<image>
-				<reportElement x="0" y="0" width="114" height="100" uuid="ca4e86c7-4774-4cf5-85b2-739690ef4284">
+				<reportElement x="0" y="0" width="99" height="80" uuid="ca4e86c7-4774-4cf5-85b2-739690ef4284">
 					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 				</reportElement>
 				<imageExpression><![CDATA[$P{pathImagen} +"/"+$F{prefijoEmpresa}+".png"]]></imageExpression>
 			</image>
 			<textField>
-				<reportElement x="114" y="0" width="122" height="19" uuid="656c8afa-03d7-401f-b0fb-c10a36205161"/>
+				<reportElement x="99" y="0" width="140" height="29" uuid="656c8afa-03d7-401f-b0fb-c10a36205161"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font size="12" isBold="true"/>
+					<font size="13" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{nombreEmpresa}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="114" y="20" width="122" height="20" uuid="e32d1f7e-f1f6-40e8-b7d6-71ef2b3566f8"/>
+				<reportElement x="99" y="31" width="140" height="39" uuid="e32d1f7e-f1f6-40e8-b7d6-71ef2b3566f8"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font size="10"/>
+					<font size="12"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{descripcionEmpresa}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="150" y="70" width="90" height="10" uuid="c4ad6e9b-b5b1-496c-a3e4-317aabf5d63d">
+				<reportElement x="140" y="70" width="90" height="10" uuid="c4ad6e9b-b5b1-496c-a3e4-317aabf5d63d">
 					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 				</reportElement>
 				<textElement verticalAlignment="Middle">
@@ -117,16 +152,7 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 				<textFieldExpression><![CDATA[$F{domicilioEmpresa}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="240" y="0" width="80" height="15" uuid="abd8d794-c5e7-4b1d-ad03-bd5bc2eb1f06">
-					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
-				</reportElement>
-				<textElement textAlignment="Center" verticalAlignment="Bottom">
-					<font isBold="true"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{descripcionCortaCteTipo}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement x="240" y="59" width="80" height="14" uuid="ce474066-9813-4320-8c1f-6459d77cb9bc">
+				<reportElement x="240" y="29" width="80" height="14" uuid="ce474066-9813-4320-8c1f-6459d77cb9bc">
 					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 				</reportElement>
 				<textElement textAlignment="Center" verticalAlignment="Top">
@@ -135,24 +161,24 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 				<textFieldExpression><![CDATA["COD. "+$F{codigoAfip}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="421" y="19" width="95" height="20" uuid="afed095b-b22f-477a-9d56-5295837174cd"/>
+				<reportElement x="425" y="19" width="95" height="20" uuid="afed095b-b22f-477a-9d56-5295837174cd"/>
 				<textElement verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[$F{numeroComprobante}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{numeroComprobanteAfip} != null?$F{numeroComprobanteAfip}:$F{numeroComprobante}]]></textFieldExpression>
 			</textField>
 			<textField pattern="dd/MM/yyyy">
-				<reportElement x="422" y="39" width="116" height="20" uuid="57c4145c-2b3d-4491-8b00-6f7c5594068a"/>
+				<reportElement x="452" y="40" width="94" height="20" uuid="57c4145c-2b3d-4491-8b00-6f7c5594068a"/>
 				<textElement verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{fechaEmisionComprobante}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="240" y="73" width="80" height="35" uuid="32123544-6ca8-4231-b526-5636df84937b"/>
+				<reportElement x="240" y="43" width="80" height="35" uuid="32123544-6ca8-4231-b526-5636df84937b"/>
 				<textElement textAlignment="Center">
 					<font size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{detalleReporte}]]></textFieldExpression>
 			</textField>
 			<line>
-				<reportElement x="0" y="108" width="555" height="1" uuid="68de44b4-e495-4b85-938c-ae62b57bbc6b">
+				<reportElement x="0" y="100" width="555" height="1" uuid="68de44b4-e495-4b85-938c-ae62b57bbc6b">
 					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
 				</reportElement>
 				<graphicElement>
@@ -161,13 +187,13 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 			</line>
 			<textField>
 				<reportElement x="320" y="0" width="235" height="19" uuid="b7585eb0-a752-4f74-a15b-1e0f405a2e16"/>
-				<textElement textAlignment="Center">
-					<font size="12" isBold="true"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="14" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{descripcionCteTipo}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="330" y="39" width="92" height="20" uuid="8fd878e9-7771-4489-b2e6-73495f84deac">
+				<reportElement x="360" y="40" width="90" height="20" uuid="8fd878e9-7771-4489-b2e6-73495f84deac">
 					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
 				</reportElement>
@@ -177,7 +203,7 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 				<text><![CDATA[Fecha Emision:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="355" y="19" width="26" height="20" uuid="0b0431a1-ee18-4e33-9f90-45be1b7663bd">
+				<reportElement x="360" y="19" width="26" height="20" uuid="0b0431a1-ee18-4e33-9f90-45be1b7663bd">
 					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 				</reportElement>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
@@ -186,27 +212,30 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 				<text><![CDATA[Nro:]]></text>
 			</staticText>
 			<textField>
-				<reportElement mode="Opaque" x="260" y="31" width="40" height="18" backcolor="#CFCFCF" uuid="38598e2f-3ff9-4b8b-95eb-f7b33364a558"/>
-				<textElement textAlignment="Center">
+				<reportElement mode="Opaque" x="260" y="1" width="40" height="18" backcolor="#CFCFCF" uuid="38598e2f-3ff9-4b8b-95eb-f7b33364a558"/>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="14" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{letra}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="381" y="19" width="33" height="20" uuid="31af72ab-4164-4266-9e37-a849e73f3d4c">
+				<reportElement x="386" y="19" width="33" height="20" uuid="31af72ab-4164-4266-9e37-a849e73f3d4c">
 					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
 				</reportElement>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[$F{prefijoComprobante}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{prefijoComprobanteAfip} != null? $F{prefijoComprobanteAfip}:$F{prefijoComprobante}]]></textFieldExpression>
 			</textField>
 			<line>
-				<reportElement x="280" y="49" width="1" height="10" uuid="dd211f42-0c39-41de-a425-ecd7dc31ee35"/>
-			</line>
-			<line>
-				<reportElement x="280" y="15" width="1" height="16" uuid="81f79d34-831c-46e0-b7e6-28dd64e3afb0"/>
+				<reportElement x="280" y="19" width="1" height="10" uuid="dd211f42-0c39-41de-a425-ecd7dc31ee35"/>
 			</line>
 			<textField>
-				<reportElement x="150" y="80" width="90" height="10" uuid="131c9d04-15fa-4584-829b-8a21ebec6d5b">
+				<reportElement x="140" y="80" width="90" height="10" uuid="131c9d04-15fa-4584-829b-8a21ebec6d5b">
 					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 				</reportElement>
 				<textElement verticalAlignment="Middle">
@@ -215,7 +244,7 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 				<textFieldExpression><![CDATA[$F{telefono}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="150" y="90" width="90" height="10" uuid="e141ad2b-9e54-44c0-aded-63402ed18679">
+				<reportElement x="140" y="90" width="90" height="10" uuid="e141ad2b-9e54-44c0-aded-63402ed18679">
 					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 				</reportElement>
 				<textElement verticalAlignment="Middle">
@@ -224,14 +253,14 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 				<textFieldExpression><![CDATA[$F{codigoPostal}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="114" y="70" width="36" height="10" uuid="c62d6820-23f5-4ce4-88de-0dc0d42b028d"/>
+				<reportElement x="104" y="70" width="36" height="10" uuid="c62d6820-23f5-4ce4-88de-0dc0d42b028d"/>
 				<textElement verticalAlignment="Middle">
 					<font size="7"/>
 				</textElement>
 				<text><![CDATA[Dirección:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="114" y="80" width="36" height="10" uuid="fcf2d497-3b5f-458e-8daf-f5ed6dff74b2">
+				<reportElement x="104" y="80" width="36" height="10" uuid="fcf2d497-3b5f-458e-8daf-f5ed6dff74b2">
 					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 				</reportElement>
 				<textElement verticalAlignment="Middle">
@@ -240,7 +269,7 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 				<text><![CDATA[Teléfono:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="114" y="90" width="36" height="10" uuid="076e271c-60fe-40d6-a0ea-d3fff67c6af4">
+				<reportElement x="104" y="90" width="36" height="10" uuid="076e271c-60fe-40d6-a0ea-d3fff67c6af4">
 					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 				</reportElement>
 				<textElement verticalAlignment="Middle">
@@ -299,28 +328,28 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 				<textFieldExpression><![CDATA[$F{ingBrutosEmpresa}]]></textFieldExpression>
 			</textField>
 			<line>
-				<reportElement x="414" y="29" width="6" height="1" uuid="ea0ded61-fea8-4250-ad6d-0cd814f3c3fd"/>
+				<reportElement x="419" y="29" width="6" height="1" uuid="ea0ded61-fea8-4250-ad6d-0cd814f3c3fd"/>
 			</line>
 		</band>
 	</title>
 	<pageHeader>
-		<band height="46" splitType="Stretch">
+		<band height="61" splitType="Stretch">
 			<staticText>
-				<reportElement x="0" y="0" width="124" height="15" uuid="9ec9c5dc-f324-4e38-8299-309738221566">
+				<reportElement x="0" y="0" width="69" height="15" uuid="9ec9c5dc-f324-4e38-8299-309738221566">
 					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
 				</reportElement>
 				<textElement verticalAlignment="Middle">
 					<font isBold="true"/>
 				</textElement>
-				<text><![CDATA[Cliente/Proveedor:]]></text>
+				<text><![CDATA[NOMBRE:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="0" y="30" width="40" height="15" uuid="a4ac74e3-ef9a-4d63-8e8f-e85f2b6026e8"/>
+				<reportElement x="350" y="45" width="101" height="15" uuid="a4ac74e3-ef9a-4d63-8e8f-e85f2b6026e8"/>
 				<textElement verticalAlignment="Middle">
 					<font isBold="true"/>
 				</textElement>
-				<text><![CDATA[IVA:]]></text>
+				<text><![CDATA[Cta Cte:]]></text>
 			</staticText>
 			<staticText>
 				<reportElement x="350" y="0" width="101" height="15" uuid="084e4066-5af3-4b11-b16a-7946b2505f82">
@@ -333,30 +362,32 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 				<text><![CDATA[Lista de precios:]]></text>
 			</staticText>
 			<textField>
-				<reportElement x="124" y="0" width="150" height="15" uuid="4fb3505b-0448-4397-874c-40a10632a161"/>
+				<reportElement x="69" y="0" width="281" height="15" uuid="4fb3505b-0448-4397-874c-40a10632a161"/>
 				<textElement verticalAlignment="Middle">
 					<font isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{nombreCilente}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="0" y="15" width="40" height="15" uuid="10d4dcf5-9a98-4535-bb2c-ab2c5c808686"/>
+				<reportElement x="0" y="15" width="69" height="15" uuid="10d4dcf5-9a98-4535-bb2c-ab2c5c808686"/>
 				<textElement verticalAlignment="Middle">
 					<font isBold="true"/>
 				</textElement>
 				<text><![CDATA[CUIT:]]></text>
 			</staticText>
 			<textField>
-				<reportElement x="124" y="15" width="150" height="15" uuid="49d5778f-53ae-40ea-875a-f1e62defbbd2"/>
+				<reportElement x="69" y="15" width="281" height="15" uuid="49d5778f-53ae-40ea-875a-f1e62defbbd2"/>
 				<textElement verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{cuitCliente}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="124" y="30" width="150" height="15" uuid="ad116f43-755d-4081-ba47-1d2a48210fdf"/>
-				<textElement verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[$F{situacionIva}]]></textFieldExpression>
+				<reportElement x="451" y="45" width="103" height="15" uuid="ad116f43-755d-4081-ba47-1d2a48210fdf"/>
+				<textElement verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ctaCtePadron}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement x="451" y="0" width="103" height="15" uuid="88685a2f-ad82-482d-8bb2-8323fe6bde39"/>
 				<textElement verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{listaPrecios}]]></textFieldExpression>
@@ -376,7 +407,7 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 				<textFieldExpression><![CDATA[$F{moneda}]]></textFieldExpression>
 			</textField>
 			<line>
-				<reportElement x="0" y="45" width="555" height="1" uuid="34803c1d-0884-462b-9c48-2a3510f54757"/>
+				<reportElement x="0" y="60" width="555" height="1" uuid="34803c1d-0884-462b-9c48-2a3510f54757"/>
 				<graphicElement>
 					<pen lineWidth="2.0" lineStyle="Solid"/>
 				</graphicElement>
@@ -395,34 +426,58 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 				<textElement verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{tipoOperacion}]]></textFieldExpression>
 			</textField>
+			<staticText>
+				<reportElement x="0" y="30" width="69" height="15" uuid="3f8a555f-8383-4f86-9e99-2fa31441770b"/>
+				<textElement verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[DOMICILIO:]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement x="69" y="30" width="281" height="15" uuid="c6899d95-0d63-4b2d-a6bd-d02111f47af1"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{domicilioPadron}+"  (C.P.: "+$F{codigoPostal} +")"]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="45" width="69" height="15" uuid="53b7d0ee-eed0-4f56-b26e-77c520fef1bb"/>
+				<textElement verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[IVA:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="69" y="45" width="281" height="15" uuid="4303729c-08ba-43f9-a497-42dd5e275e28"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{situacionIvaCliente}]]></textFieldExpression>
+			</textField>
 		</band>
 	</pageHeader>
 	<columnHeader>
 		<band height="13" splitType="Stretch">
 			<staticText>
-				<reportElement mode="Opaque" x="69" y="0" width="179" height="12" backcolor="#D1D1D1" uuid="5cc1971b-c09e-44f5-a0ac-375728abd021"/>
+				<reportElement mode="Opaque" x="60" y="0" width="176" height="12" backcolor="#D1D1D1" uuid="5cc1971b-c09e-44f5-a0ac-375728abd021"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font size="9" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Descripción]]></text>
 			</staticText>
 			<staticText>
-				<reportElement mode="Opaque" x="248" y="0" width="58" height="12" backcolor="#D1D1D1" uuid="a8d763f1-4601-4c23-acbf-2542504a62ef">
+				<reportElement mode="Opaque" x="236" y="0" width="74" height="12" backcolor="#D1D1D1" uuid="a8d763f1-4601-4c23-acbf-2542504a62ef">
+					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Comp.Rel.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="310" y="0" width="54" height="12" backcolor="#D1D1D1" uuid="83aeda01-c2c4-492f-8170-93e584936d71">
 					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
 				</reportElement>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font size="9" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Cantidad]]></text>
-			</staticText>
-			<staticText>
-				<reportElement mode="Opaque" x="306" y="0" width="58" height="12" backcolor="#D1D1D1" uuid="83aeda01-c2c4-492f-8170-93e584936d71">
-					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
-				</reportElement>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font size="9" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Precio]]></text>
 			</staticText>
 			<line>
 				<reportElement x="0" y="12" width="555" height="1" uuid="6102a35f-3e25-4f13-86b8-e195cc451ae6">
@@ -433,7 +488,7 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 				</graphicElement>
 			</line>
 			<staticText>
-				<reportElement mode="Opaque" x="0" y="0" width="69" height="12" backcolor="#D1D1D1" uuid="8ab28cd5-004c-465e-b7ba-96c079b27076"/>
+				<reportElement mode="Opaque" x="0" y="0" width="60" height="12" backcolor="#D1D1D1" uuid="8ab28cd5-004c-465e-b7ba-96c079b27076"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font size="9" isBold="true"/>
 				</textElement>
@@ -462,32 +517,32 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font size="9" isBold="true"/>
 				</textElement>
-				<text><![CDATA[Precio Bonif.]]></text>
+				<text><![CDATA[Precio]]></text>
 			</staticText>
 		</band>
 	</columnHeader>
 	<detail>
 		<band height="11" splitType="Stretch">
 			<textField>
-				<reportElement x="69" y="-1" width="179" height="11" uuid="a76a8a95-6482-427a-9031-32b32ec1435b"/>
+				<reportElement x="60" y="-1" width="176" height="11" uuid="a76a8a95-6482-427a-9031-32b32ec1435b"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{detalleProducto}]]></textFieldExpression>
 			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement stretchType="RelativeToTallestObject" x="236" y="-1" width="74" height="11" uuid="3e060701-07ae-443b-81a4-2bf041117f4d"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prefijoComprobanteImputado} != null ?$F{prefijoComprobanteImputado}+"-"+$F{numeroComprobanteImputado} : " "]]></textFieldExpression>
+			</textField>
 			<textField>
-				<reportElement stretchType="RelativeToTallestObject" x="248" y="-1" width="58" height="11" uuid="3e060701-07ae-443b-81a4-2bf041117f4d"/>
+				<reportElement stretchType="RelativeToTallestObject" x="310" y="-1" width="54" height="11" uuid="76bbb564-828f-4e05-be75-65ead45fa5f6"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{cantidad}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement stretchType="RelativeToTallestObject" x="306" y="-1" width="58" height="11" uuid="76bbb564-828f-4e05-be75-65ead45fa5f6"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font size="8"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{precio}]]></textFieldExpression>
 			</textField>
 			<line>
 				<reportElement x="0" y="10" width="554" height="1" uuid="fd3f8b2f-9368-4ea4-85a3-b640f82ca935">
@@ -498,7 +553,7 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 				</graphicElement>
 			</line>
 			<textField>
-				<reportElement x="0" y="-1" width="69" height="11" uuid="54a562d5-6b45-4c52-a624-baff56a55213"/>
+				<reportElement x="0" y="-1" width="60" height="11" uuid="54a562d5-6b45-4c52-a624-baff56a55213"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font size="8"/>
 				</textElement>
@@ -528,18 +583,18 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 		</band>
 	</detail>
 	<lastPageFooter>
-		<band height="196" splitType="Prevent">
+		<band height="311" splitType="Prevent">
 			<line>
-				<reportElement x="-1" y="92" width="1" height="103" uuid="3f2ddd50-6022-4aa8-a106-5160af31bf08"/>
+				<reportElement x="-1" y="160" width="1" height="103" uuid="3f2ddd50-6022-4aa8-a106-5160af31bf08"/>
 			</line>
 			<line>
-				<reportElement x="555" y="92" width="1" height="103" uuid="e24f3369-7578-4849-9286-0e12bcb9ef26"/>
+				<reportElement x="555" y="159" width="1" height="105" uuid="e24f3369-7578-4849-9286-0e12bcb9ef26"/>
 			</line>
 			<line>
-				<reportElement x="-1" y="195" width="557" height="1" uuid="ff310959-9f01-42ca-a084-0e0039e4752d"/>
+				<reportElement x="-1" y="263" width="557" height="1" uuid="ff310959-9f01-42ca-a084-0e0039e4752d"/>
 			</line>
 			<subreport>
-				<reportElement x="1" y="92" width="553" height="103" uuid="240ddc4e-4ee6-4cb0-a268-43a15a3dd27d"/>
+				<reportElement x="1" y="160" width="553" height="103" uuid="240ddc4e-4ee6-4cb0-a268-43a15a3dd27d"/>
 				<subreportParameter name="idFactCab">
 					<subreportParameterExpression><![CDATA[$P{idFactCab}]]></subreportParameterExpression>
 				</subreportParameter>
@@ -553,22 +608,22 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 				<subreportExpression><![CDATA[$P{pathImagen} +"/"+"subTotales.jasper"]]></subreportExpression>
 			</subreport>
 			<line>
-				<reportElement x="-1" y="91" width="557" height="1" uuid="a5b7a62b-e2ea-40bb-aba6-702713dde34b"/>
+				<reportElement x="-1" y="159" width="557" height="1" uuid="a5b7a62b-e2ea-40bb-aba6-702713dde34b"/>
 			</line>
 			<line>
-				<reportElement x="-1" y="90" width="557" height="1" uuid="3ce4ea5a-da1f-4075-933e-88d5ef634cea"/>
+				<reportElement x="-1" y="158" width="557" height="1" uuid="3ce4ea5a-da1f-4075-933e-88d5ef634cea"/>
 			</line>
 			<line>
-				<reportElement x="0" y="3" width="555" height="1" uuid="1ee24042-93ec-4e2b-af06-8e1d9594b730"/>
+				<reportElement x="0" y="71" width="555" height="1" uuid="1ee24042-93ec-4e2b-af06-8e1d9594b730"/>
 			</line>
 			<line>
-				<reportElement x="-1" y="3" width="1" height="87" uuid="b90d0b39-a6cd-4ed1-b4b4-d98dfa56b9d9"/>
+				<reportElement x="-1" y="71" width="1" height="87" uuid="b90d0b39-a6cd-4ed1-b4b4-d98dfa56b9d9"/>
 			</line>
 			<line>
-				<reportElement x="555" y="3" width="1" height="87" uuid="d34d6e0f-833e-44bd-9fb3-0b7367580b1b"/>
+				<reportElement x="555" y="71" width="1" height="87" uuid="d34d6e0f-833e-44bd-9fb3-0b7367580b1b"/>
 			</line>
 			<staticText>
-				<reportElement x="0" y="4" width="99" height="14" uuid="6c5abce2-f8e1-453f-a920-64c06b643e74">
+				<reportElement x="0" y="72" width="99" height="14" uuid="6c5abce2-f8e1-453f-a920-64c06b643e74">
 					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 				</reportElement>
 				<textElement>
@@ -577,7 +632,7 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 				<text><![CDATA[Forma de Pago:]]></text>
 			</staticText>
 			<subreport>
-				<reportElement x="0" y="18" width="555" height="71" uuid="8ac3eb89-c9ae-48ca-9113-ce676e1c69ba"/>
+				<reportElement x="0" y="86" width="555" height="71" uuid="8ac3eb89-c9ae-48ca-9113-ce676e1c69ba"/>
 				<subreportParameter name="idFactCab">
 					<subreportParameterExpression><![CDATA[$P{idFactCab}]]></subreportParameterExpression>
 				</subreportParameter>
@@ -590,6 +645,72 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<subreportExpression><![CDATA[$P{pathImagen} +"/"+"formaPago.jasper"]]></subreportExpression>
 			</subreport>
+			<staticText>
+				<reportElement x="0" y="285" width="40" height="13" uuid="a186cc1d-9c60-46b9-a182-67a0a833a0d0">
+					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					<printWhenExpression><![CDATA[!$F{cae}.equals(" ")]]></printWhenExpression>
+				</reportElement>
+				<text><![CDATA[C.A.E.:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="298" width="120" height="13" uuid="7bae7c86-36cb-4072-9f69-9abecdb4a75f">
+					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					<printWhenExpression><![CDATA[!$F{cae}.equals(" ")]]></printWhenExpression>
+				</reportElement>
+				<text><![CDATA[FECHA VENCIMIENTO:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="40" y="285" width="100" height="13" uuid="a1336501-0677-4f23-85e4-086dc2abf210">
+					<printWhenExpression><![CDATA[!$F{cae}.equals(" ")]]></printWhenExpression>
+				</reportElement>
+				<textFieldExpression><![CDATA[$F{cae}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy">
+				<reportElement x="120" y="298" width="100" height="13" uuid="3e9fc25f-8ac9-46b5-9d0e-d7377e43dbfc">
+					<printWhenExpression><![CDATA[!$F{cae}.equals(" ")]]></printWhenExpression>
+				</reportElement>
+				<textElement>
+					<paragraph lineSpacing="Proportional"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{caeVto}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="1" y="5" width="552" height="66" uuid="2672f58f-d0a2-4f64-90c7-2a8edcc6ae43"/>
+				<textElement>
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{moneda}.equals("u$s") && $F{leyenda1} != null? $F{leyenda1} + $F{cotDolar}.setScale(3, java.math.RoundingMode.HALF_UP) + $F{leyenda2}+ $F{cotDolar}.multiply($V{bruto}).setScale(2, java.math.RoundingMode.HALF_UP)+ $F{leyenda3} + $F{leyenda4}: " "]]></textFieldExpression>
+			</textField>
+			<componentElement>
+				<reportElement x="300" y="267" width="252" height="41" uuid="f5423023-2c7d-4d24-9e87-4277a74aefa9">
+					<printWhenExpression><![CDATA[!$F{cae}.equals(" ")]]></printWhenExpression>
+				</reportElement>
+				<jr:Interleaved2Of5 xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<jr:codeExpression><![CDATA[$V{barCode}]]></jr:codeExpression>
+				</jr:Interleaved2Of5>
+			</componentElement>
+			<staticText>
+				<reportElement x="0" y="270" width="40" height="13" uuid="a5f58039-db0e-4992-a195-2f2417339cd8">
+					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					<printWhenExpression><![CDATA[!$F{prefijoComprobanteAfip}.equals(null)]]></printWhenExpression>
+				</reportElement>
+				<text><![CDATA[Interno:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="40" y="270" width="33" height="13" uuid="13e158b2-bb15-4d83-9ec7-3a902368a4be">
+					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{prefijoComprobanteAfip} != null?$F{prefijoComprobante}: " "]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="73" y="276" width="6" height="1" uuid="7b4a2cc0-c30f-44d8-8eaa-8d4e29e89430"/>
+			</line>
+			<textField>
+				<reportElement x="79" y="270" width="95" height="13" uuid="19f02cca-7eee-4137-9d5b-cdada623280e"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{numeroComprobanteAfip} != null?$F{numeroComprobante}:" "]]></textFieldExpression>
+			</textField>
 		</band>
 	</lastPageFooter>
 </jasperReport>
