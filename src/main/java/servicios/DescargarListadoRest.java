@@ -63,6 +63,9 @@ public class DescargarListadoRest {
             Integer padCodigo = (Integer) Utils.getKeyFromJsonObject("padCodigo", jsonBody, "Integer");
             Integer idDeposito = (Integer) Utils.getKeyFromJsonObject("idDeposito", jsonBody, "Integer");
             Integer idEstado = (Integer) Utils.getKeyFromJsonObject("idEstado", jsonBody, "Integer");
+            Integer idVendedor = (Integer) Utils.getKeyFromJsonObject("idVendedor", jsonBody, "Integer");
+            Integer idSisTipoOperacion = (Integer) Utils.getKeyFromJsonObject("idSisTipoOperacion", jsonBody, "Integer");
+            String autorizada = (String) Utils.getKeyFromJsonObject("autorizada", jsonBody, "String");
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -112,6 +115,7 @@ public class DescargarListadoRest {
             String tituloReporte = "Consulta de Comprobantes";
                    
             HashMap hm = new HashMap();
+            hm.put("titulo", tituloReporte);
             hm.put("empresa",user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
             hm.put("modulo",comprobanteModulo);
             hm.put("tipo", comprobanteTipo);
@@ -127,7 +131,10 @@ public class DescargarListadoRest {
             hm.put("padCodigo", padCodigo);
             hm.put("deposito", idDeposito);
             hm.put("estado", idEstado);
-            hm.put("titulo", tituloReporte);
+            hm.put("idVendedor", idVendedor);
+            hm.put("idSisTipoOperacion", idSisTipoOperacion);
+            hm.put("autorizada", autorizada);
+            
             
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             byte[] bytes = utils.generateJasperReportPDF(request, nombreReporte, hm, user, outputStream);

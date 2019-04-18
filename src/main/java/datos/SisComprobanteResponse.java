@@ -23,6 +23,7 @@ public class SisComprobanteResponse implements Payload{
     private Integer idSisOperacionComprobante;
     private Boolean admiteRelacionMultiple;
     private Boolean usaContrato;
+    private Boolean permiteImporteCero;
     private List<SisMonedasResponse> monedas = new ArrayList<>();
     
     public SisComprobanteResponse(SisComprobante s) {
@@ -135,8 +136,14 @@ public class SisComprobanteResponse implements Payload{
     public void setUsaContrato(Boolean usaContrato) {
         this.usaContrato = usaContrato;
     }
-    
-    
+
+    public Boolean getPermiteImporteCero() {
+        return permiteImporteCero;
+    }
+
+    public void setPermiteImporteCero(Boolean permiteImporteCero) {
+        this.permiteImporteCero = permiteImporteCero;
+    }
 
     public List<SisMonedasResponse> getMonedas() {
         return monedas;

@@ -7,6 +7,7 @@ import datos.DatosResponse;
 import datos.ServicioResponse;
 import entidades.Acceso;
 import entidades.Contrato;
+import entidades.ContratoDet;
 import entidades.CteNumerador;
 import entidades.CteTipo;
 import entidades.Deposito;
@@ -51,6 +52,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
+import persistencia.ContratoDetFacade;
 import persistencia.ContratoFacade;
 import persistencia.CteNumeradorFacade;
 import persistencia.CteTipoFacade;
@@ -107,6 +109,7 @@ public class GrabaComprobanteRest {
     @Inject SisCotDolarFacade sisCotDolarFacade;
     @Inject PadronFacade padronFacade;
     @Inject ContratoFacade contratoFacade;
+    @Inject ContratoDetFacade contratoDetFacade;
           
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -130,10 +133,7 @@ public class GrabaComprobanteRest {
             String cai = (String) Utils.getKeyFromJsonObject("cai", jsonBody, "String");
             Date caiVto = (Date) Utils.getKeyFromJsonObject("caiVto", jsonBody, "Date");
             String codBarra =(String) Utils.getKeyFromJsonObject("codBarra", jsonBody, "String");
-            Integer idPadron = (Integer) Utils.getKeyFromJsonObject("idPadron", jsonBody, "Integer");            
-            String productoCanje = (String) Utils.getKeyFromJsonObject("productoCanje", jsonBody, "String");
-            BigDecimal precioReferenciaCanje = (BigDecimal) Utils.getKeyFromJsonObject("precioReferenciaCanje", jsonBody, "BigDecimal");
-            BigDecimal interesCanje = (BigDecimal) Utils.getKeyFromJsonObject("interesCanje", jsonBody, "BigDecimal");
+            Integer idPadron = (Integer) Utils.getKeyFromJsonObject("idPadron", jsonBody, "Integer");                      
             Integer idMoneda = (Integer) Utils.getKeyFromJsonObject("idMoneda", jsonBody, "Integer");
             String nombre = (String) Utils.getKeyFromJsonObject("nombre", jsonBody, "String");
             String cuit = (String) Utils.getKeyFromJsonObject("cuit", jsonBody, "String");
@@ -150,6 +150,16 @@ public class GrabaComprobanteRest {
             Integer codigoAfip = (Integer) Utils.getKeyFromJsonObject("codigoAfip", jsonBody, "Integer");
             Integer idSisOperacionComprobante = (Integer) Utils.getKeyFromJsonObject("idSisOperacionComprobante", jsonBody, "Integer");
             Integer idContrato = (Integer) Utils.getKeyFromJsonObject("idContrato", jsonBody, "Integer");
+            
+            //Para canje
+            String productoCanje = (String) Utils.getKeyFromJsonObject("productoCanje", jsonBody, "String");
+            BigDecimal precioReferenciaCanje = (BigDecimal) Utils.getKeyFromJsonObject("precioReferenciaCanje", jsonBody, "BigDecimal");
+            BigDecimal interesCanje = (BigDecimal) Utils.getKeyFromJsonObject("interesCanje", jsonBody, "BigDecimal");
+            Integer kilosCanje = (Integer) Utils.getKeyFromJsonObject("kilosCanje", jsonBody, "Integer");
+            String observacionesCanje = (String) Utils.getKeyFromJsonObject("observacionesCanje", jsonBody, "String");
+            
+            //Deposito de destino para el movimiento de remitos internos
+            Integer idDepositoDestino = (Integer) Utils.getKeyFromJsonObject("idDepositoDestino", jsonBody, "Integer");
             
             //Booleanos para ver que se guarda y que no.
             boolean factCabecera = (Boolean) Utils.getKeyFromJsonObject("factCabecera", jsonBody, "boolean");
@@ -275,8 +285,8 @@ public class GrabaComprobanteRest {
             if(codigoAfip == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, codigo Afip nulo");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-            }            
-            
+            }
+                                  
             //----------Metodos de busquedas de clases por id----------//
             
             CteTipo cteTipo = cteTipoFacade.find(idCteTipo);
@@ -377,18 +387,7 @@ public class GrabaComprobanteRest {
                     codPostal = padron.getCodigoPostal().toString();
                 }
             }
-            
-            //Busco el contrato si es que lleva
-            if(idContrato != null) {
-                Contrato contrato = contratoFacade.find(idContrato);
-                if(contrato == null) {
-                    respuesta.setControl(AppCodigo.ERROR, "Error, no xiste el contrato seleccionado");
-                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                }
-            }
-            
-            
-            
+          
             FactCab factCab = new FactCab();
             //Pregunto si se guarda una cabecera
             if(factCabecera) {               
@@ -432,10 +431,53 @@ public class GrabaComprobanteRest {
                 }
             }
             
+            //le seteo el deposito de destino
+            if(idDepositoDestino != null) {
+                Deposito deposito = depositoFacade.find(idDepositoDestino);
+                if(deposito == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, el deposito con id " + idDepositoDestino + " no existe");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                factCab.setIdDepositoDestino(deposito);
+            }
+                       
+            //Busco el contrato si es que lleva
+            ContratoDet contratoDet = new ContratoDet();
+            if(idContrato != null && kilosCanje != null) {
+                Contrato contrato = contratoFacade.find(idContrato);
+                if(contrato == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no xiste el contrato seleccionado");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                if(kilosCanje > contrato.getKilos()) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, los kilos sobrepasan a lo estipulado en el contrato");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                
+                if(!contrato.getContratoDetCollection().isEmpty()) {
+                    Integer sumatoriaCantidad = 0;
+                    for(ContratoDet d : contrato.getContratoDetCollection()) {
+                        sumatoriaCantidad = sumatoriaCantidad + d.getKilos();
+                    }
+                    sumatoriaCantidad = kilosCanje + sumatoriaCantidad;
+                    if(sumatoriaCantidad > contrato.getKilos()) {
+                        respuesta.setControl(AppCodigo.ERROR, "Error, los kilos sobrepasan a lo estipulado en el contrato");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                }
+                
+                contratoDet.setIdContratos(contrato);
+                contratoDet.setIdFactCab(factCab);
+                contratoDet.setImporte(precioReferenciaCanje);
+                contratoDet.setKilos(kilosCanje);
+                contratoDet.setObservaciones(observacionesCanje);
+            }
+            
             //Le agrego el numero a numero afip si es compra
             if(cteTipo.getIdSisComprobante().getIdSisModulos().getIdSisModulos() == 1) {
                 factCab.setNumeroAfip(numero.longValue());
             }
+            
                 //Pregunto si guarda Detalles
                 if(factDet) {
                     //Armo la listas de Fact par luego parsearlas todas juntas
@@ -498,9 +540,20 @@ public class GrabaComprobanteRest {
                             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                         }
                         
-                        if(!precio.equals(producto.getCostoReposicion()) && cteTipo.getIdSisComprobante().getIdSisModulos().getIdSisModulos().equals(1)) {
-                            producto.setCostoReposicion(precio);
-                            productoFacade.editProducto(producto);
+                        //Actualizo el precio del aritulo si es compra, si es distinto de 0 y si el precio es distinto. Ademas lo convierto de acuerdo al tipo de moneda
+                        if(!precio.equals(producto.getCostoReposicion()) && cteTipo.getIdSisComprobante().getIdSisModulos().getIdSisModulos().equals(1) && precio.compareTo(BigDecimal.ZERO) != 0) {
+                            SisCotDolar sisCotDolar = sisCotDolarFacade.getLastCotizacion();
+                            BigDecimal precioAtualizado = new BigDecimal(0);
+                            //Me fijo la moneda seleccionada y la del producto
+                            if(producto.getDescripcion().equals("$AR") && sisMonedas.getDescripcion().equals("u$s")) {  
+                               precioAtualizado = producto.getCostoReposicion().multiply(sisCotDolar.getCotizacion());
+                            } else if((producto.getDescripcion().equals("u$s") && sisMonedas.getDescripcion().equals("$AR"))) {
+                               precioAtualizado = producto.getCostoReposicion().divide(sisCotDolar.getCotizacion(),2, RoundingMode.HALF_UP);
+                            }
+                            //Si el precio convertido es distinto al que tiene el producto lo cambio
+                            if(!precioAtualizado.equals(producto.getCostoReposicion())) {
+                                productoFacade.editProducto(producto);
+                            }
                         } 
                         
                         //Si la cantidad es igual a 0 no guarda ese articulo
@@ -878,7 +931,7 @@ public class GrabaComprobanteRest {
                             String concatenado = ptoVenta.concat(numeroVentaFormat);
                             factCab.setNumero(Long.parseLong(concatenado,10));
                         }
-                        return this.persistirObjetos(factCab, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumerador);
+                        return this.persistirObjetos(factCab, contratoDet,listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumerador);
                     } else if(tipoFact != null || letraFact != null || numeroFact != null || fechaVencimientoFact != null || fechaContaFact != null){                                              
                         CteNumerador cteNumerador = null;
                         if(idNumero != null) {
@@ -894,7 +947,7 @@ public class GrabaComprobanteRest {
                         }
                         
                        //Persisto Primero los objetos del remito
-                        this.persistirObjetos(factCab, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumerador);
+                        this.persistirObjetos(factCab, contratoDet, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumerador);
                         
                         //Luego empiezo con los datos de la factura relacionada
                         CteTipo cteTipoFac = cteTipoFacade.find(tipoFact);
@@ -944,7 +997,7 @@ public class GrabaComprobanteRest {
                         fc.setSitIVA(sisSitIva);
                         fc.setIdSisTipoOperacion(sisTipoOperacion);
                         fc.setIdVendedor(idVendedor);
-                        return this.generarFacturaRelacionada(fc, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumeradorRel);
+                        return this.generarFacturaRelacionada(fc, contratoDet, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumeradorRel);
                     } else {
                         respuesta.setControl(AppCodigo.ERROR, "No pudo grabar la factura asociada, algun campo no es valido");
                         return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
@@ -959,7 +1012,7 @@ public class GrabaComprobanteRest {
         }
     }
     
-    public Response persistirObjetos(FactCab factCab, List<FactDetalle> factDetalle, List<FactImputa> factImputa, List<Produmo> produmo, List<FactPie> factPie, List<Lote> listaLotes, List<FactFormaPago> factFormaPago, CteNumerador cteNumerador) {
+    public Response persistirObjetos(FactCab factCab, ContratoDet contratoDet, List<FactDetalle> factDetalle, List<FactImputa> factImputa, List<Produmo> produmo, List<FactPie> factPie, List<Lote> listaLotes, List<FactFormaPago> factFormaPago, CteNumerador cteNumerador) {
         ServicioResponse respuesta = new ServicioResponse();
         try {
             //Comienzo con la transaccion de FactCab
@@ -969,6 +1022,17 @@ public class GrabaComprobanteRest {
                 respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta la Cabecera, clave primaria repetida");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
+            
+            //Comienzo con la transaccion de contratoDet si existe
+            if(contratoDet != null && contratoDet.getIdContratos() != null) {
+                boolean transaccionContrato;
+                transaccionContrato = contratoDetFacade.setContratoDetNuevo(contratoDet);
+                if(!transaccionContrato) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no se pudo dar de alta el detalle del contrato");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+            }
+            
             //Comienzo con la transaccion de FacDetalle
             if(!factDetalle.isEmpty()) {
                 for(FactDetalle d : factDetalle) {
@@ -1085,7 +1149,7 @@ public class GrabaComprobanteRest {
         } 
     }
     
-    public Response generarFacturaRelacionada(FactCab factCab, List<FactDetalle> factDetalle, List<FactImputa> factImputa, List<Produmo> produmo, List<FactPie> factPie, List<Lote> listaLotes, List<FactFormaPago> factFormaPago, CteNumerador cteNumerador) {
+    public Response generarFacturaRelacionada(FactCab factCab, ContratoDet contratoDet, List<FactDetalle> factDetalle, List<FactImputa> factImputa, List<Produmo> produmo, List<FactPie> factPie, List<Lote> listaLotes, List<FactFormaPago> factFormaPago, CteNumerador cteNumerador) {
         ServicioResponse respuesta = new ServicioResponse();
         try {
             List<FactDetalle> listaDetalles = new ArrayList<>();
@@ -1191,7 +1255,7 @@ public class GrabaComprobanteRest {
             }
             
             //Persisto los objetos y devuelvo la respuesta          
-            return this.persistirObjetos(factCab, listaDetalles, listaImputa, produmo, listaPie, listaLotes, listaFormaPago, cteNumerador);
+            return this.persistirObjetos(factCab, contratoDet, listaDetalles, listaImputa, produmo, listaPie, listaLotes, listaFormaPago, cteNumerador);
         } catch(Exception ex) {
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();

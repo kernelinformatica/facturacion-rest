@@ -11,9 +11,11 @@ import datos.Payload;
 import datos.ServicioResponse;
 import entidades.Acceso;
 import entidades.ContPlanCuenta;
+import entidades.CtacteCategoria;
 import entidades.FormaPagoDet;
 import entidades.ListaPrecio;
 import entidades.ListaPrecioDet;
+import entidades.Padron;
 import entidades.Producto;
 import entidades.SisMonedas;
 import entidades.Usuario;
@@ -36,13 +38,16 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
 import persistencia.ContPlanCuentaFacade;
+import persistencia.CtacteCategoriaFacade;
 import persistencia.ListaPrecioDetFacade;
 import persistencia.ListaPrecioFacade;
+import persistencia.PadronFacade;
 import persistencia.ProductoFacade;
 import persistencia.SisMonedasFacade;
 import persistencia.UsuarioFacade;
@@ -65,12 +70,15 @@ public class ListaPrecioRest {
     @Inject ListaPrecioDetFacade listaPrecioDetFacade; 
     @Inject ContPlanCuentaFacade contPlanCuentaFacade;
     @Inject UsuarioListaPrecioFacade usuarioListaPrecioFacade;
+    @Inject PadronFacade padronFacade;
+    @Inject CtacteCategoriaFacade ctacteCategoriaFacade;
     
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response getListaPrecios(  
-        @HeaderParam ("token") String token,  
+        @HeaderParam ("token") String token,
+        @QueryParam("codPadron") Integer codPadron,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {
@@ -126,13 +134,34 @@ public class ListaPrecioRest {
                                 if(d.getCtaContable() == null) {
                                     continue;
                                 }
-                                ContPlanCuenta cont = contPlanCuentaFacade.getCuentaContable(Integer.parseInt(d.getCtaContable()));
+                                ContPlanCuenta cont = new ContPlanCuenta();
+                                if(!d.getCtaContable().equals("0")) {
+                                    cont = contPlanCuentaFacade.getCuentaContable(Integer.parseInt(d.getCtaContable()));
+                                } else if(codPadron != null){
+                                    Padron padron = padronFacade.getPadronByCodigo(codPadron);
+                                    if(padron != null && padron.getPadronCatego() != null) {
+                                        CtacteCategoria categoria = ctacteCategoriaFacade.getCategoriaByCodigo(padron.getPadronCatego());
+                                        if(categoria != null && categoria.getPlanCuentas() != null) {
+                                            cont = contPlanCuentaFacade.getCuentaContable(categoria.getPlanCuentas());
+                                        //categoria no encontrada o categoria con plan cuentas nula en sybase
+                                        } else {
+                                            cont = null;
+                                        }
+                                    //Padron no encontrado o no tiene categoria cargada en base sybase
+                                    } else {
+                                        cont = null;
+                                    } 
+                                //Padron no ingresado desde compra o venta
+                                } else {
+                                    cont = null;
+                                }
+                                //Me fijo si la cuenta es nula, de ser asi armo una como este en forma de pago
                                 if(cont != null){
                                     d.setPlanCuenta(new ContPlanCuentaResponse(cont));
                                 } else {
                                     ContPlanCuentaResponse conta = new ContPlanCuentaResponse(Integer.parseInt(d.getCtaContable()),d.getDetalle());
                                     d.setPlanCuenta(conta);
-                                }
+                                }                                                                
                             }
                         }
                     }                                       

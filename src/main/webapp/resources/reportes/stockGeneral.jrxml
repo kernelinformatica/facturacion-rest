@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.3.0.final using JasperReports Library version 6.3.0  -->
-<!-- 2018-11-13T11:19:30 -->
+<!-- 2019-04-12T12:03:49 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="stockGeneral" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="0" bottomMargin="20" isFloatColumnFooter="true" whenResourceMissingType="Error" uuid="4806e2f6-ab00-41d0-b74f-73434a7c5917">
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
 	<parameter name="pathImagen" class="java.lang.String"/>
@@ -36,12 +36,10 @@
 		<variableExpression><![CDATA[$F{ingresoVirtual}.subtract($F{egresoVirtual}).subtract($F{virtualImputado})]]></variableExpression>
 	</variable>
 	<title>
-		<band height="115">
+		<band height="61">
 			<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 			<subreport>
-				<reportElement x="0" y="0" width="555" height="115" uuid="88b052fb-0d6f-43d1-b99b-11bd396c90fc">
-					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
-				</reportElement>
+				<reportElement x="0" y="0" width="555" height="61" uuid="88b052fb-0d6f-43d1-b99b-11bd396c90fc"/>
 				<subreportParameter name="empresa">
 					<subreportParameterExpression><![CDATA[$P{empresa}]]></subreportParameterExpression>
 				</subreportParameter>

@@ -231,8 +231,10 @@ public class PendientesCancelarRest {
                             producto);
                     if(moneda.getDescripcion().equals("$AR") && rs.getString("moneda").equals("u$s")) {
                         pendientesCancelar.setPrecio(pendientesCancelar.getPrecio().multiply(rs.getBigDecimal("dolar")));
+                        pendientesCancelar.setImporte(pendientesCancelar.getPrecio().multiply(pendientesCancelar.getPendiente()));
                     } else if((moneda.getDescripcion().equals("u$s") && rs.getString("moneda").equals("$AR"))) {
                         pendientesCancelar.setPrecio(pendientesCancelar.getPrecio().divide(rs.getBigDecimal("dolar"),2, RoundingMode.HALF_UP));
+                        pendientesCancelar.setImporte(pendientesCancelar.getPrecio().multiply(pendientesCancelar.getPendiente()));
                     }
                     pendientes.add(pendientesCancelar);
                 }
@@ -263,7 +265,7 @@ public class PendientesCancelarRest {
                     if(!pendientes.isEmpty()) {
                         pendientes.clear();
                     }
-
+                    //Aca fijarse para devolver only por sucursal no empresa!!!!
                     FactCab factCab = factCabFacade.getByNumeroEmpresa(facNumero, cteTipoSeleccionado,user.getIdPerfil().getIdSucursal().getIdEmpresa(),letra);
                     if(factCab == null) {
                         respuesta.setControl(AppCodigo.ERROR, "No existe el comprobante, por favor corrobore el nro ingresado");
@@ -439,7 +441,7 @@ public class PendientesCancelarRest {
                     sr.setCostoReposicion(sr.getCostoReposicion().divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP));
                 } else if(moneda.getDescripcion().equals("$AR") && s.getIdMoneda().getDescripcion().equals("u$s")) {
                     SisCotDolar cotDolar = sisCotDolarFacade.getLastCotizacion();
-                    sr.setCostoReposicion(cotDolar.getCotizacion());
+                    sr.setCostoReposicion(cotDolar.getCotizacion().multiply(sr.getCostoReposicion()));
                 }
                 
                 //Agrego las cuentas contables

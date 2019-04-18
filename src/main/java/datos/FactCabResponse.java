@@ -44,11 +44,12 @@ public class FactCabResponse implements Payload{
     private BigDecimal importeTotal;
     private String tipoOperacion;
     private String autorizada;
+    private String permiteBorrado;
     private List<FactDetalleResponse> detalle;
     private List<FactImputaResponse> imputa;
     
     
-    FactCabResponse(FactCab f) {
+    public FactCabResponse(FactCab f) {
         this.idFactCab = f.getIdFactCab();
         this.comprobante = f.getIdCteTipo().getDescripcion();
         this.numero = f.getNumero();
@@ -59,16 +60,16 @@ public class FactCabResponse implements Payload{
         this.cotDolar = f.getCotDolar();       
         this.moneda = f.getIdmoneda().getDescripcion();
         this.modulo = f.getIdCteTipo().getIdSisComprobante().getIdSisModulos().getDescripcion();
-        this.vendedor = f.getIdVendedor().toString();       
+        this.vendedor = "";       
         this.importeNeto = BigDecimal.ZERO;
         this.importeTotal = BigDecimal.ZERO;
-        this.tipoOperacion = " ";
+        this.tipoOperacion = f.getIdSisTipoOperacion().getDescripcion();
         this.autorizada = " ";
         this.detalle = new ArrayList<>();
         this.imputa = new ArrayList<>();
     }
 
-    public FactCabResponse(Integer idFactCab, String comprobante,long numero, Date fechaEmision, Integer idPadron, String nombre, String cuit, BigDecimal cotDolar, String moneda, String imputada, String modulo, String vendedor, Integer idCteTipo, BigDecimal importeNeto, BigDecimal importeTotal, String tipoOperacion, String autorizada) {
+    public FactCabResponse(Integer idFactCab, String comprobante,long numero, Date fechaEmision, Integer idPadron, String nombre, String cuit, BigDecimal cotDolar, String moneda, String imputada, String modulo, String vendedor, Integer idCteTipo, BigDecimal importeNeto, BigDecimal importeTotal, String tipoOperacion, String autorizada, String permiteBorrado) {
         this.idFactCab = idFactCab;
         this.comprobante = comprobante;
         this.numero = numero;
@@ -88,6 +89,7 @@ public class FactCabResponse implements Payload{
         this.importeTotal = importeTotal;
         this.tipoOperacion = tipoOperacion;
         this.autorizada = autorizada;
+        this.permiteBorrado = permiteBorrado;
     }
 
     public FactCabResponse(Integer idFactCab) {

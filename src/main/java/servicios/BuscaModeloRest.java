@@ -9,6 +9,8 @@ import datos.Payload;
 import datos.ServicioResponse;
 import entidades.Acceso;
 import entidades.ModeloDetalle;
+import entidades.PadronGral;
+import entidades.PadronProveedor;
 import entidades.Producto;
 import entidades.SisCotDolar;
 import entidades.SisModulo;
@@ -36,6 +38,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
 import persistencia.ModeloDetalleFacade;
+import persistencia.PadronGralFacade;
 import persistencia.ProductoFacade;
 import persistencia.SisCotDolarFacade;
 import persistencia.SisModuloFacade;
@@ -60,6 +63,7 @@ public class BuscaModeloRest {
     @Inject SisModuloFacade sisModuloFacade;
     @Inject SisMonedasFacade sisMonedasFacade;
     @Inject SisCotDolarFacade sisCotDolarFacade;
+    @Inject PadronGralFacade padronGralFacade;
     
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -76,6 +80,7 @@ public class BuscaModeloRest {
             // Obtengo los atributos del body
             Integer modulo = (Integer) Utils.getKeyFromJsonObject("modulo", jsonBody, "Integer");
             Integer idMoneda = (Integer) Utils.getKeyFromJsonObject("idMoneda", jsonBody, "Integer");
+            Integer idProveedor = (Integer) Utils.getKeyFromJsonObject("idProveedor", jsonBody, "Integer");
             List<JsonElement> productos = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("productos", jsonBody, "ArrayList");
             
             //valido que token no sea null
@@ -215,7 +220,10 @@ public class BuscaModeloRest {
                                 default:
                                     break;
                             }
-                        } else if(!p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(3).getTipo()) && !p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(1).getTipo())) {                            
+                        } else if(!p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(3).getTipo()) 
+                                && !p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(1).getTipo())
+                                && !p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(6).getTipo())
+                                && !p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(7).getTipo())) {                            
                             total = total.add(precio.multiply(cantidad));
                             if(p.getValor().compareTo(BigDecimal.ZERO) == 0) {
                                 porcentaje = porcentaje.add(producto.getIdIVA().getPorcIVA());
@@ -252,6 +260,62 @@ public class BuscaModeloRest {
                                 default:
                                     break;
                             }
+                        //busco las percepciones del proveedor
+                        } else if(p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(6).getTipo()) && idProveedor != null) {
+                            //Busco en el padron general el proveedor
+                            PadronGral padronGral = padronGralFacade.find(idProveedor);
+                            if(padronGral == null) {
+                                continue;
+                            }
+                            
+                            //Me fijo si tiene la relacion en la Tabla PadronProveedor
+                            if(padronGral.getPadronProveedorCollection().isEmpty()) {
+                                continue;
+                            }
+                            
+                            //Eligo el primero de la coleccion(es una relacion de uno a uno)
+                            PadronProveedor prov = padronGral.getPadronProveedorCollection().iterator().next();
+                            if(prov == null) {
+                                continue;
+                            }
+                            
+                            //si el valor de modelodetalle es igual a 0 busco el valor del proveedor
+                            total = total.add(precio.multiply(cantidad));
+                            if(p.getValor().compareTo(BigDecimal.ZERO) == 0) {
+                                porcentaje = prov.getIibbPer();
+                                total = total.multiply(porcentaje.divide(new BigDecimal(100)));
+                            } else {
+                                porcentaje = p.getValor();
+                                total = total.multiply(porcentaje.divide(cien));
+                            }
+                        //busco las retenciones del proveedoer    
+                        } else if(p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(7).getTipo()) && idProveedor != null) {
+                           //Busco en el padron general el proveedor
+                            PadronGral padronGral = padronGralFacade.find(idProveedor);
+                            if(padronGral == null) {
+                                continue;
+                            }
+                            
+                            //Me fijo si tiene la relacion en la Tabla PadronProveedor
+                            if(padronGral.getPadronProveedorCollection().isEmpty()) {
+                                continue;
+                            }
+                            
+                            //Eligo el primero de la coleccion(es una relacion de uno a uno)
+                            PadronProveedor prov = padronGral.getPadronProveedorCollection().iterator().next();
+                            if(prov == null) {
+                                continue;
+                            }
+                            
+                            //si el valor de modelodetalle es igual a 0 busco el valor del proveedor
+                            total = total.add(precio.multiply(cantidad));
+                            if(p.getValor().compareTo(BigDecimal.ZERO) == 0) {
+                                porcentaje = prov.getIibbRet();
+                                total = total.multiply(porcentaje.divide(new BigDecimal(100)));
+                            } else {
+                                porcentaje = p.getValor();
+                                total = total.multiply(porcentaje.divide(cien));
+                            } 
                         }
                         ModeloDetalleResponse modeloResponse = new ModeloDetalleResponse(p, total, porcentaje, baseImponible);
                         modelos.add(modeloResponse);

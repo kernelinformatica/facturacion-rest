@@ -90,7 +90,7 @@ public class DepositoRest {
             
             //busco los SubRubros de la empresa del usuario
             List<Payload> formaPagos = new ArrayList<>();
-            for(Deposito p : user.getIdPerfil().getIdSucursal().getIdEmpresa().getDepositoCollection()){
+            for(Deposito p : user.getIdPerfil().getIdSucursal().getDepositoCollection()){
                 DepositoResponse fp = new DepositoResponse(p);
                 formaPagos.add(fp);
             }
@@ -161,6 +161,7 @@ public class DepositoRest {
             deposito.setCodigoPostal(codigoPostal);
             deposito.setDescripcion(descripcion);
             deposito.setDomicilio(domicilio);
+            deposito.setIdSucursal(user.getIdPerfil().getIdSucursal());
             transaccion = depositoFacade.setDepositoNuevo(deposito);
             if(!transaccion) {
                 respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Deposito, clave primaria repetida");

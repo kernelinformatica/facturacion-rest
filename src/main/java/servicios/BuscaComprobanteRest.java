@@ -185,7 +185,8 @@ public class BuscaComprobanteRest {
                         rs.getBigDecimal("importeNeto"),
                         rs.getBigDecimal("importeTotal"),
                         rs.getString("tipoOperacion"),
-                        rs.getString("autorizada"));
+                        rs.getString("autorizada"),
+                        rs.getString("permiteBorrado"));
                 factCabResponses.add(factCab);
             }
             

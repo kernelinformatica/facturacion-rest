@@ -47,6 +47,7 @@ import persistencia.MarcaFacade;
 import persistencia.ModeloCabFacade;
 import persistencia.ProdCultivoFacade;
 import persistencia.ProductoFacade;
+import persistencia.ProdumoFacade;
 import persistencia.SisIVAFacade;
 import persistencia.SisMonedasFacade;
 import persistencia.SisUnidadFacade;
@@ -73,6 +74,7 @@ public class ProductoRest {
     @Inject CultivoFacade cultivoFacade;
     @Inject ProdCultivoFacade prodCultivoFacade;
     @Inject SisMonedasFacade sisMonedasFacade;
+    @Inject ProdumoFacade produmoFacade;
     
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
@@ -82,6 +84,7 @@ public class ProductoRest {
         @QueryParam ("tipo") String tipo,
         @QueryParam ("listaPrecio") Integer idListaPrecio,
         @QueryParam("aptoCanje") boolean aptoCanje,
+        @QueryParam("idDeposito") Integer idDeposito,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {
@@ -124,10 +127,10 @@ public class ProductoRest {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             List<Payload> productosResponse = new ArrayList<>();
-            if(tipo != null && tipo.equals("reducida") && idListaPrecio == null) {
+            if(tipo != null && tipo.equals("reducida") && idListaPrecio == null ) {
                 for(Producto s : productos) {
                     ProductoResponse sr = new ProductoResponse(s.getIdProductos(),s.getDescripcion(),s.getCodProducto());
-                    productosResponse.add(sr);
+                    productosResponse.add(sr);                       
                 }
             } else if(tipo != null && tipo.equals("reducida") && idListaPrecio != null) {
                 //Busco la lista de precio
@@ -137,21 +140,28 @@ public class ProductoRest {
                     respuesta.setControl(AppCodigo.ERROR, "No existe la lista de precios");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
-                //PRegunto si tiene detalles
+                //Pregunto si tiene detalles
                 if(lista.getListaPrecioDetCollection().isEmpty()) {
                     respuesta.setControl(AppCodigo.ERROR, "No hay productos disponibles para la lista de precios seleccionada");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
                 //Armo la respuesta
-                
                 for(ListaPrecioDet d : lista.getListaPrecioDetCollection()) {
                     //Filtro por aptoCanje
                     if(aptoCanje && d.getIdProductos().getAptoCanje()) {
-                        ProductoResponse sr = new ProductoResponse(d.getIdProductos().getIdProductos(),d.getIdProductos().getDescripcion(),d.getIdProductos().getCodProducto());
-                        productosResponse.add(sr);
+                        if(!d.getIdProductos().getProdumoCollection().isEmpty()  && idDeposito != null) {
+                            if(produmoFacade.vigenciaEnDeposito(idDeposito,d.getIdProductos())) {
+                                ProductoResponse sr = new ProductoResponse(d.getIdProductos().getIdProductos(),d.getIdProductos().getDescripcion(),d.getIdProductos().getCodProducto());
+                                productosResponse.add(sr);
+                            }
+                        }
                     } else if(!aptoCanje) {
-                        ProductoResponse sr = new ProductoResponse(d.getIdProductos().getIdProductos(),d.getIdProductos().getDescripcion(),d.getIdProductos().getCodProducto());
-                        productosResponse.add(sr);
+                        if(!d.getIdProductos().getProdumoCollection().isEmpty()) {
+                            if(produmoFacade.vigenciaEnDeposito(idDeposito,d.getIdProductos())) {
+                                ProductoResponse sr = new ProductoResponse(d.getIdProductos().getIdProductos(),d.getIdProductos().getDescripcion(),d.getIdProductos().getCodProducto());
+                                productosResponse.add(sr);
+                            }
+                        }
                     }
                 }               
             } else {
@@ -361,7 +371,7 @@ public class ProductoRest {
                         prodCultivo.setIdCultivo(c);
                         prodCultivo.setIdProductos(producto);
                         transaccion2 = prodCultivoFacade.setProdCultivoNuevo(prodCultivo);
-                        if(!transaccion) {
+                        if(!transaccion2) {
                             respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta la relacion Cultivo Producto:" + c.getDescripcion() + "y" + producto.getDescripcion());
                             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                         }
@@ -563,7 +573,7 @@ public class ProductoRest {
                         prodCultivo.setIdCultivo(c);
                         prodCultivo.setIdProductos(producto);
                         transaccion2 = prodCultivoFacade.editProdCultivo(prodCultivo);
-                        if(!transaccion) {
+                        if(!transaccion2) {
                             respuesta.setControl(AppCodigo.ERROR, "No se pudo editar la relacion Cultivo Producto:" + c.getDescripcion() + "y" + producto.getDescripcion());
                             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                         }

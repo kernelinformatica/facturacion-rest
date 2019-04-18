@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.3.0.final using JasperReports Library version 6.3.0  -->
-<!-- 2019-03-27T13:44:55 -->
+<!-- 2019-04-04T12:13:13 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="libro" printOrder="Horizontal" pageWidth="1190" pageHeight="842" orientation="Landscape" columnWidth="1150" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" whenResourceMissingType="Empty" uuid="7597f5ce-8dd5-40c7-89af-9479afc161ab">
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
@@ -247,10 +247,10 @@ where Libros.idEmpresa =   $P{empresa}  AND Libros.idSisModulos =   $P{modulo}  
 	<field name="prefijoComprobanteAfip" class="java.lang.String"/>
 	<field name="numeroComprobanteAfip" class="java.lang.String"/>
 	<variable name="datosPrimarios" class="java.lang.String">
-		<variableExpression><![CDATA[$F{Fecha} +"  " + $F{TipoComprobante}+"  " + $F{Letra} +"  " +
-($F{prefijoComprobanteAfip} != null? $F{prefijoComprobanteAfip}+" - ":$F{prefijoComprobante}+" - ")
-+($F{numeroComprobanteAfip}  != null?$F{numeroComprobanteAfip}:$F{numeroComprobante})  
-+ "   "+$F{Cuit}+"  "  + $F{Nombre}]]></variableExpression>
+		<variableExpression><![CDATA[$F{Fecha} +"  " + $F{TipoComprobante}+"  " + $F{Letra} +"  " 
++($F{prefijoComprobanteAfip} != null? $F{prefijoComprobanteAfip}+" - ":$F{prefijoComprobante}+" - ")
++($F{numeroComprobanteAfip} != null?$F{numeroComprobanteAfip}:$F{numeroComprobante})  
++ "   "+$F{Cuit}+"  " + $F{Nombre}]]></variableExpression>
 	</variable>
 	<variable name="orden" class="java.lang.Integer"/>
 	<background>
@@ -315,7 +315,9 @@ where Libros.idEmpresa =   $P{empresa}  AND Libros.idSisModulos =   $P{modulo}  
 								<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 							</box>
 							<textField isBlankWhenNull="true">
-								<reportElement x="0" y="0" width="330" height="20" isRemoveLineWhenBlank="true" uuid="8ccb97ed-4898-42ef-b69b-4da033d294b9"/>
+								<reportElement x="0" y="0" width="330" height="20" isRemoveLineWhenBlank="true" uuid="8ccb97ed-4898-42ef-b69b-4da033d294b9">
+									<printWhenExpression><![CDATA[$V{Importe_MEASURE}.compareTo(BigDecimal.ZERO) != 0]]></printWhenExpression>
+								</reportElement>
 								<textElement verticalAlignment="Middle"/>
 								<textFieldExpression><![CDATA[$V{datosPrimarios}]]></textFieldExpression>
 							</textField>
@@ -403,7 +405,9 @@ where Libros.idEmpresa =   $P{empresa}  AND Libros.idSisModulos =   $P{modulo}  
 							<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 						</box>
 						<textField pattern="#,##0.00###">
-							<reportElement x="0" y="0" width="60" height="20" uuid="5e1e0438-fc75-4f0e-a92f-364fc7ae8aa6"/>
+							<reportElement x="0" y="0" width="60" height="20" uuid="5e1e0438-fc75-4f0e-a92f-364fc7ae8aa6">
+								<printWhenExpression><![CDATA[$V{Importe_MEASURE_Columna_ALL}.compareTo(BigDecimal.ZERO) != 0]]></printWhenExpression>
+							</reportElement>
 							<textElement textAlignment="Right" verticalAlignment="Middle"/>
 							<textFieldExpression><![CDATA[$V{Importe_MEASURE}]]></textFieldExpression>
 						</textField>
@@ -418,7 +422,9 @@ where Libros.idEmpresa =   $P{empresa}  AND Libros.idSisModulos =   $P{modulo}  
 							<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 						</box>
 						<textField pattern="#,##0.00###">
-							<reportElement x="0" y="0" width="60" height="20" uuid="7e0d5faa-4d14-4e72-80af-cf39b2617ffe"/>
+							<reportElement x="0" y="0" width="60" height="20" uuid="7e0d5faa-4d14-4e72-80af-cf39b2617ffe">
+								<printWhenExpression><![CDATA[$V{Importe_MEASURE_Columna_ALL}.compareTo(BigDecimal.ZERO) != 0]]></printWhenExpression>
+							</reportElement>
 							<textElement textAlignment="Right" verticalAlignment="Middle"/>
 							<textFieldExpression><![CDATA[$V{Importe_MEASURE}]]></textFieldExpression>
 						</textField>
