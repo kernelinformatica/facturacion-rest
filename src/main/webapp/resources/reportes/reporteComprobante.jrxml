@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.3.0.final using JasperReports Library version 6.3.0  -->
-<!-- 2019-02-28T12:01:33 -->
+<!-- 2019-04-22T11:46:25 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="reporteComprobante" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="5" bottomMargin="20" isFloatColumnFooter="true" whenResourceMissingType="Empty" uuid="4806e2f6-ab00-41d0-b74f-73434a7c5917">
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
 	<property name="net.sf.jasperreports.print.create.bookmarks" value="false"/>
@@ -24,6 +24,7 @@ FactCab.caiVto as caeVto,
 FactCab.codigoAfip as codigoAfip,
 FactCab.cotDolar as cotDolar,
 FactCab.idPadron as ctaCtePadron,
+FactCab.Observaciones as observaciones,
 FactCab.domicilio as domicilioPadron,
 LPAD(SUBSTRING(FactCab.numeroAfip,1,length(FactCab.numeroAfip)-8),4,'0') as prefijoComprobanteAfip,
 SUBSTRING(FactCab.numeroAfip,-8) as numeroComprobanteAfip,
@@ -113,6 +114,7 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 	<field name="numeroComprobanteAfip" class="java.lang.String"/>
 	<field name="ctaCtePadron" class="java.lang.Integer"/>
 	<field name="domicilioPadron" class="java.lang.String"/>
+	<field name="observaciones" class="java.lang.String"/>
 	<variable name="bruto" class="java.math.BigDecimal" calculation="Sum">
 		<variableExpression><![CDATA[$F{importe}]]></variableExpression>
 	</variable>
@@ -583,18 +585,18 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 		</band>
 	</detail>
 	<lastPageFooter>
-		<band height="311" splitType="Prevent">
+		<band height="341" splitType="Prevent">
 			<line>
-				<reportElement x="-1" y="160" width="1" height="103" uuid="3f2ddd50-6022-4aa8-a106-5160af31bf08"/>
+				<reportElement x="-1" y="190" width="1" height="103" uuid="3f2ddd50-6022-4aa8-a106-5160af31bf08"/>
 			</line>
 			<line>
-				<reportElement x="555" y="159" width="1" height="105" uuid="e24f3369-7578-4849-9286-0e12bcb9ef26"/>
+				<reportElement x="555" y="189" width="1" height="105" uuid="e24f3369-7578-4849-9286-0e12bcb9ef26"/>
 			</line>
 			<line>
-				<reportElement x="-1" y="263" width="557" height="1" uuid="ff310959-9f01-42ca-a084-0e0039e4752d"/>
+				<reportElement x="-1" y="293" width="557" height="1" uuid="ff310959-9f01-42ca-a084-0e0039e4752d"/>
 			</line>
 			<subreport>
-				<reportElement x="1" y="160" width="553" height="103" uuid="240ddc4e-4ee6-4cb0-a268-43a15a3dd27d"/>
+				<reportElement x="1" y="190" width="553" height="103" uuid="240ddc4e-4ee6-4cb0-a268-43a15a3dd27d"/>
 				<subreportParameter name="idFactCab">
 					<subreportParameterExpression><![CDATA[$P{idFactCab}]]></subreportParameterExpression>
 				</subreportParameter>
@@ -608,22 +610,22 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 				<subreportExpression><![CDATA[$P{pathImagen} +"/"+"subTotales.jasper"]]></subreportExpression>
 			</subreport>
 			<line>
-				<reportElement x="-1" y="159" width="557" height="1" uuid="a5b7a62b-e2ea-40bb-aba6-702713dde34b"/>
+				<reportElement x="-1" y="189" width="557" height="1" uuid="a5b7a62b-e2ea-40bb-aba6-702713dde34b"/>
 			</line>
 			<line>
-				<reportElement x="-1" y="158" width="557" height="1" uuid="3ce4ea5a-da1f-4075-933e-88d5ef634cea"/>
+				<reportElement x="-1" y="188" width="557" height="1" uuid="3ce4ea5a-da1f-4075-933e-88d5ef634cea"/>
 			</line>
 			<line>
-				<reportElement x="0" y="71" width="555" height="1" uuid="1ee24042-93ec-4e2b-af06-8e1d9594b730"/>
+				<reportElement x="0" y="101" width="555" height="1" uuid="1ee24042-93ec-4e2b-af06-8e1d9594b730"/>
 			</line>
 			<line>
-				<reportElement x="-1" y="71" width="1" height="87" uuid="b90d0b39-a6cd-4ed1-b4b4-d98dfa56b9d9"/>
+				<reportElement x="-1" y="101" width="1" height="87" uuid="b90d0b39-a6cd-4ed1-b4b4-d98dfa56b9d9"/>
 			</line>
 			<line>
-				<reportElement x="555" y="71" width="1" height="87" uuid="d34d6e0f-833e-44bd-9fb3-0b7367580b1b"/>
+				<reportElement x="555" y="101" width="1" height="87" uuid="d34d6e0f-833e-44bd-9fb3-0b7367580b1b"/>
 			</line>
 			<staticText>
-				<reportElement x="0" y="72" width="99" height="14" uuid="6c5abce2-f8e1-453f-a920-64c06b643e74">
+				<reportElement x="0" y="102" width="99" height="14" uuid="6c5abce2-f8e1-453f-a920-64c06b643e74">
 					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 				</reportElement>
 				<textElement>
@@ -632,7 +634,7 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 				<text><![CDATA[Forma de Pago:]]></text>
 			</staticText>
 			<subreport>
-				<reportElement x="0" y="86" width="555" height="71" uuid="8ac3eb89-c9ae-48ca-9113-ce676e1c69ba"/>
+				<reportElement x="0" y="116" width="555" height="71" uuid="8ac3eb89-c9ae-48ca-9113-ce676e1c69ba"/>
 				<subreportParameter name="idFactCab">
 					<subreportParameterExpression><![CDATA[$P{idFactCab}]]></subreportParameterExpression>
 				</subreportParameter>
@@ -646,27 +648,27 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 				<subreportExpression><![CDATA[$P{pathImagen} +"/"+"formaPago.jasper"]]></subreportExpression>
 			</subreport>
 			<staticText>
-				<reportElement x="0" y="285" width="40" height="13" uuid="a186cc1d-9c60-46b9-a182-67a0a833a0d0">
+				<reportElement x="0" y="315" width="40" height="13" uuid="a186cc1d-9c60-46b9-a182-67a0a833a0d0">
 					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 					<printWhenExpression><![CDATA[!$F{cae}.equals(" ")]]></printWhenExpression>
 				</reportElement>
 				<text><![CDATA[C.A.E.:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="0" y="298" width="120" height="13" uuid="7bae7c86-36cb-4072-9f69-9abecdb4a75f">
+				<reportElement x="0" y="328" width="120" height="13" uuid="7bae7c86-36cb-4072-9f69-9abecdb4a75f">
 					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 					<printWhenExpression><![CDATA[!$F{cae}.equals(" ")]]></printWhenExpression>
 				</reportElement>
 				<text><![CDATA[FECHA VENCIMIENTO:]]></text>
 			</staticText>
 			<textField>
-				<reportElement x="40" y="285" width="100" height="13" uuid="a1336501-0677-4f23-85e4-086dc2abf210">
+				<reportElement x="40" y="315" width="100" height="13" uuid="a1336501-0677-4f23-85e4-086dc2abf210">
 					<printWhenExpression><![CDATA[!$F{cae}.equals(" ")]]></printWhenExpression>
 				</reportElement>
 				<textFieldExpression><![CDATA[$F{cae}]]></textFieldExpression>
 			</textField>
 			<textField pattern="dd/MM/yyyy">
-				<reportElement x="120" y="298" width="100" height="13" uuid="3e9fc25f-8ac9-46b5-9d0e-d7377e43dbfc">
+				<reportElement x="120" y="328" width="100" height="13" uuid="3e9fc25f-8ac9-46b5-9d0e-d7377e43dbfc">
 					<printWhenExpression><![CDATA[!$F{cae}.equals(" ")]]></printWhenExpression>
 				</reportElement>
 				<textElement>
@@ -675,14 +677,14 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 				<textFieldExpression><![CDATA[$F{caeVto}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="1" y="5" width="552" height="66" uuid="2672f58f-d0a2-4f64-90c7-2a8edcc6ae43"/>
+				<reportElement x="1" y="34" width="552" height="66" uuid="2672f58f-d0a2-4f64-90c7-2a8edcc6ae43"/>
 				<textElement>
 					<font size="7"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{moneda}.equals("u$s") && $F{leyenda1} != null? $F{leyenda1} + $F{cotDolar}.setScale(3, java.math.RoundingMode.HALF_UP) + $F{leyenda2}+ $F{cotDolar}.multiply($V{bruto}).setScale(2, java.math.RoundingMode.HALF_UP)+ $F{leyenda3} + $F{leyenda4}: " "]]></textFieldExpression>
 			</textField>
 			<componentElement>
-				<reportElement x="300" y="267" width="252" height="41" uuid="f5423023-2c7d-4d24-9e87-4277a74aefa9">
+				<reportElement x="300" y="297" width="252" height="41" uuid="f5423023-2c7d-4d24-9e87-4277a74aefa9">
 					<printWhenExpression><![CDATA[!$F{cae}.equals(" ")]]></printWhenExpression>
 				</reportElement>
 				<jr:Interleaved2Of5 xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
@@ -690,26 +692,35 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 				</jr:Interleaved2Of5>
 			</componentElement>
 			<staticText>
-				<reportElement x="0" y="270" width="40" height="13" uuid="a5f58039-db0e-4992-a195-2f2417339cd8">
+				<reportElement x="0" y="300" width="40" height="13" uuid="a5f58039-db0e-4992-a195-2f2417339cd8">
 					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 					<printWhenExpression><![CDATA[!$F{prefijoComprobanteAfip}.equals(null)]]></printWhenExpression>
 				</reportElement>
 				<text><![CDATA[Interno:]]></text>
 			</staticText>
 			<textField>
-				<reportElement x="40" y="270" width="33" height="13" uuid="13e158b2-bb15-4d83-9ec7-3a902368a4be">
+				<reportElement x="40" y="300" width="33" height="13" uuid="13e158b2-bb15-4d83-9ec7-3a902368a4be">
 					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
 				</reportElement>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{prefijoComprobanteAfip} != null?$F{prefijoComprobante}: " "]]></textFieldExpression>
 			</textField>
 			<line>
-				<reportElement x="73" y="276" width="6" height="1" uuid="7b4a2cc0-c30f-44d8-8eaa-8d4e29e89430"/>
+				<reportElement x="73" y="306" width="6" height="1" uuid="7b4a2cc0-c30f-44d8-8eaa-8d4e29e89430">
+					<printWhenExpression><![CDATA[!$F{prefijoComprobanteAfip}.equals(null)]]></printWhenExpression>
+				</reportElement>
 			</line>
 			<textField>
-				<reportElement x="79" y="270" width="95" height="13" uuid="19f02cca-7eee-4137-9d5b-cdada623280e"/>
+				<reportElement x="79" y="300" width="95" height="13" uuid="19f02cca-7eee-4137-9d5b-cdada623280e"/>
 				<textElement verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{numeroComprobanteAfip} != null?$F{numeroComprobante}:" "]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="1" y="4" width="552" height="30" uuid="41a97c2d-c821-4fde-966a-9d1a0b0c3fdd"/>
+				<textElement>
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{observaciones}]]></textFieldExpression>
 			</textField>
 		</band>
 	</lastPageFooter>

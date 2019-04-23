@@ -150,13 +150,13 @@ public class ProductoRest {
                     //Filtro por aptoCanje
                     if(aptoCanje && d.getIdProductos().getAptoCanje()) {
                         if(!d.getIdProductos().getProdumoCollection().isEmpty()  && idDeposito != null) {
-                            if(produmoFacade.vigenciaEnDeposito(idDeposito,d.getIdProductos())) {
+                            if(produmoFacade.vigenciaEnDeposito(idDeposito,d.getIdProductos()) || !d.getIdProductos().getStock()) {
                                 ProductoResponse sr = new ProductoResponse(d.getIdProductos().getIdProductos(),d.getIdProductos().getDescripcion(),d.getIdProductos().getCodProducto());
                                 productosResponse.add(sr);
                             }
                         }
                     } else if(!aptoCanje) {
-                        if(!d.getIdProductos().getProdumoCollection().isEmpty()) {
+                        if(!d.getIdProductos().getProdumoCollection().isEmpty() || !d.getIdProductos().getStock()) {
                             if(produmoFacade.vigenciaEnDeposito(idDeposito,d.getIdProductos())) {
                                 ProductoResponse sr = new ProductoResponse(d.getIdProductos().getIdProductos(),d.getIdProductos().getDescripcion(),d.getIdProductos().getCodProducto());
                                 productosResponse.add(sr);

@@ -24,6 +24,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -48,7 +49,8 @@ public class DepositoRest {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response getDepositos(  
-        @HeaderParam ("token") String token,  
+        @HeaderParam ("token") String token,
+        @QueryParam ("todos") boolean todos,    
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {
@@ -82,19 +84,33 @@ public class DepositoRest {
                 return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
             }
             
-            //valido que tenga Rubros disponibles
-            if(user.getIdPerfil().getIdSucursal().getIdEmpresa().getDepositoCollection().isEmpty()) {
-                respuesta.setControl(AppCodigo.ERROR, "No hay Depositos disponibles");
-                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            List<Payload> depositos = new ArrayList<>();
+            if(!todos) {
+                //valido que la sucursal tenga Depositos disponibles
+                if(user.getIdPerfil().getIdSucursal().getDepositoCollection().isEmpty()) {
+                    respuesta.setControl(AppCodigo.ERROR, "No hay Depositos disponibles");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+
+                //busco los depositos de la sucursal del usuario
+                for(Deposito p : user.getIdPerfil().getIdSucursal().getDepositoCollection()){
+                    DepositoResponse fp = new DepositoResponse(p);
+                    depositos.add(fp);
+                }
+            } else {
+                //valido que la empresa tenga Depositos disponibles 
+                if(user.getIdPerfil().getIdSucursal().getIdEmpresa().getDepositoCollection().isEmpty()) {
+                    respuesta.setControl(AppCodigo.ERROR, "No hay Depositos disponibles");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+
+                //busco los depositos de la empresa del usuario
+                for(Deposito p : user.getIdPerfil().getIdSucursal().getIdEmpresa().getDepositoCollection()){
+                    DepositoResponse fp = new DepositoResponse(p);
+                    depositos.add(fp);
+                }
             }
-            
-            //busco los SubRubros de la empresa del usuario
-            List<Payload> formaPagos = new ArrayList<>();
-            for(Deposito p : user.getIdPerfil().getIdSucursal().getDepositoCollection()){
-                DepositoResponse fp = new DepositoResponse(p);
-                formaPagos.add(fp);
-            }
-            respuesta.setArraydatos(formaPagos);
+            respuesta.setArraydatos(depositos);
             respuesta.setControl(AppCodigo.OK, "Lista de Depositos");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception e) {
