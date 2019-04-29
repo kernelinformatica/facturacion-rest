@@ -136,6 +136,8 @@ public class NumeradorRest {
             Integer idCteTipoSisLetra = (Integer) Utils.getKeyFromJsonObject("idCteTipoSisLetra", jsonBody, "Integer");
             Integer idPtoVenta = (Integer) Utils.getKeyFromJsonObject("idPtoVenta", jsonBody, "Integer");
             Integer ptoVenta = (Integer) Utils.getKeyFromJsonObject("ptoVenta", jsonBody, "Integer");
+            Date vtoCai = (Date) Utils.getKeyFromJsonObject("vtoCai", jsonBody, "Date");
+            String cai = (String) Utils.getKeyFromJsonObject("cai", jsonBody, "String");
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -205,6 +207,12 @@ public class NumeradorRest {
                 cteNumerador.setIdCteTipoSisLetra(cteTipoSisLetra);
                 cteNumerador.setIdPtoVenta(ptoVta);
                 cteNumerador.setNumerador(numerador);
+                cteNumerador.setCai(cai);
+                if(vtoCai != null) {
+                    cteNumerador.setVtoCai(vtoCai);
+                } else {
+                    cteNumerador.setVtoCai(fechaCierre);
+                }
                 try {
                     transaccion = ptoVentaFacade.setPtoVentaNuevo(ptoVta);
                     transaccion1 = cteNumeradorFacade.setCteNumeradorNuevo(cteNumerador);
@@ -231,6 +239,12 @@ public class NumeradorRest {
                 cteNumerador.setIdCteTipoSisLetra(cteTipoSisLetra);
                 cteNumerador.setIdPtoVenta(ptoVta);
                 cteNumerador.setNumerador(numerador);
+                cteNumerador.setCai(cai);
+                if(vtoCai != null) {
+                    cteNumerador.setVtoCai(vtoCai);
+                } else {
+                    cteNumerador.setVtoCai(fechaCierre);
+                }
                 transaccion1 = cteNumeradorFacade.setCteNumeradorNuevo(cteNumerador);
                 if(!transaccion1) {
                     respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Numerador");
@@ -268,6 +282,8 @@ public class NumeradorRest {
             Integer idCteTipoSisLetra = (Integer) Utils.getKeyFromJsonObject("idCteTipoSisLetra", jsonBody, "Integer");
             Integer idPtoVenta = (Integer) Utils.getKeyFromJsonObject("idPtoVenta", jsonBody, "Integer");
             Integer ptoVenta = (Integer) Utils.getKeyFromJsonObject("ptoVenta", jsonBody, "Integer");
+            Date vtoCai = (Date) Utils.getKeyFromJsonObject("vtoCai", jsonBody, "Date");
+            String cai = (String) Utils.getKeyFromJsonObject("cai", jsonBody, "String");
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -342,6 +358,12 @@ public class NumeradorRest {
                 cteNumerador.setIdCteTipoSisLetra(cteTipoSisLetra);
                 cteNumerador.setIdPtoVenta(ptoVta);
                 cteNumerador.setNumerador(numerador);
+                cteNumerador.setCai(cai);
+                if(vtoCai != null) {
+                    cteNumerador.setVtoCai(vtoCai);
+                } else {
+                    cteNumerador.setVtoCai(fechaCierre);
+                }
                 try {
                     transaccion = ptoVentaFacade.setPtoVentaNuevo(ptoVta);
                     transaccion1 = cteNumeradorFacade.editCteNumerador(cteNumerador);
@@ -367,6 +389,12 @@ public class NumeradorRest {
                 cteNumerador.setIdCteTipoSisLetra(cteTipoSisLetra);
                 cteNumerador.setIdPtoVenta(ptoVta);
                 cteNumerador.setNumerador(numerador);
+                cteNumerador.setCai(cai);
+                if(vtoCai != null) {
+                    cteNumerador.setVtoCai(vtoCai);
+                } else {
+                    cteNumerador.setVtoCai(fechaCierre);
+                }
                 transaccion1 = cteNumeradorFacade.editCteNumerador(cteNumerador);
                 if(!transaccion1) {
                     respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Numerador");

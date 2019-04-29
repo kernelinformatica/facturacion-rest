@@ -170,6 +170,8 @@ public class ContratoRest {
         @FormDataParam("file") InputStream file,
         @FormDataParam("contratoNro") String contratoNro,
         @FormDataParam("idPadron") Integer idPadron,
+        @FormDataParam("padronNombre") String padronNombre,
+        @FormDataParam("padronApelli") String padronApelli,
         @FormDataParam("fechaNacimiento") String fechaNacimiento,
         @FormDataParam("nacionalidad") String nacionalidad,
         @FormDataParam("profesion") String profesion,
@@ -259,6 +261,8 @@ public class ContratoRest {
             contrato.setProfesion(profesion);
             contrato.setFechaVto(dateVencimiento);
             contrato.setDirectorio(fileLocation);
+            contrato.setApellidoCliente(padronApelli);
+            contrato.setNombreCliente(padronNombre);
             boolean transaccion;
             transaccion = contratoFacade.setContratoNuevo(contrato);
             
@@ -294,6 +298,8 @@ public class ContratoRest {
         @FormDataParam("file") InputStream file,
         @FormDataParam("contratoNro") String contratoNro,
         @FormDataParam("idPadron") Integer idPadron,
+        @FormDataParam("padronNombre") String padronNombre,
+        @FormDataParam("padronApelli") String padronApelli,
         @FormDataParam("fechaNacimiento") String fechaNacimiento,
         @FormDataParam("nacionalidad") String nacionalidad,
         @FormDataParam("profesion") String profesion,
@@ -386,6 +392,8 @@ public class ContratoRest {
             contrato.setPadre(padre);
             contrato.setProfesion(profesion);
             contrato.setFechaVto(dateVencimiento);
+            contrato.setApellidoCliente(padronApelli);
+            contrato.setNombreCliente(padronNombre);
             boolean transaccion;
             transaccion = contratoFacade.editContrato(contrato);
             

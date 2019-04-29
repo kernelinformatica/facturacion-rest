@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.3.0.final using JasperReports Library version 6.3.0  -->
-<!-- 2019-04-22T11:46:25 -->
+<!-- 2019-04-23T13:43:45 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="reporteComprobante" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="5" bottomMargin="20" isFloatColumnFooter="true" whenResourceMissingType="Empty" uuid="4806e2f6-ab00-41d0-b74f-73434a7c5917">
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
 	<property name="net.sf.jasperreports.print.create.bookmarks" value="false"/>
@@ -26,6 +26,7 @@ FactCab.cotDolar as cotDolar,
 FactCab.idPadron as ctaCtePadron,
 FactCab.Observaciones as observaciones,
 FactCab.domicilio as domicilioPadron,
+FactCab.codigoPostal as codigoPostal,
 LPAD(SUBSTRING(FactCab.numeroAfip,1,length(FactCab.numeroAfip)-8),4,'0') as prefijoComprobanteAfip,
 SUBSTRING(FactCab.numeroAfip,-8) as numeroComprobanteAfip,
 FactDetalle.detalle as detalleProducto,
@@ -46,7 +47,7 @@ Empresas.domicilio as domicilioEmpresa,
 Empresas.cuit as cuitEmpresa,
 Empresas.iibb as ingBrutosEmpresa,
 Empresas.telefono as telefono,
-Empresas.codigoPostal as codigoPostal,
+Empresas.codigoPostal as codigoPostalEmpresa,
 Empresas.situacionIva as situacionIvaEmpresa,
 SisOperacionComprobantes.leyenda1 as leyenda1,
 SisOperacionComprobantes.leyenda2 as leyenda2,
@@ -115,6 +116,7 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 	<field name="ctaCtePadron" class="java.lang.Integer"/>
 	<field name="domicilioPadron" class="java.lang.String"/>
 	<field name="observaciones" class="java.lang.String"/>
+	<field name="codigoPostalEmpresa" class="java.lang.String"/>
 	<variable name="bruto" class="java.math.BigDecimal" calculation="Sum">
 		<variableExpression><![CDATA[$F{importe}]]></variableExpression>
 	</variable>
@@ -252,7 +254,7 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 				<textElement verticalAlignment="Middle">
 					<font size="7"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{codigoPostal}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{codigoPostalEmpresa}]]></textFieldExpression>
 			</textField>
 			<staticText>
 				<reportElement x="104" y="70" width="36" height="10" uuid="c62d6820-23f5-4ce4-88de-0dc0d42b028d"/>

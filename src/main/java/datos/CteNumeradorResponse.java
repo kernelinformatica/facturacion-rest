@@ -13,6 +13,8 @@ public class CteNumeradorResponse implements Payload {
     private String descripcion;
     private Date fechaApertura;
     private Date fechaCierre;
+    private String cai;
+    private Date vtoCai;
     private PtoVentaResponse ptoVenta;
     private SisLetraSisCodAfipResponse letrasCodigos;
 
@@ -22,6 +24,8 @@ public class CteNumeradorResponse implements Payload {
         this.descripcion = c.getDescripcion();
         this.fechaApertura = c.getFechaApertura();
         this.fechaCierre = c.getFechaCierre();
+        this.cai = c.getCai();
+        this.vtoCai = c.getVtoCai();
         this.ptoVenta = new PtoVentaResponse(c.getIdPtoVenta());
         this.letrasCodigos = new SisLetraSisCodAfipResponse(c.getIdCteTipoSisLetra());
     }
@@ -81,6 +85,24 @@ public class CteNumeradorResponse implements Payload {
     public void setLetrasCodigos(SisLetraSisCodAfipResponse letrasCodigos) {
         this.letrasCodigos = letrasCodigos;
     }
+
+    public String getCai() {
+        return cai;
+    }
+
+    public void setCai(String cai) {
+        this.cai = cai;
+    }
+
+    public Date getVtoCai() {
+        return vtoCai;
+    }
+
+    public void setVtoCai(Date vtoCai) {
+        this.vtoCai = vtoCai;
+    }
+    
+    
            
     @Override
     public String getClassName() {

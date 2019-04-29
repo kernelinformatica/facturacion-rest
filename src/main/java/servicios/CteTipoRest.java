@@ -323,6 +323,7 @@ public class CteTipoRest {
                             if(soc.getIdSisComprobantes().getIdSisComprobantes().equals(c.getIdSisComprobante().getIdSisComprobantes()) && 
                                soc.getIdSisTipoOperacion().equals(tipoOperacion) &&
                                soc.getIdSisOperacionComprobantes().equals(c.getIdSisOperacionComprobante())) {                              
+                                    //seteo todos los parametros de acuerdo a la tabla SisOperacionesComprobantes
                                     ctr.getComprobante().setIncluyeIva(soc.getIncluyeIva());
                                     ctr.getComprobante().setIncluyeNeto(soc.getIncluyeNeto());
                                     ctr.getComprobante().setOrden(soc.getOrden());
@@ -333,6 +334,9 @@ public class CteTipoRest {
                                     ctr.getComprobante().setAdmiteRelacionMultiple(soc.getAdmiteRelacionMultiple());
                                     ctr.getComprobante().setUsaContrato(soc.getUsaContrato());
                                     ctr.getComprobante().setPermiteImporteCero(soc.getPermiteImporteCero());
+                                    ctr.getComprobante().setUsaRelacion(soc.getUsaRelacion());
+                                    ctr.getComprobante().setObservaciones(soc.getObservaciones());
+                                //Si la moneda en la tabla SisOperacionesComprobantes es nula agrego todas sino, la que esta dada de alta
                                 if(soc.getIdSisMoneda() == null) {
                                     List<SisMonedas> todas = sisMonedasFacade.findAll();
                                     ctr.getComprobante().agregarMonedas(todas);

@@ -15,6 +15,8 @@ public class ContratoResponse implements Payload {
     private Integer idContratos;   
     private String contratoNro;
     private Integer idPadron;
+    private String padronApelli;
+    private String padronNombre;
     private Date fechaNacimiento;
     private String nacionalidad;
     private String profesion;
@@ -22,6 +24,7 @@ public class ContratoResponse implements Payload {
     private String padre;
     private String madre;
     private Integer kilos;
+    private Integer kilosCumplidos;
     private Integer cosecha;
     private String observaciones;
     private SisCanjeResponse sisCanje;
@@ -32,6 +35,8 @@ public class ContratoResponse implements Payload {
         this.idContratos = c.getIdContratos();
         this.contratoNro = c.getContratoNro();
         this.idPadron = c.getIdPadron();
+        this.padronApelli = c.getApellidoCliente();
+        this.padronNombre = c.getNombreCliente();
         this.fechaNacimiento = c.getFechaNacimiento();
         this.nacionalidad = c.getNacionalidad();
         this.profesion = c.getProfesion();
@@ -44,6 +49,7 @@ public class ContratoResponse implements Payload {
         this.sisCanje = new SisCanjeResponse(c.getIdSisCanje());
         this.contratoDet = new ArrayList<>();
         this.fechaVto = c.getFechaVto();
+        this.kilosCumplidos = 0;
     }    
 
     public Integer getIdContratos() {
@@ -165,12 +171,36 @@ public class ContratoResponse implements Payload {
     public void setFechaVto(Date fechaVto) {
         this.fechaVto = fechaVto;
     }
-    
-    
 
+    public String getPadronApelli() {
+        return padronApelli;
+    }
+
+    public void setPadronApelli(String padronApelli) {
+        this.padronApelli = padronApelli;
+    }
+
+    public String getPadronNombre() {
+        return padronNombre;
+    }
+
+    public void setPadronNombre(String padronNombre) {
+        this.padronNombre = padronNombre;
+    }
+
+    public Integer getKilosCumplidos() {
+        return kilosCumplidos;
+    }
+
+    public void setKilosCumplidos(Integer kilosCumplidos) {
+        this.kilosCumplidos = kilosCumplidos;
+    }
+    
+   
     public void agregarDetalles(Collection<ContratoDet> det) {
         for(ContratoDet d : det) {
             ContratoDetResponse dr = new ContratoDetResponse(d);
+            this.kilosCumplidos = this.kilosCumplidos + d.getKilos();
             this.contratoDet.add(dr);
         }
     }

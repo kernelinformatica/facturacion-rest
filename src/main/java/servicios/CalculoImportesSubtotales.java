@@ -55,7 +55,7 @@ public class CalculoImportesSubtotales {
                        
             // Obtengo los atributos del body
             BigDecimal precio = (BigDecimal) Utils.getKeyFromJsonObject("precio", jsonBody.getAsJsonObject(), "BigDecimal");
-            Integer cantidad = (Integer) Utils.getKeyFromJsonObject("cantidad", jsonBody.getAsJsonObject(), "Integer");
+            BigDecimal cantidad = (BigDecimal) Utils.getKeyFromJsonObject("cantidad", jsonBody.getAsJsonObject(), "BigDecimal");
             BigDecimal iva = (BigDecimal) Utils.getKeyFromJsonObject("iva", jsonBody.getAsJsonObject(), "BigDecimal");
             String descuento = (String) Utils.getKeyFromJsonObject("descuento", jsonBody.getAsJsonObject(), "String");
             String tipoDescuento = (String) Utils.getKeyFromJsonObject("tipoDescuento", jsonBody.getAsJsonObject(), "String");
@@ -131,7 +131,7 @@ public class CalculoImportesSubtotales {
                     porcentaje = porcentaje.divide(new BigDecimal(100));
                     unitario = unitario.add(unitario.multiply(porcentaje));
                     unitario = unitario.setScale(3, BigDecimal.ROUND_HALF_EVEN);
-                    total = unitario.multiply(new BigDecimal(cantidad));
+                    total = unitario.multiply(cantidad);
                 }
                 
                 BigDecimal porcentajeIva = new BigDecimal(0);
@@ -149,7 +149,7 @@ public class CalculoImportesSubtotales {
                     BigDecimal desc = new BigDecimal(entry.getValue().toString());
                     unitario = unitario.add(desc);
                     unitario = unitario.setScale(3, BigDecimal.ROUND_HALF_EVEN);
-                    total = unitario.multiply(new BigDecimal(cantidad));                   
+                    total = unitario.multiply(cantidad);                   
                 }
                 BigDecimal porcentajeIva = new BigDecimal(0);
                 porcentajeIva = porcentajeIva.add(iva.divide(new BigDecimal(100)));

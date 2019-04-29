@@ -23,6 +23,7 @@ import entidades.Master;
 import entidades.Padron;
 import entidades.Producto;
 import entidades.Produmo;
+import entidades.RelacionesCanje;
 import entidades.SisCotDolar;
 import entidades.SisMonedas;
 import entidades.SisOperacionComprobante;
@@ -70,6 +71,7 @@ import persistencia.MasterFacade;
 import persistencia.PadronFacade;
 import persistencia.ProductoFacade;
 import persistencia.ProdumoFacade;
+import persistencia.RelacionesCanjeFacade;
 import persistencia.SisCotDolarFacade;
 import persistencia.SisMonedasFacade;
 import persistencia.SisOperacionComprobanteFacade;
@@ -110,6 +112,7 @@ public class GrabaComprobanteRest {
     @Inject PadronFacade padronFacade;
     @Inject ContratoFacade contratoFacade;
     @Inject ContratoDetFacade contratoDetFacade;
+    @Inject RelacionesCanjeFacade relacionesCanjeFacade;
           
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -150,6 +153,7 @@ public class GrabaComprobanteRest {
             Integer codigoAfip = (Integer) Utils.getKeyFromJsonObject("codigoAfip", jsonBody, "Integer");
             Integer idSisOperacionComprobante = (Integer) Utils.getKeyFromJsonObject("idSisOperacionComprobante", jsonBody, "Integer");
             Integer idContrato = (Integer) Utils.getKeyFromJsonObject("idContrato", jsonBody, "Integer");
+            String direccion =(String) Utils.getKeyFromJsonObject("direccion", jsonBody, "String");
             
             //Para canje
             String productoCanje = (String) Utils.getKeyFromJsonObject("productoCanje", jsonBody, "String");
@@ -157,6 +161,7 @@ public class GrabaComprobanteRest {
             BigDecimal interesCanje = (BigDecimal) Utils.getKeyFromJsonObject("interesCanje", jsonBody, "BigDecimal");
             Integer kilosCanje = (Integer) Utils.getKeyFromJsonObject("kilosCanje", jsonBody, "Integer");
             String observacionesCanje = (String) Utils.getKeyFromJsonObject("observacionesCanje", jsonBody, "String");
+            Integer idRelacionSisCanje = (Integer) Utils.getKeyFromJsonObject("idRelacionSisCanje", jsonBody, "Integer");
             
             //Deposito de destino para el movimiento de remitos internos
             Integer idDepositoDestino = (Integer) Utils.getKeyFromJsonObject("idDepositoDestino", jsonBody, "Integer");
@@ -365,9 +370,9 @@ public class GrabaComprobanteRest {
                 }
             }
             
-            String direccion = "";
-            String codPostal = "";
-            if(idPadron != null) {
+//            String dir = "";
+            String codPostal = codigoPostal;
+            if(idPadron != null && idPadron != 0) {
                 Padron padron = padronFacade.find(idPadron);
                 if(padron != null) {
                     if(padron.getPadronDomici() !=  null) {
@@ -471,6 +476,15 @@ public class GrabaComprobanteRest {
                 contratoDet.setImporte(precioReferenciaCanje);
                 contratoDet.setKilos(kilosCanje);
                 contratoDet.setObservaciones(observacionesCanje);
+            }
+            
+            if(idRelacionSisCanje != null) {
+                RelacionesCanje relacion = relacionesCanjeFacade.find(idRelacionSisCanje);
+                if(relacion == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, la relacion seleccionada no existe");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                factCab.setIdRelacionCanje(relacion);
             }
             
             //Le agrego el numero a numero afip si es compra
@@ -695,8 +709,9 @@ public class GrabaComprobanteRest {
                                 SisCotDolar sisCotDolar = sisCotDolarFacade.getLastCotizacion();
                                 precio = precio.divide(sisCotDolar.getCotizacion(),2, RoundingMode.HALF_UP);
                             }                          
-                            if(precio.compareTo(det.getAuxListaPrecioDet().getCotaInf()) < 0 ||
-                               precio.compareTo(det.getAuxListaPrecioDet().getCotaSup()) > 0) {
+                            if((precio.compareTo(det.getAuxListaPrecioDet().getCotaInf()) < 0 ||
+                               precio.compareTo(det.getAuxListaPrecioDet().getCotaSup()) > 0) &&
+                               precio.compareTo(BigDecimal.ZERO) != 0) {
                                 detallesCotas.add(det);
                             } 
                         }
@@ -930,6 +945,14 @@ public class GrabaComprobanteRest {
                             String numeroVentaFormat = String.format("%08d",cteNumerador.getNumerador());
                             String concatenado = ptoVenta.concat(numeroVentaFormat);
                             factCab.setNumero(Long.parseLong(concatenado,10));
+                            //Guardo cai en factCab si tiene el numerador
+                            if(cteNumerador.getCai() != null) {
+                                factCab.setCai(cteNumerador.getCai());
+                            }
+                            //Guardo vtoCai en factCab si tiene el numerador
+                            if(cteNumerador.getVtoCai() != null) {
+                                factCab.setCaiVto(cteNumerador.getVtoCai());
+                            }
                         }
                         return this.persistirObjetos(factCab, contratoDet,listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumerador);
                     } else if(tipoFact != null || letraFact != null || numeroFact != null || fechaVencimientoFact != null || fechaContaFact != null){                                              
@@ -944,6 +967,14 @@ public class GrabaComprobanteRest {
                             String numeroVentaFormat = String.format("%08d",cteNumerador.getNumerador());
                             String concatenado = ptoVenta.concat(numeroVentaFormat);
                             factCab.setNumero(Long.parseLong(concatenado,10));
+                            //Guardo cai en factCab si tiene el numerador
+                            if(cteNumerador.getCai() != null) {
+                                factCab.setCai(cteNumerador.getCai());
+                            }
+                            //Guardo vtoCai en factCab si tiene el numerador
+                            if(cteNumerador.getVtoCai() != null) {
+                                factCab.setCaiVto(cteNumerador.getVtoCai());
+                            }
                         }
                         
                        //Persisto Primero los objetos del remito
@@ -970,6 +1001,14 @@ public class GrabaComprobanteRest {
                             String numeroVentaFormat = String.format("%08d",cteNumeradorRel.getNumerador());
                             String concatenado = ptoVenta.concat(numeroVentaFormat);
                             fc.setNumero(Long.parseLong(concatenado,10));
+                            //Guardo cai en factCab si tiene el numerador
+                            if(cteNumerador.getCai() != null) {
+                                fc.setCai(cteNumerador.getCai());
+                            }
+                            //Guardo vtoCai en factCab si tiene el numerador
+                            if(cteNumerador.getVtoCai() != null) {
+                                fc.setCaiVto(cteNumerador.getVtoCai());
+                            }
                         } else {
                             fc.setNumero(numeroFact.longValue());
                         }
