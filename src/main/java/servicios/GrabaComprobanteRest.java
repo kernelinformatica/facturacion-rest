@@ -485,6 +485,7 @@ public class GrabaComprobanteRest {
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
                 factCab.setIdRelacionCanje(relacion);
+                factCab.setKilosCanje(kilosCanje);
             }
             
             //Le agrego el numero a numero afip si es compra
