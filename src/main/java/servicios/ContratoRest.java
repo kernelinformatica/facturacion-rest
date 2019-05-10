@@ -402,7 +402,7 @@ public class ContratoRest {
                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build(); 
             }
             
-            respuesta.setControl(AppCodigo.CREADO, "Contrato creado con exito");
+            respuesta.setControl(AppCodigo.GUARDADO, "Contrato editado con exito");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();        
         } catch (IOException | ParseException ex) { 
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());

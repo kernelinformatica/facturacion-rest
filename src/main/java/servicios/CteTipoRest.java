@@ -348,6 +348,7 @@ public class CteTipoRest {
                             }                     
                         }
                     }
+                    
                     //Agrego las letras y codigo afip
                     for(CteTipoSisLetra cl : c.getCteTipoSisLetraCollection()) {
                         for(SisSitIVALetras si : sitIva.getSisSitIVALetrasCollection()) {

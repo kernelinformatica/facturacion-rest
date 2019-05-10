@@ -138,6 +138,7 @@ public class NumeradorRest {
             Integer ptoVenta = (Integer) Utils.getKeyFromJsonObject("ptoVenta", jsonBody, "Integer");
             Date vtoCai = (Date) Utils.getKeyFromJsonObject("vtoCai", jsonBody, "Date");
             String cai = (String) Utils.getKeyFromJsonObject("cai", jsonBody, "String");
+            boolean electronico = (Boolean) Utils.getKeyFromJsonObject("electronico", jsonBody, "boolean");
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -208,6 +209,7 @@ public class NumeradorRest {
                 cteNumerador.setIdPtoVenta(ptoVta);
                 cteNumerador.setNumerador(numerador);
                 cteNumerador.setCai(cai);
+                cteNumerador.setElectronico(electronico);
                 if(vtoCai != null) {
                     cteNumerador.setVtoCai(vtoCai);
                 } else {
@@ -240,6 +242,7 @@ public class NumeradorRest {
                 cteNumerador.setIdPtoVenta(ptoVta);
                 cteNumerador.setNumerador(numerador);
                 cteNumerador.setCai(cai);
+                cteNumerador.setElectronico(electronico);
                 if(vtoCai != null) {
                     cteNumerador.setVtoCai(vtoCai);
                 } else {
@@ -284,6 +287,7 @@ public class NumeradorRest {
             Integer ptoVenta = (Integer) Utils.getKeyFromJsonObject("ptoVenta", jsonBody, "Integer");
             Date vtoCai = (Date) Utils.getKeyFromJsonObject("vtoCai", jsonBody, "Date");
             String cai = (String) Utils.getKeyFromJsonObject("cai", jsonBody, "String");
+            boolean electronico = (Boolean) Utils.getKeyFromJsonObject("electronico", jsonBody, "boolean");
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -359,6 +363,7 @@ public class NumeradorRest {
                 cteNumerador.setIdPtoVenta(ptoVta);
                 cteNumerador.setNumerador(numerador);
                 cteNumerador.setCai(cai);
+                cteNumerador.setElectronico(electronico);
                 if(vtoCai != null) {
                     cteNumerador.setVtoCai(vtoCai);
                 } else {
@@ -390,6 +395,7 @@ public class NumeradorRest {
                 cteNumerador.setIdPtoVenta(ptoVta);
                 cteNumerador.setNumerador(numerador);
                 cteNumerador.setCai(cai);
+                cteNumerador.setElectronico(electronico);
                 if(vtoCai != null) {
                     cteNumerador.setVtoCai(vtoCai);
                 } else {

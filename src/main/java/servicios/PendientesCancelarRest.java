@@ -180,7 +180,7 @@ public class PendientesCancelarRest {
             callableStatement.setInt(6, idProducto);
             callableStatement.setInt(7,idDeposito);
             callableStatement.setString(8,despacho);
-            callableStatement.setInt(9,0);
+            callableStatement.setInt(9,idMoneda);
             callableStatement.setInt(10,idSisTipoOperacion);
             callableStatement.setInt(11,idListaPrecio);
             

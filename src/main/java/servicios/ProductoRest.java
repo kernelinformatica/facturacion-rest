@@ -127,12 +127,14 @@ public class ProductoRest {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             List<Payload> productosResponse = new ArrayList<>();
-            if(tipo != null && tipo.equals("reducida") && idListaPrecio == null ) {
+            //Devuelvo productos para compra
+            if(tipo != null && tipo.equals("reducida") && idListaPrecio == null && idDeposito == null) {
                 for(Producto s : productos) {
                     ProductoResponse sr = new ProductoResponse(s.getIdProductos(),s.getDescripcion(),s.getCodProducto());
                     productosResponse.add(sr);                       
                 }
-            } else if(tipo != null && tipo.equals("reducida") && idListaPrecio != null) {
+            //devuelvo productos para venta
+            } else if(tipo != null && tipo.equals("reducida") && idListaPrecio != null && idDeposito != null) {
                 //Busco la lista de precio
                 ListaPrecio lista = listaPrecioFacade.find(idListaPrecio);
                 //Pregunto si existe
@@ -161,6 +163,17 @@ public class ProductoRest {
                                 ProductoResponse sr = new ProductoResponse(d.getIdProductos().getIdProductos(),d.getIdProductos().getDescripcion(),d.getIdProductos().getCodProducto());
                                 productosResponse.add(sr);
                             }
+                        }
+                    }
+                }               
+            } else if(tipo != null && tipo.equals("reducida") && idListaPrecio == null && idDeposito != null) {
+                //Armo la respuesta
+                for(Producto s : productos) {
+                    //Filtro por existencia en deposito
+                    if((!s.getProdumoCollection().isEmpty()) || !s.getStock()) {
+                        if(produmoFacade.vigenciaEnDeposito(idDeposito,s) || !s.getStock()) {
+                            ProductoResponse sr = new ProductoResponse(s.getIdProductos(),s.getDescripcion(),s.getCodProducto());
+                            productosResponse.add(sr);
                         }
                     }
                 }               

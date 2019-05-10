@@ -78,6 +78,7 @@ public class FormaPagoRest {
     public Response getFormaPago(  
         @HeaderParam ("token") String token,
         @QueryParam("codPadron") Integer codPadron,
+        @QueryParam("idSisModulo") Integer idSisModulo,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {
@@ -116,25 +117,140 @@ public class FormaPagoRest {
                 respuesta.setControl(AppCodigo.ERROR, "No hay Formas de Pago disponibles");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            
-            //busco las formas de pago de acuerdo a las listas de precios dadas de alta para el usuario
             List<Payload> formaPagos = new ArrayList<>();
-            List<FormaPagoResponse> formaPagosEncontradas = new ArrayList<>();
-            for(UsuarioListaPrecio lu : user.getUsuarioListaPrecioCollection()){ 
-                for(ListaPrecioFormaPago lp : lu.getIdListaPrecios().getListaPrecioFormaPagoCollection()) {                                              
-                    FormaPagoResponse fp = new FormaPagoResponse(lp.getIdFormaPago());
-                    for(ListaPrecioFormaPago lpfp : lp.getIdFormaPago().getListaPrecioFormaPagoCollection()) {
-                        ListaPreciosResponse lr = new ListaPreciosResponse(lpfp.getIdListaPrecio());                   
-                        fp.getListaPrecios().add(lr);
+            //devuelvo para el ABM
+            if(idSisModulo == null){
+                if(user.getIdPerfil().getIdSucursal().getIdEmpresa().getFormaPagoCollection().isEmpty()) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no hay formas de pagos disponibles");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                for(FormaPago p :user.getIdPerfil().getIdSucursal().getIdEmpresa().getFormaPagoCollection()) {
+                    FormaPagoResponse fp = new FormaPagoResponse(p);
+                    for(FormaPagoDet d : p.getFormaPagoDetCollection()) {
+                        FormaPagoDetResponse fpd = new FormaPagoDetResponse(d);
+                        //si es nula continuo en el for
+                        if(d.getCtaContable() == null) {
+                            continue;
+                        }
+
+                        ContPlanCuenta cont = new ContPlanCuenta();
+                        if(!d.getCtaContable().equals("0")) {
+                            cont = contPlanCuentaFacade.getCuentaContable(Integer.parseInt(d.getCtaContable()));
+                        } else if(codPadron != null){
+                            Padron padron = padronFacade.getPadronByCodigo(codPadron);
+                            if(padron != null && padron.getPadronCatego() != null) {
+                                CtacteCategoria categoria = ctacteCategoriaFacade.getCategoriaByCodigo(padron.getPadronCatego());
+                                if(categoria != null && categoria.getPlanCuentas() != null) {
+                                    cont = contPlanCuentaFacade.getCuentaContable(categoria.getPlanCuentas());
+                                //categoria no encontrada o categoria con plan cuentas nula en sybase
+                                } else {
+                                    cont = null;
+                                }
+                            //Padron no encontrado o no tiene categoria cargada en base sybase
+                            } else {
+                                cont = null;
+                            } 
+                        //Padron no ingresado desde compra o venta
+                        } else {
+                            cont = null;
+                        }
+                        //Me fijo si la cuenta es nula, de ser asi armo una como este en forma de pago
+                        if(cont != null){
+                            fpd.setPlanCuenta(new ContPlanCuentaResponse(cont));
+                        } else {
+                            ContPlanCuentaResponse conta = new ContPlanCuentaResponse(Integer.parseInt(d.getCtaContable()),d.getDetalle());
+                            fpd.setPlanCuenta(conta);
+                        }
+                        fp.getFormaPagoDet().add(fpd);
                     }
-                    if(!lp.getIdFormaPago().getFormaPagoDetCollection().isEmpty()) {
-                        for(FormaPagoDet d : lp.getIdFormaPago().getFormaPagoDetCollection()) {
+                    formaPagos.add(fp);
+                }
+            //Aca devuelvo para compra y venta    
+            } else {
+                if(idSisModulo == 2) {
+                List<FormaPagoResponse> formaPagosEncontradas = new ArrayList<>();
+                //busco las formas de pago de acuerdo a las listas de precios dadas de alta para el usuario
+                    for(UsuarioListaPrecio lu : user.getUsuarioListaPrecioCollection()){ 
+                        for(ListaPrecioFormaPago lp : lu.getIdListaPrecios().getListaPrecioFormaPagoCollection()) {                                              
+                            //Si no pertenece al modulo seleccionado continuo
+                            if(!lp.getIdFormaPago().getTipo().getIdSIsModulo().getIdSisModulos().equals(idSisModulo)){
+                                continue;
+                            }
+                            FormaPagoResponse fp = new FormaPagoResponse(lp.getIdFormaPago());
+                            for(ListaPrecioFormaPago lpfp : lp.getIdFormaPago().getListaPrecioFormaPagoCollection()) {
+                                ListaPreciosResponse lr = new ListaPreciosResponse(lpfp.getIdListaPrecio());                   
+                                fp.getListaPrecios().add(lr);
+                            }
+                            if(!lp.getIdFormaPago().getFormaPagoDetCollection().isEmpty()) {
+                                for(FormaPagoDet d : lp.getIdFormaPago().getFormaPagoDetCollection()) {
+                                    FormaPagoDetResponse fpd = new FormaPagoDetResponse(d);
+                                    //si es nula continuo en el for
+                                    if(d.getCtaContable() == null) {
+                                        continue;
+                                    }
+
+                                    ContPlanCuenta cont = new ContPlanCuenta();
+                                    if(!d.getCtaContable().equals("0")) {
+                                        cont = contPlanCuentaFacade.getCuentaContable(Integer.parseInt(d.getCtaContable()));
+                                    } else if(codPadron != null){
+                                        Padron padron = padronFacade.getPadronByCodigo(codPadron);
+                                        if(padron != null && padron.getPadronCatego() != null) {
+                                            CtacteCategoria categoria = ctacteCategoriaFacade.getCategoriaByCodigo(padron.getPadronCatego());
+                                            if(categoria != null && categoria.getPlanCuentas() != null) {
+                                                cont = contPlanCuentaFacade.getCuentaContable(categoria.getPlanCuentas());
+                                            //categoria no encontrada o categoria con plan cuentas nula en sybase
+                                            } else {
+                                                cont = null;
+                                            }
+                                        //Padron no encontrado o no tiene categoria cargada en base sybase
+                                        } else {
+                                            cont = null;
+                                        } 
+                                    //Padron no ingresado desde compra o venta
+                                    } else {
+                                        cont = null;
+                                    }
+                                    //Me fijo si la cuenta es nula, de ser asi armo una como este en forma de pago
+                                    if(cont != null){
+                                        fpd.setPlanCuenta(new ContPlanCuentaResponse(cont));
+                                    } else {
+                                        ContPlanCuentaResponse conta = new ContPlanCuentaResponse(Integer.parseInt(d.getCtaContable()),d.getDetalle());
+                                        fpd.setPlanCuenta(conta);
+                                    }
+                                    fp.getFormaPagoDet().add(fpd);
+                                }
+                            }
+                            // Aca busca si ya exsite
+                            FormaPagoResponse yaExiste = formaPagosEncontradas.stream()
+                                .filter(
+                                    a -> a.getIdFormaPago() == fp.getIdFormaPago()
+                                )
+                                .findFirst()
+                                .orElse(null);
+                            if (yaExiste == null) {
+                                formaPagosEncontradas.add(fp);
+                                formaPagos.add(fp);
+                            }                    
+                        }
+                    }//termina el for
+                    if(formaPagosEncontradas.isEmpty()) {
+                        respuesta.setControl(AppCodigo.ERROR, "No hay Formas de Pago disponibles");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                //devuelvo para compras sin las listas de precios
+                } else if(idSisModulo == 1) {
+                    for(FormaPago p :user.getIdPerfil().getIdSucursal().getIdEmpresa().getFormaPagoCollection()) {
+                        if(p.getTipo().getIdSIsModulo().getIdSisModulos() != idSisModulo) {
+                            continue;
+                        }
+                        FormaPagoResponse fp = new FormaPagoResponse(p);
+                        for(FormaPagoDet d : p.getFormaPagoDetCollection()) {
                             FormaPagoDetResponse fpd = new FormaPagoDetResponse(d);
                             //si es nula continuo en el for
                             if(d.getCtaContable() == null) {
                                 continue;
                             }
-                            
+
                             ContPlanCuenta cont = new ContPlanCuenta();
                             if(!d.getCtaContable().equals("0")) {
                                 cont = contPlanCuentaFacade.getCuentaContable(Integer.parseInt(d.getCtaContable()));
@@ -165,26 +281,10 @@ public class FormaPagoRest {
                             }
                             fp.getFormaPagoDet().add(fpd);
                         }
-                    }
-                    // Aca busca si ya exsite
-                    FormaPagoResponse yaExiste = formaPagosEncontradas.stream()
-                        .filter(
-                            a -> a.getIdFormaPago() == fp.getIdFormaPago()
-                        )
-                        .findFirst()
-                        .orElse(null);
-                    if (yaExiste == null) {
-                        formaPagosEncontradas.add(fp);
                         formaPagos.add(fp);
-                    }                    
-                }
+                    }
+                }               
             }
-                       
-            if(formaPagosEncontradas.isEmpty()) {
-                respuesta.setControl(AppCodigo.ERROR, "No hay Formas de Pago disponibles");
-                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-            }
-            
             respuesta.setArraydatos(formaPagos);
             respuesta.setControl(AppCodigo.OK, "Lista de Formas de Pago");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
@@ -256,7 +356,7 @@ public class FormaPagoRest {
             }
                        
             FormaPago formaPago = new FormaPago();
-            formaPago.setIdEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
+            formaPago.setIdEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa());
             formaPago.setTipo(sisFormaPago);
             formaPago.setDescripcion(descripcion);
             boolean transaccion;

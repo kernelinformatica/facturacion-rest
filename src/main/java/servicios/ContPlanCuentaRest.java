@@ -85,6 +85,9 @@ public class ContPlanCuentaRest {
             }
             
             List<Payload> cuentas = new ArrayList<>();
+            ContPlanCuentaResponse sp = new ContPlanCuentaResponse(0,"SIN CUENTA");
+            cuentas.add(sp);
+            
             for(ContPlanCuenta p : listaContPlanCuenta){
                 ContPlanCuentaResponse fp = new ContPlanCuentaResponse(p);
                 cuentas.add(fp);

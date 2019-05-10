@@ -946,6 +946,7 @@ public class GrabaComprobanteRest {
                             String numeroVentaFormat = String.format("%08d",cteNumerador.getNumerador());
                             String concatenado = ptoVenta.concat(numeroVentaFormat);
                             factCab.setNumero(Long.parseLong(concatenado,10));
+                            factCab.setIdCteNumerador(cteNumerador);
                             //Guardo cai en factCab si tiene el numerador
                             if(cteNumerador.getCai() != null) {
                                 factCab.setCai(cteNumerador.getCai());
@@ -968,6 +969,7 @@ public class GrabaComprobanteRest {
                             String numeroVentaFormat = String.format("%08d",cteNumerador.getNumerador());
                             String concatenado = ptoVenta.concat(numeroVentaFormat);
                             factCab.setNumero(Long.parseLong(concatenado,10));
+                            factCab.setIdCteNumerador(cteNumerador);
                             //Guardo cai en factCab si tiene el numerador
                             if(cteNumerador.getCai() != null) {
                                 factCab.setCai(cteNumerador.getCai());
@@ -1002,6 +1004,7 @@ public class GrabaComprobanteRest {
                             String numeroVentaFormat = String.format("%08d",cteNumeradorRel.getNumerador());
                             String concatenado = ptoVenta.concat(numeroVentaFormat);
                             fc.setNumero(Long.parseLong(concatenado,10));
+                            fc.setIdCteNumerador(cteNumerador);
                             //Guardo cai en factCab si tiene el numerador
                             if(cteNumerador.getCai() != null) {
                                 fc.setCai(cteNumerador.getCai());
