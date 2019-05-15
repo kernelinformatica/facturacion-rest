@@ -70,6 +70,7 @@ public class BuscaComprobanteRest {
             Integer idVendedor = (Integer) Utils.getKeyFromJsonObject("idVendedor", jsonBody, "Integer");
             Integer idSisTipoOperacion = (Integer) Utils.getKeyFromJsonObject("idSisTipoOperacion", jsonBody, "Integer");
             String autorizada = (String) Utils.getKeyFromJsonObject("autorizada", jsonBody, "String");
+            Integer contratoRelacionado = (Integer) Utils.getKeyFromJsonObject("contratoRelacionado", jsonBody, "Integer");
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -108,7 +109,7 @@ public class BuscaComprobanteRest {
             }
                   
             //seteo el nombre del store cabecera
-            String nombreSP = "call s_buscaComprobantesCabecera(?,?,?,?,?,?,?,?,?,?,?,?,?)";
+            String nombreSP = "call s_buscaComprobantesCabecera(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
             
             //seteo el nombre del store detalle
             String nombreSPDetalle = "call s_buscaComprobantesDetalles(?,?,?,?,?,?,?,?,?,?,?,?)";
@@ -121,6 +122,10 @@ public class BuscaComprobanteRest {
             if(callableStatement == null || callableStatementDetalle == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, no existe el procedimiento");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            
+            if(contratoRelacionado == null) {
+                contratoRelacionado = 0;
             }
             
             //Seteo los parametros para la cabecera 
@@ -142,6 +147,7 @@ public class BuscaComprobanteRest {
             callableStatement.setInt(11, idVendedor);
             callableStatement.setInt(12, idSisTipoOperacion);
             callableStatement.setString(13, autorizada);
+            callableStatement.setInt(14, contratoRelacionado);
            
             //Seteo los parametros para los detalle
             callableStatementDetalle.setInt(1,user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
@@ -186,7 +192,8 @@ public class BuscaComprobanteRest {
                         rs.getBigDecimal("importeTotal"),
                         rs.getString("tipoOperacion"),
                         rs.getString("autorizada"),
-                        rs.getString("permiteBorrado"));
+                        rs.getString("permiteBorrado"),
+                        rs.getInt("kilosCanje"));
                 factCabResponses.add(factCab);
             }
             

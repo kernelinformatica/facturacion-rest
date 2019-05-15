@@ -8,6 +8,7 @@ import datos.ModeloDetalleResponse;
 import datos.Payload;
 import datos.ServicioResponse;
 import entidades.Acceso;
+import entidades.CerealSisa;
 import entidades.ModeloDetalle;
 import entidades.PadronGral;
 import entidades.PadronProveedor;
@@ -15,6 +16,7 @@ import entidades.Producto;
 import entidades.SisCotDolar;
 import entidades.SisModulo;
 import entidades.SisMonedas;
+import entidades.SisaPorcentaje;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
@@ -22,7 +24,7 @@ import java.math.RoundingMode;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.HashMap; 
 import java.util.List;
 import java.util.Map;
 import javax.ejb.Stateless;
@@ -37,6 +39,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
+import persistencia.CerealSisaFacade;
 import persistencia.ModeloDetalleFacade;
 import persistencia.PadronGralFacade;
 import persistencia.ProductoFacade;
@@ -44,6 +47,7 @@ import persistencia.SisCotDolarFacade;
 import persistencia.SisModuloFacade;
 import persistencia.SisMonedasFacade;
 import persistencia.SisTipoModeloFacade;
+import persistencia.SisaPorcentajeFacade;
 import persistencia.UsuarioFacade;
 import utils.Utils;
 
@@ -64,6 +68,8 @@ public class BuscaModeloRest {
     @Inject SisMonedasFacade sisMonedasFacade;
     @Inject SisCotDolarFacade sisCotDolarFacade;
     @Inject PadronGralFacade padronGralFacade;
+    @Inject CerealSisaFacade cerealSisaFacade;
+    @Inject SisaPorcentajeFacade sisaPorcentajeFacade;
     
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -81,6 +87,8 @@ public class BuscaModeloRest {
             Integer modulo = (Integer) Utils.getKeyFromJsonObject("modulo", jsonBody, "Integer");
             Integer idMoneda = (Integer) Utils.getKeyFromJsonObject("idMoneda", jsonBody, "Integer");
             Integer idProveedor = (Integer) Utils.getKeyFromJsonObject("idProveedor", jsonBody, "Integer");
+            Integer idCliente = (Integer) Utils.getKeyFromJsonObject("idCliente", jsonBody, "Integer");
+            Integer idSisTipoOperacion = (Integer) Utils.getKeyFromJsonObject("idSisTipoOperacion", jsonBody, "Integer");
             List<JsonElement> productos = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("productos", jsonBody, "ArrayList");
             
             //valido que token no sea null
@@ -170,7 +178,7 @@ public class BuscaModeloRest {
                 }
                 
                 //Me fijo si el subTotal es cero o nulo 
-                if(subTotal != null && subTotal.compareTo(BigDecimal.ZERO) != 0) {
+                if(subTotal != null ) {
                     precio = subTotal;
                     cantidad = BigDecimal.ONE;
                 }
@@ -223,7 +231,8 @@ public class BuscaModeloRest {
                         } else if(!p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(3).getTipo()) 
                                 && !p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(1).getTipo())
                                 && !p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(6).getTipo())
-                                && !p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(7).getTipo())) {                            
+                                && !p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(7).getTipo())
+                                && !p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(8).getTipo())) {                            
                             total = total.add(precio.multiply(cantidad));
                             if(p.getValor().compareTo(BigDecimal.ZERO) == 0) {
                                 porcentaje = porcentaje.add(producto.getIdIVA().getPorcIVA());
@@ -316,6 +325,30 @@ public class BuscaModeloRest {
                                 porcentaje = p.getValor();
                                 total = total.multiply(porcentaje.divide(cien));
                             } 
+                        //Busco percepciones de iva para el cliente de acuerdo a la tabla del sisa en venas solamente si es canje
+                        } else if(p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(8).getTipo()) && idCliente != null && idSisTipoOperacion == 5) {
+                            //Busco en la base Sybasse el CerealSisa
+                            CerealSisa cerealSisa = cerealSisaFacade.getByCodPadron(idCliente);
+                            if(cerealSisa == null) {
+                                continue;
+                            }
+                            
+                            //Busco en la base Mysql el porcentaje de acuerdo al estado
+                            SisaPorcentaje sisaPorcentaje = sisaPorcentajeFacade.getByEstadoEmpresa(Integer.parseInt(cerealSisa.getEstado().toString()), user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
+                            if(sisaPorcentaje == null) {
+                                continue;
+                            }
+                            
+                            //si el valor de modelodetalle es igual a 0 busco el valor del sisaPorcentaje
+                            total = total.add(precio.multiply(cantidad));
+                            if(p.getValor().compareTo(BigDecimal.ZERO) == 0) {
+                                porcentaje = sisaPorcentaje.getPercepIva();
+                                total = total.multiply(porcentaje.divide(new BigDecimal(100)));
+                            } else {
+                                porcentaje = p.getValor();
+                                total = total.multiply(porcentaje.divide(cien));
+                            } 
+                        
                         }
                         ModeloDetalleResponse modeloResponse = new ModeloDetalleResponse(p, total, porcentaje, baseImponible);
                         modelos.add(modeloResponse);

@@ -45,6 +45,7 @@ public class FactCabResponse implements Payload{
     private String tipoOperacion;
     private String autorizada;
     private String permiteBorrado;
+    private Integer kilosCanje;    
     private List<FactDetalleResponse> detalle;
     private List<FactImputaResponse> imputa;
     
@@ -69,7 +70,7 @@ public class FactCabResponse implements Payload{
         this.imputa = new ArrayList<>();
     }
 
-    public FactCabResponse(Integer idFactCab, String comprobante,long numero, Date fechaEmision, Integer idPadron, String nombre, String cuit, BigDecimal cotDolar, String moneda, String imputada, String modulo, String vendedor, Integer idCteTipo, BigDecimal importeNeto, BigDecimal importeTotal, String tipoOperacion, String autorizada, String permiteBorrado) {
+    public FactCabResponse(Integer idFactCab, String comprobante,long numero, Date fechaEmision, Integer idPadron, String nombre, String cuit, BigDecimal cotDolar, String moneda, String imputada, String modulo, String vendedor, Integer idCteTipo, BigDecimal importeNeto, BigDecimal importeTotal, String tipoOperacion, String autorizada, String permiteBorrado, Integer kilosCanje) {
         this.idFactCab = idFactCab;
         this.comprobante = comprobante;
         this.numero = numero;
@@ -90,6 +91,7 @@ public class FactCabResponse implements Payload{
         this.tipoOperacion = tipoOperacion;
         this.autorizada = autorizada;
         this.permiteBorrado = permiteBorrado;
+        this.kilosCanje = kilosCanje;
     }
 
     public FactCabResponse(Integer idFactCab) {

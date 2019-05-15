@@ -11,6 +11,7 @@ import datos.SisMonedasResponse;
 import entidades.Acceso;
 import entidades.CteTipo;
 import entidades.CteTipoSisLetra;
+import entidades.Reporte;
 import entidades.SisCodigoAfip;
 import entidades.SisComprobante;
 import entidades.SisLetra;
@@ -45,6 +46,7 @@ import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
 import persistencia.CteTipoFacade;
 import persistencia.CteTipoSisLetraFacade;
+import persistencia.ReporteFacade;
 import persistencia.SisCodigoAfipFacade;
 import persistencia.SisComprobanteFacade;
 import persistencia.SisLetraFacade;
@@ -75,6 +77,7 @@ public class CteTipoRest {
     @Inject SisModuloFacade sisModuloFacade;
     @Inject SisSitIVAFacade sisSitIvaFacade;
     @Inject SisMonedasFacade sisMonedasFacade;
+    @Inject ReporteFacade reporteFacade;
     
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
@@ -450,6 +453,19 @@ public class CteTipoRest {
                 respuesta.setControl(AppCodigo.ERROR, "Error, no existe el Comprobante");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
+            String  nombreReporte = "reporteComprobante";
+            Reporte reporte = reporteFacade.findBynombreEmpresa(nombreReporte,user.getIdPerfil().getIdSucursal().getIdEmpresa());
+             
+            if(reporte == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, dar de alta un registro en la tabla reporte con nombre : reporteComprobante");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+            String detalleReporte = "";
+            if(cursoLegal) {
+                detalleReporte = " ";
+            } else {
+                detalleReporte = "DOCUMENTO NO VALIDO COMO FACTURA";
+            }
            
             boolean transaccion;
             CteTipo newCte = new CteTipo();
@@ -462,6 +478,8 @@ public class CteTipoRest {
             newCte.setSurenu(surenu);
             newCte.setIdSisComprobante(sisComprobante);
             newCte.setRequiereFormaPago(requiereFormaPago);
+            newCte.setIdReportes(reporte);
+            newCte.setDetalleReporte(detalleReporte);
             transaccion = cteTipoFacade.setCteTipoNuevo(newCte, user);
             if(!transaccion) {
                 respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Tipo de Comprobante, Codigo de Comprobante existente");
