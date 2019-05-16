@@ -2,6 +2,7 @@ package datos;
 
 import entidades.CteNumerador;
 import entidades.CteTipoSisLetra;
+import entidades.Sucursal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -69,10 +70,12 @@ private CteTipoResponse cteTipo;
  
    
     
-    public void agregarNumeradores(Collection<CteNumerador> numeradores) {
+    public void agregarNumeradores(Collection<CteNumerador> numeradores, Sucursal sucursal) {
         for(CteNumerador p : numeradores) {
-            CteNumeradorResponse cnr = new CteNumeradorResponse(p);
-            this.numeradores.add(cnr);
+            if(p.getIdPtoVenta().getIdSucursal().equals(sucursal)) {
+                CteNumeradorResponse cnr = new CteNumeradorResponse(p);
+                this.numeradores.add(cnr);
+            }
         }
     }
 

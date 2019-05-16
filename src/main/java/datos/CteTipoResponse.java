@@ -2,6 +2,7 @@ package datos;
 
 import entidades.CteTipo;
 import entidades.CteTipoSisLetra;
+import entidades.Sucursal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -101,11 +102,11 @@ public class CteTipoResponse implements Payload {
         this.comprobante = comprobante;
     }
     
-    public void agregarLetrasCodigos(Collection<CteTipoSisLetra> letras) {
+    public void agregarLetrasCodigos(Collection<CteTipoSisLetra> letras, Sucursal sucursal) {
         for(CteTipoSisLetra l : letras) {
             SisLetraSisCodAfipResponse slr = new SisLetraSisCodAfipResponse(l);
             if(!l.getCteNumeradorCollection().isEmpty()) {
-                slr.agregarNumeradores(l.getCteNumeradorCollection());
+                slr.agregarNumeradores(l.getCteNumeradorCollection(), sucursal);
             }
             this.letrasCodigos.add(slr);
         }

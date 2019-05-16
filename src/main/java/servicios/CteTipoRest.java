@@ -129,7 +129,7 @@ public class CteTipoRest {
                 for(CteTipo p : user.getIdPerfil().getIdSucursal().getIdEmpresa().getCteTipoCollection()){
                     CteTipoResponse pr = new CteTipoResponse(p);
                     if(!p.getCteTipoSisLetraCollection().isEmpty() && p.getCteTipoSisLetraCollection() != null) {
-                        pr.agregarLetrasCodigos(p.getCteTipoSisLetraCollection());
+                        pr.agregarLetrasCodigos(p.getCteTipoSisLetraCollection(), user.getIdPerfil().getIdSucursal());
                     }
                     cteTipos.add(pr);
                 }
@@ -139,7 +139,7 @@ public class CteTipoRest {
                     if(p.getIdSisComprobante().getPropio().equals(1)) {
                         CteTipoResponse pr = new CteTipoResponse(p);
                         if(!p.getCteTipoSisLetraCollection().isEmpty() && p.getCteTipoSisLetraCollection() != null) {
-                            pr.agregarLetrasCodigos(p.getCteTipoSisLetraCollection());
+                            pr.agregarLetrasCodigos(p.getCteTipoSisLetraCollection(), user.getIdPerfil().getIdSucursal());
                         }
                         cteTipos.add(pr);
                     }
@@ -164,7 +164,7 @@ public class CteTipoRest {
                 for(CteTipo p : cteTipoList){
                     CteTipoResponse pr = new CteTipoResponse(p);
                     if(!p.getCteTipoSisLetraCollection().isEmpty() && p.getCteTipoSisLetraCollection() != null) {
-                        pr.agregarLetrasCodigos(p.getCteTipoSisLetraCollection());
+                        pr.agregarLetrasCodigos(p.getCteTipoSisLetraCollection(), user.getIdPerfil().getIdSucursal());
                     }
                     cteTipos.add(pr);
                 }                
@@ -187,7 +187,7 @@ public class CteTipoRest {
                 for(CteTipo c : cteTipo) {
                     CteTipoResponse cteTipoResponse = new CteTipoResponse(c);
                     if(!c.getCteTipoSisLetraCollection().isEmpty() && c.getCteTipoSisLetraCollection() != null) {
-                        cteTipoResponse.agregarLetrasCodigos(c.getCteTipoSisLetraCollection());
+                        cteTipoResponse.agregarLetrasCodigos(c.getCteTipoSisLetraCollection(), user.getIdPerfil().getIdSucursal());
                     }
                     cteTipos.add(cteTipoResponse);
                 }
@@ -207,7 +207,7 @@ public class CteTipoRest {
                 //Armo la respuesta  
                 CteTipoResponse cteTipoResponse = new CteTipoResponse(cteTipo);
                 if(!cteTipo.getCteTipoSisLetraCollection().isEmpty() && cteTipo.getCteTipoSisLetraCollection() != null) {
-                    cteTipoResponse.agregarLetrasCodigos(cteTipo.getCteTipoSisLetraCollection());
+                    cteTipoResponse.agregarLetrasCodigos(cteTipo.getCteTipoSisLetraCollection(), user.getIdPerfil().getIdSucursal());
                 }
                 cteTipos.add(cteTipoResponse); 
             //Devuelvo el comprobante anterior para los relacionados
@@ -237,7 +237,7 @@ public class CteTipoRest {
                 for(CteTipo c : cteTipoAnteriores) {
                     CteTipoResponse cteTip = new CteTipoResponse(c);
                     if(!c.getCteTipoSisLetraCollection().isEmpty() && c.getCteTipoSisLetraCollection() != null) {
-                        cteTip.agregarLetrasCodigos(c.getCteTipoSisLetraCollection());
+                        cteTip.agregarLetrasCodigos(c.getCteTipoSisLetraCollection(), user.getIdPerfil().getIdSucursal());
                     }
                     cteTipos.add(cteTip);
                 }                
@@ -260,24 +260,57 @@ public class CteTipoRest {
                         continue;
                     } else {
                         for(CteTipo c : p.getIdSisComprobantes().getCteTipoCollection()) {
-                            if(!listaTipos.isEmpty() && listaTipos.contains(c)) {
-                                continue;
-                            } else if(c.getIdEmpresa().equals(user.getIdPerfil().getIdSucursal().getIdEmpresa())){
-                                listaTipos.add(c);
+                            //filtro por empresa
+                            if(c.getIdEmpresa().equals(user.getIdPerfil().getIdSucursal().getIdEmpresa()) && c.getIdEmpresa().getIdEmpresa().equals(p.getIdEmpresa()) ){
+                                //Agrego todos los comprobantes de acuerdo a la coleccion de sisOperacionComprobante para asignarles un id y luego filtrarlas
+                                if(listaTipos.contains(c)) {
+                                    CteTipo cteTipoNuevo = new CteTipo(c);
+                                    cteTipoNuevo.setIdSisOperacionComprobante(p.getIdSisOperacionComprobantes());
+                                    listaTipos.add(cteTipoNuevo);
+                                } else {
+                                    c.setIdSisOperacionComprobante(p.getIdSisOperacionComprobantes());                               
+                                    listaTipos.add(c);
+                                }
                             }
                         }                        
                     }                   
                 }
-                //Ordeno la lista
-                //Collections.sort(listaTipos, (o1, o2) -> o1.getIdSisComprobante().getOrden().compareTo(o2.getIdSisComprobante().getOrden()));               
-                
                 //Armo la respuesta
                 for(CteTipo c : listaTipos) {
                     CteTipoResponse ctr = new CteTipoResponse(c);
                     if(!c.getCteTipoSisLetraCollection().isEmpty() && c.getCteTipoSisLetraCollection() != null) {
-                        ctr.agregarLetrasCodigos(c.getCteTipoSisLetraCollection());
+                        ctr.agregarLetrasCodigos(c.getCteTipoSisLetraCollection(), user.getIdPerfil().getIdSucursal());
                     }
-                    
+                    //Agrego los parametros de la tabla SisOperacionComprobante
+                    for(SisOperacionComprobante soc : c.getIdSisComprobante().getSisOperacionComprobanteCollection()) {
+                        //Aca filtro las que realmente quiero, de acuerdo al SisComprobante, tipo de operacion y idSiscomprobante seteado anteriormente
+                        if(soc.getIdSisComprobantes().getIdSisComprobantes().equals(c.getIdSisComprobante().getIdSisComprobantes()) && 
+                           soc.getIdSisTipoOperacion().equals(tipoOperacion) &&
+                           soc.getIdSisOperacionComprobantes().equals(c.getIdSisOperacionComprobante())) {                              
+                                //seteo todos los parametros de acuerdo a la tabla SisOperacionesComprobantes
+                                ctr.getComprobante().setIncluyeIva(soc.getIncluyeIva());
+                                ctr.getComprobante().setIncluyeNeto(soc.getIncluyeNeto());
+                                ctr.getComprobante().setOrden(soc.getOrden());
+                                ctr.getComprobante().setDifCotizacion(soc.getDifCotizacion());
+                                ctr.getComprobante().setReferencia(soc.getDescripcion());
+                                ctr.getComprobante().setIdSisOperacionComprobante(soc.getIdSisOperacionComprobantes());
+                                ctr.getComprobante().setRelacionadosMultiples(soc.getRelacionadosMultiples());
+                                ctr.getComprobante().setAdmiteRelacionMultiple(soc.getAdmiteRelacionMultiple());
+                                ctr.getComprobante().setUsaContrato(soc.getUsaContrato());
+                                ctr.getComprobante().setPermiteImporteCero(soc.getPermiteImporteCero());
+                                ctr.getComprobante().setUsaRelacion(soc.getUsaRelacion());
+                                ctr.getComprobante().setObservaciones(soc.getObservaciones());
+                            //Si la moneda en la tabla SisOperacionesComprobantes es nula agrego todas sino, la que esta dada de alta
+                            if(soc.getIdSisMoneda() == null) {
+                                List<SisMonedas> todas = sisMonedasFacade.findAll();
+                                ctr.getComprobante().agregarMonedas(todas);
+                            } else {
+                                SisMonedas unica = sisMonedasFacade.find(soc.getIdSisMoneda());
+                                SisMonedasResponse u = new SisMonedasResponse(unica);
+                                ctr.getComprobante().getMonedas().add(u);
+                            }
+                        }                     
+                    }
                     cteTipos.add(ctr);
                 }
                 //Devuelvo los comprobantes para compra y para venta
@@ -359,7 +392,7 @@ public class CteTipoRest {
                                 SisLetraSisCodAfipResponse sisLetCod = new SisLetraSisCodAfipResponse(cl);
                                 if(!cl.getCteNumeradorCollection().isEmpty()) {
                                     if(user.getIdPtoVenta() == null) {
-                                        sisLetCod.agregarNumeradores(cl.getCteNumeradorCollection());
+                                        sisLetCod.agregarNumeradores(cl.getCteNumeradorCollection(), user.getIdPerfil().getIdSucursal());
                                     } else {
                                         sisLetCod.agregarNumeradores(cl.getCteNumeradorCollection(), user.getIdPtoVenta());
                                     }
