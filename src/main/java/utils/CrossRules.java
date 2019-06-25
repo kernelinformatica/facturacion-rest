@@ -8,7 +8,7 @@ import javax.ws.rs.ext.Provider;
 
 @Provider
 public class CrossRules implements ContainerResponseFilter {
-
+// EDIT
     @Override
     public void filter(final ContainerRequestContext requestContext,
                        final ContainerResponseContext cres) throws IOException {
