@@ -99,14 +99,16 @@ public class PadronRest {
                     .filter(
                        a -> 
                        a.getPadronApelli().contains(elementos) || 
-                       a.getPadronCodigo().toString().contains(elementos))    
-                      .collect(Collectors.toList());                 
+                       a.getPadronCodigo().toString().contains(elementos)
+                    )
+                    .collect(Collectors.toList());
                 for(Padron p: padornes) {
                     PadronResponse fp = new PadronResponse(p);
                     clientes.add(fp);
                 }
             } else if(grupo != null && elementos != null){
-                List<Parametro> listaParametros = parametroFacade.getByGrupoEmpresa(grupo, user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
+                List<Parametro> listaParametros = parametroFacade
+                    .getByGrupoEmpresa(grupo, user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
                 
                 if(listaParametros.isEmpty() || listaParametros == null) {
                     respuesta.setControl(AppCodigo.ERROR, "No existe el grupo");
