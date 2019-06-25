@@ -1,5 +1,6 @@
 package servicios;
 
+import com.google.gson.JsonObject;
 import datos.AppCodigo;
 import datos.ContratoResponse;
 import datos.Payload;
@@ -43,6 +44,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import javax.ws.rs.PathParam;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import utils.Utils;
 
 /**
  *
@@ -56,6 +58,8 @@ public class ContratoRest {
     @Inject AccesoFacade accesoFacade;
     @Inject SisCanjeFacade sisCanjeFacade;
     @Inject ContratoFacade contratoFacade;
+    
+    @Inject Utils utils;
     
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
@@ -71,7 +75,7 @@ public class ContratoRest {
                 respuesta.setControl(AppCodigo.ERROR, "Error, token vacio");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-
+            
             //Busco el token
             Acceso userToken = accesoFacade.findByToken(token);
 
@@ -153,6 +157,7 @@ public class ContratoRest {
                     contratos.add(cr);
                 }
             }
+            
             respuesta.setArraydatos(contratos);
             respuesta.setControl(AppCodigo.OK, "Contratos");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
@@ -470,5 +475,141 @@ public class ContratoRest {
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
         }
-    }  
+    }
+    
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("/generar")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response generarContratoByComprobanteNuevo (  
+        @HeaderParam ("token") String token,
+        @Context HttpServletRequest request
+    ) throws Exception {
+
+        ServicioResponse respuesta = new ServicioResponse();
+        try { 
+
+            // Obtengo el body de la request
+            JsonObject jsonBody = Utils.getJsonObjectFromRequest(request);
+
+            Integer idPadron = (Integer) Utils.getKeyFromJsonObject("idPadron", jsonBody, "Integer");
+            Integer kilos = (Integer) Utils.getKeyFromJsonObject("kilos", jsonBody, "Integer");
+            String documento = (String) Utils.getKeyFromJsonObject("documento", jsonBody, "String");
+            Integer idSisCanje = (Integer) Utils.getKeyFromJsonObject("idSisCanje", jsonBody, "Integer");
+            Date fechaVto = (Date) Utils.getKeyFromJsonObject("fechaVto", jsonBody, "Date");
+            String padronNombre = (String) Utils.getKeyFromJsonObject("padronNombre", jsonBody, "String");
+            String padronApelli = (String) Utils.getKeyFromJsonObject("padronApelli", jsonBody, "String");
+
+            //valido que token no sea null
+            if(token == null || token.trim().isEmpty()) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, token vacio");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+
+            //Busco el token
+            Acceso userToken = accesoFacade.findByToken(token);
+
+            //valido que Acceso no sea null
+            if(userToken == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, Acceso nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+
+            //Busco el usuario
+            Usuario user = usuarioFacade.getByToken(userToken);
+
+            //valido que el Usuario no sea null
+            if(user == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, Usuario nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+
+            //valido vencimiento token
+            if(!accesoFacade.validarToken(userToken, user)) {
+                respuesta.setControl(AppCodigo.ERROR, "Credenciales incorrectas");
+                return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
+            }
+
+            //Me fijo que idSisCanje no sea nulo
+            if(idSisCanje == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, algun campo esta vacio");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+
+            SisCanje sisCanje = sisCanjeFacade.find(idSisCanje);
+
+            if(sisCanje == null){
+                respuesta.setControl(AppCodigo.ERROR, "Error, no existe el Canje seleccionado");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }          
+            
+            boolean transaccion;
+            
+            // Genero el contrato .doc a partir del template de la empresa
+            try {
+                //String dirTemplate = "/opt/payara5/glassfish/domains/domain1/config/template/modelo-"+user.getIdPerfil().getIdSucursal().getIdEmpresa()+".docx";
+                String dirTemplate = "/home/administrador/test-doc/modelo-"+user.getIdPerfil().getIdSucursal().getIdEmpresa()+".docx";
+                String dirOutput = "/home/administrador/test-doc/";
+
+                utils.replaceTextDocFile(
+                    dirTemplate, 
+                    dirOutput,
+                    "{{nombreCliente}}", 
+                    padronNombre + " " + padronApelli
+                );
+                
+                transaccion = true;
+            }
+            catch(Exception ex) {
+                System.out.println(ex);
+                transaccion = false;
+            }
+            
+            // Si se creó bien el doc sin errores, continuo
+            if (transaccion == true) {
+                // Se crean sin nro los contratos acá
+                String contratoNro = "0";
+                Contrato contrato = new Contrato();
+                contrato.setContratoNro(contratoNro);
+                contrato.setDocumento(documento);
+                contrato.setIdEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa());
+                contrato.setIdPadron(idPadron);
+                contrato.setIdSisCanje(sisCanje);
+                contrato.setKilos(kilos);
+                contrato.setFechaVto(fechaVto);
+                contrato.setApellidoCliente(padronApelli);
+                contrato.setNombreCliente(padronNombre);
+                // Le seteo la fecha nacimiento a hoy porque sino tira Nullpointerexception
+                contrato.setFechaNacimiento(new Date());
+
+                transaccion = contratoFacade.setContratoNuevo(contrato);
+            }
+
+
+            if(!transaccion) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, no se pudo dar de alta el Contrato");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build(); 
+            }
+
+            respuesta.setControl(AppCodigo.CREADO, "Contrato creado con exito");
+            return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();        
+        } catch (IOException | ParseException ex) { 
+            respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
+            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+        }
+    
+    }
+    
+        
+    public boolean generateDocFile (Integer idEmpresa) throws Exception {
+        
+        utils.replaceTextDocFile(
+            "/home/administrador/test-doc/test.docx", 
+            "/home/administrador/test-doc/resultado.docx", 
+            "{{testVariable}}", 
+            "german"
+        );
+        
+        return true;
+    }
 }
