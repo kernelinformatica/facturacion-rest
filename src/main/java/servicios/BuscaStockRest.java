@@ -59,6 +59,7 @@ public class BuscaStockRest {
             JsonObject jsonBody = Utils.getJsonObjectFromRequest(request);
             
             // Obtengo los atributos del body
+            Date fechaDesde = (Date)Utils.getKeyFromJsonObject("fechaDesde", jsonBody, "Date");
             Date fechaHasta = (Date)Utils.getKeyFromJsonObject("fechaHasta", jsonBody, "Date");
             Integer idProductoDesde = (Integer) Utils.getKeyFromJsonObject("idProductoDesde", jsonBody, "Integer");
             Integer idProductoHasta = (Integer) Utils.getKeyFromJsonObject("idProductoHasta", jsonBody, "Integer");
@@ -103,7 +104,7 @@ public class BuscaStockRest {
             List<Payload> stock = new ArrayList<>();
             if(tipo != null && tipo.equals("producto")) {
             //seteo el nombre del store
-            String noombreSP = "call s_buscaStock(?,?,?,?,?,?)";
+            String noombreSP = "call s_buscaStock(?,?,?,?,?,?,?)";
 
             //invoco al store
             CallableStatement callableStatement = this.utils.procedimientoAlmacenado(user, noombreSP);
@@ -116,13 +117,16 @@ public class BuscaStockRest {
                        
             //Parseo las fechas a sql.date
             java.sql.Date sqlFechaHasta = new java.sql.Date(fechaHasta.getTime());
+            java.sql.Date sqlFechaDesde = new java.sql.Date(fechaDesde.getTime());
+            
             //Seteo los parametros del SP
             callableStatement.setInt(1,user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
-            callableStatement.setDate(2, sqlFechaHasta);
-            callableStatement.setInt(3,idProducto);
-            callableStatement.setInt(4, idDeposito);
-            callableStatement.setInt(5, tipoEstado);                        
-            callableStatement.setInt(6, idCteTipo);
+            callableStatement.setDate(2, sqlFechaDesde);
+            callableStatement.setDate(3, sqlFechaHasta);
+            callableStatement.setInt(4,idProducto);
+            callableStatement.setInt(5, idDeposito);
+            callableStatement.setInt(6, tipoEstado);                        
+            callableStatement.setInt(7, idCteTipo);
             ResultSet rs = callableStatement.executeQuery();
             List<StockResponse> sr = new ArrayList<>();
                 while (rs.next()) {
@@ -160,7 +164,7 @@ public class BuscaStockRest {
                 }
             } else if(tipo != null && tipo.equals("general")){
                //seteo el nombre del store
-               String noombreSP = "call s_buscaStockGral(?,?,?,?,?,?,?,?)";
+               String noombreSP = "call s_buscaStockGral(?,?,?,?,?,?,?,?,?)";
 
                //invoco al store
                CallableStatement callableStatement = this.utils.procedimientoAlmacenado(user, noombreSP);
@@ -173,15 +177,17 @@ public class BuscaStockRest {
 
                //Parseo las fechas a sql.date
                java.sql.Date sqlFechaHasta = new java.sql.Date(fechaHasta.getTime());
+               java.sql.Date sqlFechaDesde = new java.sql.Date(fechaDesde.getTime());
                //Seteo los parametros del SP
                callableStatement.setInt(1,user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
-               callableStatement.setDate(2, sqlFechaHasta);
-               callableStatement.setInt(3,idProductoDesde);
-               callableStatement.setInt(4,idProductoHasta);
-               callableStatement.setInt(5, idRubro);
-               callableStatement.setInt(6, idSubRubro);
-               callableStatement.setInt(7, idDeposito);
-               callableStatement.setInt(8, tipoEstado);
+               callableStatement.setDate(2, sqlFechaDesde);
+               callableStatement.setDate(3, sqlFechaHasta);
+               callableStatement.setInt(4,idProductoDesde);
+               callableStatement.setInt(5,idProductoHasta);
+               callableStatement.setInt(6, idRubro);
+               callableStatement.setInt(7, idSubRubro);
+               callableStatement.setInt(8, idDeposito);
+               callableStatement.setInt(9, tipoEstado);
                ResultSet rs = callableStatement.executeQuery();
                    while (rs.next()) {
                        StockGeneralResponse st = new StockGeneralResponse(

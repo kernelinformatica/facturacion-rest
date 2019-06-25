@@ -35,8 +35,7 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>FacturacionLib</artifactId>
-            <version>0.1alpha</version>
-            <type>jar</type>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>javax</groupId>
