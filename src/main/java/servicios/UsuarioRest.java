@@ -13,6 +13,7 @@ import entidades.Acceso;
 import entidades.ListaPrecio;
 import entidades.MenuSucursal;
 import entidades.Perfil;
+import entidades.Sucursal;
 import entidades.Permiso;
 import entidades.PtoVenta;
 import entidades.Sucursal;
@@ -50,7 +51,7 @@ import utils.Utils;
 
 /**
  *
- * @author Franco Sili
+ * @author Kernel Informática
  */
 @Stateless
 @Path("usuarios")
@@ -90,10 +91,11 @@ public class UsuarioRest {
             respuesta.setControl(AppCodigo.ERROR, "Usuario o contraseña invalida");
             return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
         }
-        
         System.out.println("claveMandada: ");
         System.out.println(clave);
-        System.out.println("calveUser: ");
+        System.out.println("Usuario: ");
+        System.out.println(usuario.getUsuario());
+        System.out.println("claveUser: ");
         System.out.println(usuario.getClave());
         
         // Si la clave es correcta
@@ -138,10 +140,13 @@ public class UsuarioRest {
             
             // Obtengo los atributos del body
             String nombre = (String) Utils.getKeyFromJsonObject("nombre", jsonBody, "String");
+            String apellido = (String) Utils.getKeyFromJsonObject("apellido", jsonBody, "String");
+            String username = (String) Utils.getKeyFromJsonObject("usuario", jsonBody, "String");
             Integer perfil = (Integer) Utils.getKeyFromJsonObject("perfil", jsonBody, "Integer");
             String telefono = (String) Utils.getKeyFromJsonObject("telefono", jsonBody, "String");
             String mail = (String) Utils.getKeyFromJsonObject("mail", jsonBody, "String");
             Integer idPtoVenta = (Integer) Utils.getKeyFromJsonObject("idPtoVenta", jsonBody, "Integer");
+            String observ = (String) Utils.getKeyFromJsonObject("observaciones", jsonBody, "String");
             List<JsonElement> listasPrecios = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("listaPrecios", jsonBody, "ArrayList");
 
             //valido que token no sea null
@@ -175,18 +180,17 @@ public class UsuarioRest {
             }
 
             //Me fijo que clave, nombre y perfil no sean nulos
-            if(nombre == null || clave == null || perfil == 0) {
+            if(nombre == null || clave == null || perfil == 0 || username == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
 
             //Concateno el nombre con el prefijo de la empresa
-            String nombreConcatenado = user.getIdPerfil().getIdSucursal().getIdEmpresa().getPrefijoEmpresa().concat(nombre);
-            
-            //Me fijo si no hay un usuario con ese mismo nombre
-            Usuario usuario = usuarioFacade.getByCuenta(nombreConcatenado);
+            String nombreConcatenado = user.getIdPerfil().getIdSucursal().getIdEmpresa().getPrefijoEmpresa().concat("-"+username);
+            Usuario usuario = usuarioFacade.getByUsuarioLogin(username);
+            //usuario.getIdPerfil().getIdSucursal().getIdEmpresa()
             if(usuario != null) {
-                respuesta.setControl(AppCodigo.ERROR, "El usuario ya existe");
+                respuesta.setControl(AppCodigo.ERROR, "El usuario ya existe: "+username);
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
 
@@ -196,15 +200,18 @@ public class UsuarioRest {
                 respuesta.setControl(AppCodigo.ERROR, "El perfil no existe");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-
+                    
             boolean transaccion;
             Usuario newUser = new Usuario();
             newUser.setClave(clave);
             newUser.setIdPerfil(perfilEncontrado);
             newUser.setMail(mail);
-            newUser.setNombre(nombreConcatenado);
+            newUser.setNombre(nombre);
             newUser.setTelefono(telefono);
             newUser.setIdPtoVenta(idPtoVenta);
+            newUser.setApellido(apellido);
+            newUser.setUsuario(nombreConcatenado);
+            newUser.setObservaciones(observ);
             transaccion = usuarioFacade.setUsuarioNuevo(newUser);
             if(!transaccion) {
                 respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el usuario");
@@ -341,10 +348,16 @@ public class UsuarioRest {
             // Obtengo los atributos del body
             Integer idUsuario = (Integer) Utils.getKeyFromJsonObject("idUsuario", jsonBody, "Integer");
             String nombre = (String) Utils.getKeyFromJsonObject("nombre", jsonBody, "String");
+            String apellido = (String) Utils.getKeyFromJsonObject("apellido", jsonBody, "String");
+            String username = (String) Utils.getKeyFromJsonObject("usuario", jsonBody, "String");
             Integer perfil = (Integer) Utils.getKeyFromJsonObject("perfil", jsonBody, "Integer");
             String telefono = (String) Utils.getKeyFromJsonObject("telefono", jsonBody, "String");
             String mail = (String) Utils.getKeyFromJsonObject("mail", jsonBody, "String");
+            String observ = (String) Utils.getKeyFromJsonObject("observaciones", jsonBody, "String");
             Integer idPtoVenta = (Integer) Utils.getKeyFromJsonObject("idPtoVenta", jsonBody, "Integer");
+            
+            
+            
             List<JsonElement> listasPrecios = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("listaPrecios", jsonBody, "ArrayList");
 
             
@@ -398,6 +411,9 @@ public class UsuarioRest {
             usuario.setNombre(nombre);
             usuario.setTelefono(telefono);
             usuario.setIdPtoVenta(idPtoVenta);
+            usuario.setUsuario(username);
+            usuario.setApellido(apellido);
+            usuario.setObservaciones(observ);
             usuario.getUsuarioListaPrecioCollection().clear();
             transaccion = usuarioFacade.editUsuario(usuario);
             if(!transaccion) {

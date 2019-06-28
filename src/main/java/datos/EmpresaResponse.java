@@ -9,19 +9,23 @@ import entidades.Empresa;
 public class EmpresaResponse {
     private Integer idEmpresa;
     private String nombre;
+    private String descripcion;
     private String domicilio;
     private String cuit;
     private String iibb;
     private String logo;
+    private String prefijoEmpresa;
 
 
     public EmpresaResponse (Empresa empresa) {
         this.idEmpresa = empresa.getIdEmpresa();
         this.nombre = empresa.getNombre();
+        this.descripcion = empresa.getDescripcion();
         this.domicilio = empresa.getDomicilio();
         this.cuit = empresa.getCuit();
         this.iibb = empresa.getIibb();
-        //this.logo = empresa.getLogo(); TODO: Agregar logo a BD   
+        this.prefijoEmpresa = empresa.getPrefijoEmpresa();
+        this.logo = this.prefijoEmpresa+".png"; 
     }
     
     ////////////////////////////////////////////////////////////
@@ -44,6 +48,22 @@ public class EmpresaResponse {
         this.nombre = nombre;
     }
 
+    public String getDescripcion() {
+        return descripcion;
+    }
+
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
+
+    public String getPrefijoEmpresa() {
+        return prefijoEmpresa;
+    }
+
+    public void setPrefijoEmpresa(String prefijoEmpresa) {
+        this.prefijoEmpresa = prefijoEmpresa;
+    }
+    
     public String getDomicilio() {
         return domicilio;
     }
@@ -77,4 +97,5 @@ public class EmpresaResponse {
     }
     
     
+        
 }

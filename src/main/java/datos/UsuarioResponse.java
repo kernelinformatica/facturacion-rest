@@ -13,24 +13,31 @@ import java.util.List;
 public class UsuarioResponse implements Payload{
     private int id;
     private String nombre;
+    private String apellido;
     private String email;
     private String telefono;
     private PerfilResponse perfil;
+    private String usuario;
     private String clave;
+    private String observaciones;
     private List<PtoVentaResponse> ptoVentas;
     private List<ListaPreciosResponse> listaPrecios;
+    
+    
     
 
     public UsuarioResponse(entidades.Usuario u) {
         this.id = u.getIdUsuarios();
         this.email = u.getMail();
         this.nombre = u.getNombre();
+        this.apellido = u.getApellido();
         this.perfil = new PerfilResponse(u.getIdPerfil());
         this.telefono = u.getTelefono();
+        this.usuario = u.getUsuario();
         this.clave = u.getClave();
+        this.observaciones = u.getObservaciones();
         this.listaPrecios = new ArrayList<>();
         this.ptoVentas = new ArrayList<>();
-        
     }
     
     public int getId() {
@@ -87,6 +94,30 @@ public class UsuarioResponse implements Payload{
 
     public void setListaPrecios(List<ListaPreciosResponse> listaPrecios) {
         this.listaPrecios = listaPrecios;
+    }
+
+    public String getApellido() {
+        return apellido;
+    }
+
+    public void setApellido(String apellido) {
+        this.apellido = apellido;
+    }
+
+    public String getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(String usuario) {
+        this.usuario = usuario;
+    }
+
+    public String getObservaciones() {
+        return observaciones;
+    }
+
+    public void setObservaciones(String observaciones) {
+        this.observaciones = observaciones;
     }
     
     public void agregarListaPrecios(Collection<UsuarioListaPrecio> lista) {
