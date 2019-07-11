@@ -78,6 +78,8 @@ import persistencia.SisOperacionComprobanteFacade;
 import persistencia.SisTipoModeloFacade;
 import persistencia.SisTipoOperacionFacade;
 import persistencia.UsuarioFacade;
+import persistencia.ParametroGeneralFacade;
+
 import utils.Utils;
 
 /**
@@ -87,6 +89,7 @@ import utils.Utils;
 @Stateless
 @Path("grabaComprobante")
 public class GrabaComprobanteRest {
+    @Inject Utils utilidadesFacade;
     @Inject UsuarioFacade usuarioFacade;
     @Inject AccesoFacade accesoFacade;
     @Inject SisMonedasFacade sisMonedasFacade;
@@ -113,6 +116,7 @@ public class GrabaComprobanteRest {
     @Inject ContratoFacade contratoFacade;
     @Inject ContratoDetFacade contratoDetFacade;
     @Inject RelacionesCanjeFacade relacionesCanjeFacade;
+    @Inject ParametroGeneralFacade parametro;
           
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -123,6 +127,7 @@ public class GrabaComprobanteRest {
         ServicioResponse respuesta = new ServicioResponse();
         try {
             // Obtengo el body de la request
+            System.out.println("<----- grabaComprobanteRest ----->");
             JsonObject jsonBody = Utils.getJsonObjectFromRequest(request);
             
             //Obtengo los atributos del body
@@ -580,8 +585,9 @@ public class GrabaComprobanteRest {
                             respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, Comprobante no encontrado");
                             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                         }
-                            
+                           
                         SisOperacionComprobante sisOperacionComprobante = sisOperacionComprobanteFacade.find(idSisOperacionComprobante);
+                        System.out.println("sisOperacionComprobante: "+sisOperacionComprobante);
                         if(sisOperacionComprobante == null) {
                             respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, Comprobante no encontrado");
                             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
@@ -600,6 +606,58 @@ public class GrabaComprobanteRest {
                             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                         }
                         
+                        // verifico si debo enviar el mail, notificando que se dio de alta un comprobante ////////////
+                        System.out.println("Verifico permiso para envio de mail ..."+sisOperacionComprobante.getEnviaMail());
+                        if (sisOperacionComprobante.getEnviaMail().equals(true) || sisOperacionComprobante.getEnviaMail().equals(1)){
+                            
+                             Integer idEmpresa = accesoFacade.findByToken(token).getIdUsuario().getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa();
+                            System.out.println("Enviando correo (Empresa: "+idEmpresa+")");
+                             String nombreEmpresaSucursal = accesoFacade.findByToken(token).getIdUsuario().getIdPerfil().getIdSucursal().getNombre();
+                             System.out.println("Enviando correo (Empresa: "+nombreEmpresaSucursal+")");
+                             String emailOrigen = parametro.get("KERNEL_SMTP_USER");
+                             System.out.println("Enviando correo (Email Origen: "+emailOrigen+")");
+                             String emailDestino  = sisOperacionComprobante.getMail1();
+                             System.out.println("Enviando correo (Email Destino: "+emailDestino+")");
+                             String nombreDestino = "Nombre del Destinatario";
+                             String asunto = "Kernel Facturación: Alta de Comprobante";
+                             // Armo el cuerpo del mail 
+                            String contenido = "<!doctype html>\n" +
+                                                "<html>\n" +
+                                                "<head>\n" +
+                                                "<meta charset=\"utf-8\">\n" +
+                                                "<title>Sistema Facturación</title>\n" +
+                                                "</head>\n" +
+                                                "<body>\n" +
+                                                "<div>\n" +
+                                                "<hr>\n"+
+                                                "	<div>Estimado: "+nombreDestino+"</div>\n" +
+                                                "	<div>Asunto: "+asunto+"</div>\n" +
+                                                "	<div>"+nombreEmpresaSucursal+"</div>\n" +
+                                                "	<div>Fecha/hora de Alta: </div>\n" +
+                                                "	<hr>\n" +
+                                                "	<div><strong>Detalle del Comprobante Cargado</strong></div>\n" +
+                                                "	<div>\n" +
+                                                "		<li>Tipo de Comprobante: "+factCab.getNombre()+" - Letra: "+factCab.getLetra()+" </li>\n" +
+                                                "		<li>Nro Comprobante: "+factCab.getNombre()+" </li>\n" +
+                                                "		<li>Fecha Emsión: "+factCab.getFechaEmision()+" </li>\n" +
+                                                "		<li>Fecha Vencimiento: "+factCab.getFechaVto()+" </li>\n" +
+                                                "		<li>Observaciones: "+factCab.getObservaciones()+" </li>\n" +
+                                                "		\n" +
+                                                "	</div>\n" +
+                                                "</div>\n" +
+                                                "\n" +
+                                                "</body>\n" +
+                                                "</html>";
+                            
+                            // fin armado del cuerpo
+        
+        
+                            // String contenido = asunto+ " | Se ha agregado un nuevo comprobante | Emision: "+fechaEmision+" - Cuit: "+cuit+" -  Comprobante Nro: "+numeroFact+" - TC: "+tipoFact;
+                             utilidadesFacade.enviarMail(emailOrigen, nombreEmpresaSucursal, emailDestino, contenido, asunto, nombreDestino);
+                        }else{
+                            System.out.println("No se envia mail("+sisOperacionComprobante.getEnviaMail()+")");
+                        }
+                        /////////////////////////////////////////////////////////
                         //Creo el factDetalle nuevo y seteo los valores
                         FactDetalle factDetalle = new FactDetalle();
                         factDetalle.setDetalle(articulo);
