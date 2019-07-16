@@ -7,7 +7,7 @@ import java.util.List;
 
 /**
  *
- * @author FrancoSili
+ * @author Dario Quiroga
  */
 public class SisComprobanteResponse implements Payload{
     private Integer idSisComprobantes;
@@ -25,6 +25,7 @@ public class SisComprobanteResponse implements Payload{
     private Boolean usaContrato;
     private Boolean permiteImporteCero;
     private Boolean usaRelacion;
+    private Boolean relacionadoObligatorio;
     private String observaciones;
     private List<SisMonedasResponse> monedas = new ArrayList<>();
     
@@ -33,6 +34,16 @@ public class SisComprobanteResponse implements Payload{
        this.descripcion = s.getDescripcion();
        this.imputacion = s.getImputacion();
        this.modulo = new SisModuloResponse(s.getIdSisModulos());
+       
+       
+    }
+
+    public Boolean getRelacionadoObligatorio() {
+        return relacionadoObligatorio;
+    }
+
+    public void setRelacionadoObligatorio(Boolean relacionadoObligatorio) {
+        this.relacionadoObligatorio = relacionadoObligatorio;
     }
     
     public Integer getIdSisComprobantes() {

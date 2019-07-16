@@ -299,6 +299,7 @@ public class CteTipoRest {
                                 ctr.getComprobante().setUsaContrato(soc.getUsaContrato());
                                 ctr.getComprobante().setPermiteImporteCero(soc.getPermiteImporteCero());
                                 ctr.getComprobante().setUsaRelacion(soc.getUsaRelacion());
+                                ctr.getComprobante().setRelacionadoObligatorio(soc.getRelacionadoObligatorio());
                                 ctr.getComprobante().setObservaciones(soc.getObservaciones());
                             //Si la moneda en la tabla SisOperacionesComprobantes es nula agrego todas sino, la que esta dada de alta
                             if(soc.getIdSisMoneda() == null) {
@@ -371,6 +372,7 @@ public class CteTipoRest {
                                     ctr.getComprobante().setUsaContrato(soc.getUsaContrato());
                                     ctr.getComprobante().setPermiteImporteCero(soc.getPermiteImporteCero());
                                     ctr.getComprobante().setUsaRelacion(soc.getUsaRelacion());
+                                     ctr.getComprobante().setRelacionadoObligatorio(soc.getRelacionadoObligatorio());
                                     ctr.getComprobante().setObservaciones(soc.getObservaciones());
                                 //Si la moneda en la tabla SisOperacionesComprobantes es nula agrego todas sino, la que esta dada de alta
                                 if(soc.getIdSisMoneda() == null) {

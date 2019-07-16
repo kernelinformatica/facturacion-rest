@@ -32,6 +32,7 @@ import entidades.SisTipoOperacion;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
@@ -89,47 +90,76 @@ import utils.Utils;
 @Stateless
 @Path("grabaComprobante")
 public class GrabaComprobanteRest {
-    @Inject Utils utilidadesFacade;
-    @Inject UsuarioFacade usuarioFacade;
-    @Inject AccesoFacade accesoFacade;
-    @Inject SisMonedasFacade sisMonedasFacade;
-    @Inject CteTipoFacade cteTipoFacade;
-    @Inject FormaPagoFacade formaPagoFacade;
-    @Inject FactCabFacade factCabFacade;
-    @Inject DepositoFacade depositoFacade;
-    @Inject FactDetalleFacade factDetalleFacade;
-    @Inject FactImputaFacade factImputaFacade;
-    @Inject FactPieFacade factPieFacade;
-    @Inject ProductoFacade productoFacade;
-    @Inject ProdumoFacade produmoFacade;
-    @Inject LoteFacade loteFacade;
-    @Inject FactFormaPagoFacade factFormaPagoFacade;
-    @Inject FormaPagoDetFacade formaPagoDetFacade;
-    @Inject SisTipoOperacionFacade  sisTipoOperacionFacade;
-    @Inject CteNumeradorFacade cteNumeradorFacade;
-    @Inject SisTipoModeloFacade sisTipoModeloFacade;
-    @Inject MasterFacade masterFacade;
-    @Inject SisOperacionComprobanteFacade sisOperacionComprobanteFacade;
-    @Inject ListaPrecioFacade listaPrecioFacade;
-    @Inject SisCotDolarFacade sisCotDolarFacade;
-    @Inject PadronFacade padronFacade;
-    @Inject ContratoFacade contratoFacade;
-    @Inject ContratoDetFacade contratoDetFacade;
-    @Inject RelacionesCanjeFacade relacionesCanjeFacade;
-    @Inject ParametroGeneralFacade parametro;
-          
+
+    @Inject
+    Utils utilidadesFacade;
+    @Inject
+    UsuarioFacade usuarioFacade;
+    @Inject
+    AccesoFacade accesoFacade;
+    @Inject
+    SisMonedasFacade sisMonedasFacade;
+    @Inject
+    CteTipoFacade cteTipoFacade;
+    @Inject
+    FormaPagoFacade formaPagoFacade;
+    @Inject
+    FactCabFacade factCabFacade;
+    @Inject
+    DepositoFacade depositoFacade;
+    @Inject
+    FactDetalleFacade factDetalleFacade;
+    @Inject
+    FactImputaFacade factImputaFacade;
+    @Inject
+    FactPieFacade factPieFacade;
+    @Inject
+    ProductoFacade productoFacade;
+    @Inject
+    ProdumoFacade produmoFacade;
+    @Inject
+    LoteFacade loteFacade;
+    @Inject
+    FactFormaPagoFacade factFormaPagoFacade;
+    @Inject
+    FormaPagoDetFacade formaPagoDetFacade;
+    @Inject
+    SisTipoOperacionFacade sisTipoOperacionFacade;
+    @Inject
+    CteNumeradorFacade cteNumeradorFacade;
+    @Inject
+    SisTipoModeloFacade sisTipoModeloFacade;
+    @Inject
+    MasterFacade masterFacade;
+    @Inject
+    SisOperacionComprobanteFacade sisOperacionComprobanteFacade;
+    @Inject
+    ListaPrecioFacade listaPrecioFacade;
+    @Inject
+    SisCotDolarFacade sisCotDolarFacade;
+    @Inject
+    PadronFacade padronFacade;
+    @Inject
+    ContratoFacade contratoFacade;
+    @Inject
+    ContratoDetFacade contratoDetFacade;
+    @Inject
+    RelacionesCanjeFacade relacionesCanjeFacade;
+    @Inject
+    ParametroGeneralFacade parametro;
+
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response setComprobante(
-    @HeaderParam ("token") String token,
-    @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {       
+            @HeaderParam("token") String token,
+            @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {
             // Obtengo el body de la request
             System.out.println("<----- grabaComprobanteRest ----->");
             JsonObject jsonBody = Utils.getJsonObjectFromRequest(request);
-            
+
             //Obtengo los atributos del body
             //Datos de FactCab
             Integer idCteTipo = (Integer) Utils.getKeyFromJsonObject("idCteTipo", jsonBody, "Integer");
@@ -140,26 +170,26 @@ public class GrabaComprobanteRest {
             Date fechaConta = (Date) Utils.getKeyFromJsonObject("fechaConta", jsonBody, "Date");
             String cai = (String) Utils.getKeyFromJsonObject("cai", jsonBody, "String");
             Date caiVto = (Date) Utils.getKeyFromJsonObject("caiVto", jsonBody, "Date");
-            String codBarra =(String) Utils.getKeyFromJsonObject("codBarra", jsonBody, "String");
-            Integer idPadron = (Integer) Utils.getKeyFromJsonObject("idPadron", jsonBody, "Integer");                      
+            String codBarra = (String) Utils.getKeyFromJsonObject("codBarra", jsonBody, "String");
+            Integer idPadron = (Integer) Utils.getKeyFromJsonObject("idPadron", jsonBody, "Integer");
             Integer idMoneda = (Integer) Utils.getKeyFromJsonObject("idMoneda", jsonBody, "Integer");
             String nombre = (String) Utils.getKeyFromJsonObject("nombre", jsonBody, "String");
             String cuit = (String) Utils.getKeyFromJsonObject("cuit", jsonBody, "String");
             String sisSitIva = (String) Utils.getKeyFromJsonObject("sisSitIva", jsonBody, "String");
             String codigoPostal = (String) Utils.getKeyFromJsonObject("codigoPostal", jsonBody, "String");
-            String listaPrecio = (String) Utils.getKeyFromJsonObject("listaPrecio", jsonBody, "String");            
+            String listaPrecio = (String) Utils.getKeyFromJsonObject("listaPrecio", jsonBody, "String");
             BigDecimal cotDolar = (BigDecimal) Utils.getKeyFromJsonObject("cotDolar", jsonBody, "BigDecimal");
             Date fechaDolar = (Date) Utils.getKeyFromJsonObject("fechaDolar", jsonBody, "Date");
             String observaciones = (String) Utils.getKeyFromJsonObject("observaciones", jsonBody, "String");
-            Integer idSisTipoOperacion = (Integer) Utils.getKeyFromJsonObject("idSisTipoOperacion", jsonBody, "Integer");           
+            Integer idSisTipoOperacion = (Integer) Utils.getKeyFromJsonObject("idSisTipoOperacion", jsonBody, "Integer");
             Integer idFactCab = (Integer) Utils.getKeyFromJsonObject("idFactCab", jsonBody, "Integer");
             Integer idNumero = (Integer) Utils.getKeyFromJsonObject("idNumero", jsonBody, "Integer");
             Integer idVendedor = (Integer) Utils.getKeyFromJsonObject("idVendedor", jsonBody, "Integer");
             Integer codigoAfip = (Integer) Utils.getKeyFromJsonObject("codigoAfip", jsonBody, "Integer");
             Integer idSisOperacionComprobante = (Integer) Utils.getKeyFromJsonObject("idSisOperacionComprobante", jsonBody, "Integer");
             Integer idContrato = (Integer) Utils.getKeyFromJsonObject("idContrato", jsonBody, "Integer");
-            String direccion =(String) Utils.getKeyFromJsonObject("direccion", jsonBody, "String");
-            
+            String direccion = (String) Utils.getKeyFromJsonObject("direccion", jsonBody, "String");
+
             //Para canje
             String productoCanje = (String) Utils.getKeyFromJsonObject("productoCanje", jsonBody, "String");
             BigDecimal precioReferenciaCanje = (BigDecimal) Utils.getKeyFromJsonObject("precioReferenciaCanje", jsonBody, "BigDecimal");
@@ -167,20 +197,20 @@ public class GrabaComprobanteRest {
             Integer kilosCanje = (Integer) Utils.getKeyFromJsonObject("kilosCanje", jsonBody, "Integer");
             String observacionesCanje = (String) Utils.getKeyFromJsonObject("observacionesCanje", jsonBody, "String");
             Integer idRelacionSisCanje = (Integer) Utils.getKeyFromJsonObject("idRelacionSisCanje", jsonBody, "Integer");
-            
+
             //Deposito de destino para el movimiento de remitos internos
             Integer idDepositoDestino = (Integer) Utils.getKeyFromJsonObject("idDepositoDestino", jsonBody, "Integer");
-            
+
             //Booleanos para ver que se guarda y que no.
             boolean factCabecera = (Boolean) Utils.getKeyFromJsonObject("factCabecera", jsonBody, "boolean");
-            boolean factDet = (Boolean) Utils.getKeyFromJsonObject("factDet", jsonBody, "boolean");          
+            boolean factDet = (Boolean) Utils.getKeyFromJsonObject("factDet", jsonBody, "boolean");
             boolean factImputa = (Boolean) Utils.getKeyFromJsonObject("factImputa", jsonBody, "boolean");
             boolean factPie = (Boolean) Utils.getKeyFromJsonObject("factPie", jsonBody, "boolean");
             boolean produmo = (Boolean) Utils.getKeyFromJsonObject("produmo", jsonBody, "boolean");
             boolean factFormaPago = (Boolean) Utils.getKeyFromJsonObject("factFormaPago", jsonBody, "boolean");
             boolean lote = (Boolean) Utils.getKeyFromJsonObject("lote", jsonBody, "boolean");
             boolean grabaFactura = (Boolean) Utils.getKeyFromJsonObject("grabaFactura", jsonBody, "boolean");
-            
+
             //Datos de la factura relacionada a un remito
             Integer tipoFact = (Integer) Utils.getKeyFromJsonObject("tipoFact", jsonBody, "Integer");
             String letraFact = (String) Utils.getKeyFromJsonObject("letraFact", jsonBody, "String");
@@ -189,16 +219,15 @@ public class GrabaComprobanteRest {
             Date fechaContaFact = (Date) Utils.getKeyFromJsonObject("fechaContaFact", jsonBody, "Date");
             Integer idNumeroFact = (Integer) Utils.getKeyFromJsonObject("idNumeroFact", jsonBody, "Integer");
             Integer codigoAfipFact = (Integer) Utils.getKeyFromJsonObject("codigoAfipFact", jsonBody, "Integer");
-                        
+
             //Grillas de articulos, subTotales, elementos trazables y formas de pago
-            List<JsonElement> grillaArticulos = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("grillaArticulos", jsonBody, "ArrayList");          
+            List<JsonElement> grillaArticulos = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("grillaArticulos", jsonBody, "ArrayList");
             List<JsonElement> grillaSubTotales = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("grillaSubTotales", jsonBody, "ArrayList");
             List<JsonElement> grillaTrazabilidad = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("grillaTrazabilidad", jsonBody, "ArrayList");
             List<JsonElement> grillaFormaPago = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("grillaFormaPago", jsonBody, "ArrayList");
-           
-            
+
             //valido que token no sea null
-            if(token == null || token.trim().isEmpty()) {
+            if (token == null || token.trim().isEmpty()) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, token vacio");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
@@ -207,7 +236,7 @@ public class GrabaComprobanteRest {
             Acceso userToken = accesoFacade.findByToken(token);
 
             //valido que Acceso no sea null
-            if(userToken == null) {
+            if (userToken == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, Acceso nulo");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
@@ -216,191 +245,190 @@ public class GrabaComprobanteRest {
             Usuario user = usuarioFacade.getByToken(userToken);
 
             //valido que el Usuario no sea null
-            if(user == null) {
+            if (user == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, Usuario nulo");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
 
             //valido vencimiento token
-            if(!accesoFacade.validarToken(userToken, user)) {
+            if (!accesoFacade.validarToken(userToken, user)) {
                 respuesta.setControl(AppCodigo.ERROR, "Credenciales incorrectas");
                 return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
             }
 
             //Me fijo que  los campos que tienen el atributo NotNull no sean nulos
-            if(idCteTipo == null) {
+            if (idCteTipo == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, tipo de comprobante nulo");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            if(letra == null) {
+            if (letra == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, letra nula");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            if(numero == null ) {
+            if (numero == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, numero nulo");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            if(fechaEmision == null) {
+            if (fechaEmision == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, fecha emision nula");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            if(fechaVencimiento == null) {
+            if (fechaVencimiento == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, fecha vencimiento nula");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            if(idPadron == null) {
+            if (idPadron == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, padron nulo");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            if(productoCanje == null) {
+            if (productoCanje == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, producto canje nulo");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            if(precioReferenciaCanje == null) {
+            if (precioReferenciaCanje == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, precio referencia canje nulo");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-            } 
-            if(interesCanje == null) {
+            }
+            if (interesCanje == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, interes canje nulo");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-            } 
-            if(idMoneda == null) {
+            }
+            if (idMoneda == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, moneda en nulo");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            if(nombre == null) {
+            if (nombre == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, nombre nulo");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            if(cuit == null) {
+            if (cuit == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, cuit nulo");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-            } 
+            }
             if (sisSitIva == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, sisSitIva nulo");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            if(codigoPostal == null){
+            if (codigoPostal == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, codigo postal nulo");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-            } 
-            if (cotDolar== null){
+            }
+            if (cotDolar == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, cot dolar nulo");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            if(idSisTipoOperacion == null) {
+            if (idSisTipoOperacion == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, sisTipoOperacion nulo");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            if(codigoAfip == null) {
+            if (codigoAfip == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, codigo Afip nulo");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-                                  
+
             //----------Metodos de busquedas de clases por id----------//
-            
             CteTipo cteTipo = cteTipoFacade.find(idCteTipo);
             //Pregunto si existe el CteTipo
-            if(cteTipo == null) {
+            if (cteTipo == null) {
                 respuesta.setControl(AppCodigo.ERROR, "No existe el tipo de Comprobante");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-                       
+
             SisMonedas sisMonedas = sisMonedasFacade.find(idMoneda);
             //Pregunto si existe SisMonedas
-            if(sisMonedas == null) {
+            if (sisMonedas == null) {
                 respuesta.setControl(AppCodigo.ERROR, "No existe la Moneda");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            
+
             SisTipoOperacion sisTipoOperacion = sisTipoOperacionFacade.find(idSisTipoOperacion);
             //Pregunto si existe sisTipoOperacion
-            if(sisTipoOperacion == null) {
+            if (sisTipoOperacion == null) {
                 respuesta.setControl(AppCodigo.ERROR, "No existe el tipo de operacion");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            
+
             //Pregunto si la grilla de articulos no esta vacia
-            if(grillaArticulos == null) {
+            if (grillaArticulos == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Lista de Articulos Vacia");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            
+
             //Hago la sumatoria para comprobar que pendientes sea distinto de cero para continuar
             BigDecimal sumatoriaPendientes = new BigDecimal(0);
-            for(JsonElement j : grillaArticulos) {
+            for (JsonElement j : grillaArticulos) {
                 BigDecimal pendiente = (BigDecimal) Utils.getKeyFromJsonObject("pendiente", j.getAsJsonObject(), "BigDecimal");
                 sumatoriaPendientes = sumatoriaPendientes.add(pendiente);
             }
-            
+
             //Pregunto si la sumatoria de pendientes es igual a 0
-            if(sumatoriaPendientes.compareTo(BigDecimal.ZERO) == 0) {
+            if (sumatoriaPendientes.compareTo(BigDecimal.ZERO) == 0) {
                 respuesta.setControl(AppCodigo.ERROR, "La cantidad no puede ser nula");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            
+
             //Compruebo si es ventas y si viene la lista de precios nula
-            if(cteTipo.getIdSisComprobante().getIdSisModulos().getIdSisModulos() == 2 && listaPrecio == null) {
+            if (cteTipo.getIdSisComprobante().getIdSisModulos().getIdSisModulos() == 2 && listaPrecio == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Debe seleccionar una lista de precios");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            
+
             //Esta condicion solamente aplica para los emitidos por el sistema
-            if(cteTipo.getIdSisComprobante().getPropio() == 1 && idNumero != null) {                             
+            if (cteTipo.getIdSisComprobante().getPropio() == 1 && idNumero != null) {
                 CteNumerador cteNumerador = cteNumeradorFacade.find(idNumero);
-                if(cteNumerador == null) {
+                if (cteNumerador == null) {
                     respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el numero de comprobante");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
-                String ptoVenta = cteNumerador.getIdPtoVenta().getPtoVenta().toString();          
-               
+                String ptoVenta = cteNumerador.getIdPtoVenta().getPtoVenta().toString();
+
                 //Valido que la fecha de emision no sea menor a la de un comprobante con el mismo tipo dado de alta.
-                List<FactCab> posteriores = factCabFacade.getByFechaEmpresaCompLetra(fechaEmision,cteTipo,user.getIdPerfil().getIdSucursal().getIdEmpresa(),letra);
-                
-                if(posteriores != null && !posteriores.isEmpty() && posteriores.size() > 0) {
+                List<FactCab> posteriores = factCabFacade.getByFechaEmpresaCompLetra(fechaEmision, cteTipo, user.getIdPerfil().getIdSucursal().getIdEmpresa(), letra);
+
+                if (posteriores != null && !posteriores.isEmpty() && posteriores.size() > 0) {
                     List<FactCab> filtrados = new ArrayList<>();
-                    for(FactCab p : posteriores) {
+                    for (FactCab p : posteriores) {
                         String num = String.valueOf(p.getNumero());
-                        String pto = num.substring(0,num.length()-8);
-                        if(pto.equals(ptoVenta)) {
+                        String pto = num.substring(0, num.length() - 8);
+                        if (pto.equals(ptoVenta)) {
                             filtrados.add(p);
                         }
                     }
-                    if(filtrados.size() > 1) {
+                    if (filtrados.size() > 1) {
                         Collections.sort(filtrados, (o1, o2) -> o1.getFechaEmision().compareTo(o2.getFechaEmision()));
                     }
                     SimpleDateFormat formateador = new SimpleDateFormat("dd/MM/yy");
-                    respuesta.setControl(AppCodigo.ERROR, "Error al dar de alta el Comprobante, la fecha debe ser mayor a: "  + formateador.format(filtrados.get(filtrados.size()-1).getFechaEmision()));
+                    respuesta.setControl(AppCodigo.ERROR, "Error al dar de alta el Comprobante, la fecha debe ser mayor a: " + formateador.format(filtrados.get(filtrados.size() - 1).getFechaEmision()));
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
             }
-            
+
 //            String dir = "";
             String codPostal = codigoPostal;
-            if(idPadron != null && idPadron != 0) {
+            if (idPadron != null && idPadron != 0) {
                 Padron padron = padronFacade.find(idPadron);
-                if(padron != null) {
-                    if(padron.getPadronDomici() !=  null) {
+                if (padron != null) {
+                    if (padron.getPadronDomici() != null) {
                         direccion = padron.getPadronDomici();
                     }
-                    if(padron.getPadronDomnro() != null) {
-                        direccion = direccion + " " + padron.getPadronDomnro(); 
+                    if (padron.getPadronDomnro() != null) {
+                        direccion = direccion + " " + padron.getPadronDomnro();
                     }
-                    if(padron.getPadronDompis() != null) {
+                    if (padron.getPadronDompis() != null) {
                         direccion = direccion + " " + padron.getPadronDompis();
                     }
-                    if(padron.getPadronDomdto() != null) {
+                    if (padron.getPadronDomdto() != null) {
                         direccion = direccion + " " + padron.getPadronDomdto();
-                    }                   
+                    }
                 }
-                if(padron.getCodigoPostal() != null) {
+                if (padron.getCodigoPostal() != null) {
                     codPostal = padron.getCodigoPostal().toString();
                 }
             }
-          
+
             FactCab factCab = new FactCab();
             //Pregunto si se guarda una cabecera
-            if(factCabecera) {               
+            if (factCabecera) {
                 factCab.setCai(cai);
                 factCab.setCaiVto(caiVto);
                 factCab.setCodBarra(codBarra);
@@ -429,804 +457,846 @@ public class GrabaComprobanteRest {
                 factCab.setIdSisOperacionComprobantes(idSisOperacionComprobante);
                 factCab.setDomicilio(direccion);
             } else {
-                if(idFactCab == null) {
+                if (idFactCab == null) {
                     respuesta.setControl(AppCodigo.ERROR, "El parametro de cabecera no puede ser nulo");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
                 //busco fact cab
                 factCab = factCabFacade.find(idFactCab);
-                if(factCab == null) {
+                if (factCab == null) {
                     respuesta.setControl(AppCodigo.ERROR, "No existe Fact Cab");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
             }
-            
+
             //le seteo el deposito de destino
-            if(idDepositoDestino != null) {
+            if (idDepositoDestino != null) {
                 Deposito deposito = depositoFacade.find(idDepositoDestino);
-                if(deposito == null) {
+                if (deposito == null) {
                     respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, el deposito con id " + idDepositoDestino + " no existe");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
                 factCab.setIdDepositoDestino(deposito);
             }
-                       
+
             //Busco el contrato si es que lleva
             ContratoDet contratoDet = new ContratoDet();
-            if(idContrato != null && kilosCanje != null) {
+            if (idContrato != null && kilosCanje != null) {
                 Contrato contrato = contratoFacade.find(idContrato);
-                if(contrato == null) {
+                if (contrato == null) {
                     respuesta.setControl(AppCodigo.ERROR, "Error, no xiste el contrato seleccionado");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
-                if(kilosCanje > contrato.getKilos()) {
+                if (kilosCanje > contrato.getKilos()) {
                     respuesta.setControl(AppCodigo.ERROR, "Error, los kilos sobrepasan a lo estipulado en el contrato");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
-                
-                if(!contrato.getContratoDetCollection().isEmpty()) {
+
+                if (!contrato.getContratoDetCollection().isEmpty()) {
                     Integer sumatoriaCantidad = 0;
-                    for(ContratoDet d : contrato.getContratoDetCollection()) {
+                    for (ContratoDet d : contrato.getContratoDetCollection()) {
                         sumatoriaCantidad = sumatoriaCantidad + d.getKilos();
                     }
                     sumatoriaCantidad = kilosCanje + sumatoriaCantidad;
-                    if(sumatoriaCantidad > contrato.getKilos()) {
+                    if (sumatoriaCantidad > contrato.getKilos()) {
                         respuesta.setControl(AppCodigo.ERROR, "Error, los kilos sobrepasan a lo estipulado en el contrato");
                         return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                     }
                 }
-                
+
                 contratoDet.setIdContratos(contrato);
                 contratoDet.setIdFactCab(factCab);
                 contratoDet.setImporte(precioReferenciaCanje);
                 contratoDet.setKilos(kilosCanje);
                 contratoDet.setObservaciones(observacionesCanje);
             }
-            
-            if(idRelacionSisCanje != null) {
+
+            if (idRelacionSisCanje != null) {
                 RelacionesCanje relacion = relacionesCanjeFacade.find(idRelacionSisCanje);
-                if(relacion == null) {
+                if (relacion == null) {
                     respuesta.setControl(AppCodigo.ERROR, "Error, la relacion seleccionada no existe");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
                 factCab.setIdRelacionCanje(relacion);
                 factCab.setKilosCanje(kilosCanje);
             }
-            
+
             //Le agrego el numero a numero afip si es compra
-            if(cteTipo.getIdSisComprobante().getIdSisModulos().getIdSisModulos() == 1) {
+            if (cteTipo.getIdSisComprobante().getIdSisModulos().getIdSisModulos() == 1) {
                 factCab.setNumeroAfip(numero.longValue());
             }
-            
-                //Pregunto si guarda Detalles
-                if(factDet) {
-                    //Armo la listas de Fact par luego parsearlas todas juntas
-                    List<FactDetalle> listaDetalles = new ArrayList<>();
-                    List<FactImputa> listaImputa = new ArrayList<>();
-                    List<Produmo> listaProdumo = new ArrayList<>();
-                    List<FactPie> listaPie = new ArrayList<>();
-                    List<Lote> listaLotes = new ArrayList<>();
-                    List<FactFormaPago> listaFormaPago = new ArrayList<>();
-                    List<BigDecimal> listaComRel = new ArrayList<>();
-                    //Contador para factDetalle
-                    int item = 0;
-                    //Recorro el array de grillaArticulos y creo facDetalle para cada articulo
-                    for(JsonElement j : grillaArticulos) {
-                        //Obtengo los atributos del body
-                        Integer idProducto = (Integer) Utils.getKeyFromJsonObject("idProducto", j.getAsJsonObject(), "Integer");  
-                        String articulo = (String) Utils.getKeyFromJsonObject("articulo", j.getAsJsonObject(), "String");
-                        BigDecimal pendiente = (BigDecimal) Utils.getKeyFromJsonObject("pendiente", j.getAsJsonObject(), "BigDecimal");
-                        BigDecimal precio = (BigDecimal) Utils.getKeyFromJsonObject("precio", j.getAsJsonObject(), "BigDecimal");
-                        BigDecimal porCalc = (BigDecimal) Utils.getKeyFromJsonObject("porCalc", j.getAsJsonObject(), "BigDecimal");
-                        String descuento = (String) Utils.getKeyFromJsonObject("descuento", j.getAsJsonObject(), "String");
-                        BigDecimal ivaPorc = (BigDecimal) Utils.getKeyFromJsonObject("ivaPorc", j.getAsJsonObject(), "BigDecimal");
-                        Integer cantidadBulto = (Integer) Utils.getKeyFromJsonObject("cantidadBulto", j.getAsJsonObject(), "Integer");
-                        String despacho = (String) Utils.getKeyFromJsonObject("despacho", j.getAsJsonObject(), "String");
-                        Boolean trazable = (Boolean) Utils.getKeyFromJsonObject("trazable", j.getAsJsonObject(), "boolean");
-                        Integer idDeposito = (Integer) Utils.getKeyFromJsonObject("idDeposito", j.getAsJsonObject(), "Integer");
-                        String observacionDetalle = (String) Utils.getKeyFromJsonObject("observacionDetalle", j.getAsJsonObject(), "String");
-                        String imputacion = (String) Utils.getKeyFromJsonObject("imputacion", j.getAsJsonObject(), "String");
-                        Integer idFactDetalleImputa = (Integer) Utils.getKeyFromJsonObject("idFactDetalleImputa", j.getAsJsonObject(), "Integer");
-                        BigDecimal importe = (BigDecimal) Utils.getKeyFromJsonObject("importe", j.getAsJsonObject(), "BigDecimal"); 
-                        BigDecimal precioDesc = (BigDecimal) Utils.getKeyFromJsonObject("precioDesc", j.getAsJsonObject(), "BigDecimal"); 
-                        String unidadDescuento = (String) Utils.getKeyFromJsonObject("unidadDescuento", j.getAsJsonObject(), "String");
-                        BigDecimal comprobanteRel = (BigDecimal) Utils.getKeyFromJsonObject("comprobanteRel", j.getAsJsonObject(), "BigDecimal");
-                        Integer idLibro = (Integer) Utils.getKeyFromJsonObject("idLibro", j.getAsJsonObject(), "Integer");
-                        
-                        if(idLibro == null) {
-                            respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el detalle de la factura, idLibro nulo");
-                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                        }
 
-                        //Pregunto por los campos que son NOTNULL
-                        if(idProducto == null || articulo == null || pendiente == null || precio == null || porCalc == null ||
-                           ivaPorc == null || cantidadBulto == null || despacho== null || trazable== null || idDeposito== null ||
-                           observacionDetalle  == null) {
-                            respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, algun campo esta vacio");
-                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                        }
-                        
-                        //Busco el deposito por id, si no encuentro alguno desarmo la transaccion.
-                        Deposito deposito = depositoFacade.find(idDeposito);
-                        if(deposito == null) {
-                            respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, el deposito con id " + idDeposito + " no existe");
-                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                        }
+            //Pregunto si guarda Detalles
+            if (factDet) {
+                //Armo la listas de Fact par luego parsearlas todas juntas
+                List<FactDetalle> listaDetalles = new ArrayList<>();
+                List<FactImputa> listaImputa = new ArrayList<>();
+                List<Produmo> listaProdumo = new ArrayList<>();
+                List<FactPie> listaPie = new ArrayList<>();
+                List<Lote> listaLotes = new ArrayList<>();
+                List<FactFormaPago> listaFormaPago = new ArrayList<>();
+                List<BigDecimal> listaComRel = new ArrayList<>();
+                //Contador para factDetalle
+                int item = 0;
+                //Recorro el array de grillaArticulos y creo facDetalle para cada articulo
+                for (JsonElement j : grillaArticulos) {
+                    //Obtengo los atributos del body
+                    Integer idProducto = (Integer) Utils.getKeyFromJsonObject("idProducto", j.getAsJsonObject(), "Integer");
+                    String articulo = (String) Utils.getKeyFromJsonObject("articulo", j.getAsJsonObject(), "String");
+                    BigDecimal pendiente = (BigDecimal) Utils.getKeyFromJsonObject("pendiente", j.getAsJsonObject(), "BigDecimal");
+                    BigDecimal precio = (BigDecimal) Utils.getKeyFromJsonObject("precio", j.getAsJsonObject(), "BigDecimal");
+                    BigDecimal porCalc = (BigDecimal) Utils.getKeyFromJsonObject("porCalc", j.getAsJsonObject(), "BigDecimal");
+                    String descuento = (String) Utils.getKeyFromJsonObject("descuento", j.getAsJsonObject(), "String");
+                    BigDecimal ivaPorc = (BigDecimal) Utils.getKeyFromJsonObject("ivaPorc", j.getAsJsonObject(), "BigDecimal");
+                    Integer cantidadBulto = (Integer) Utils.getKeyFromJsonObject("cantidadBulto", j.getAsJsonObject(), "Integer");
+                    String despacho = (String) Utils.getKeyFromJsonObject("despacho", j.getAsJsonObject(), "String");
+                    Boolean trazable = (Boolean) Utils.getKeyFromJsonObject("trazable", j.getAsJsonObject(), "boolean");
+                    Integer idDeposito = (Integer) Utils.getKeyFromJsonObject("idDeposito", j.getAsJsonObject(), "Integer");
+                    String observacionDetalle = (String) Utils.getKeyFromJsonObject("observacionDetalle", j.getAsJsonObject(), "String");
+                    String imputacion = (String) Utils.getKeyFromJsonObject("imputacion", j.getAsJsonObject(), "String");
+                    Integer idFactDetalleImputa = (Integer) Utils.getKeyFromJsonObject("idFactDetalleImputa", j.getAsJsonObject(), "Integer");
+                    BigDecimal importe = (BigDecimal) Utils.getKeyFromJsonObject("importe", j.getAsJsonObject(), "BigDecimal");
+                    BigDecimal precioDesc = (BigDecimal) Utils.getKeyFromJsonObject("precioDesc", j.getAsJsonObject(), "BigDecimal");
+                    String unidadDescuento = (String) Utils.getKeyFromJsonObject("unidadDescuento", j.getAsJsonObject(), "String");
+                    BigDecimal comprobanteRel = (BigDecimal) Utils.getKeyFromJsonObject("comprobanteRel", j.getAsJsonObject(), "BigDecimal");
+                    Integer idLibro = (Integer) Utils.getKeyFromJsonObject("idLibro", j.getAsJsonObject(), "Integer");
 
-                        //Busco el producto 
-                        Producto producto = productoFacade.find(idProducto);
-                        if(producto == null) {
-                            respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, el producto con id " + idProducto + " no existe");
-                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                        }
-                        
-                        //Actualizo el precio del aritulo si es compra, si es distinto de 0 y si el precio es distinto. Ademas lo convierto de acuerdo al tipo de moneda
-                        if(!precio.equals(producto.getCostoReposicion()) && cteTipo.getIdSisComprobante().getIdSisModulos().getIdSisModulos().equals(1) && precio.compareTo(BigDecimal.ZERO) != 0) {
-                            SisCotDolar sisCotDolar = sisCotDolarFacade.getLastCotizacion();
-                            BigDecimal precioAtualizado = new BigDecimal(0);
-                            //Me fijo la moneda seleccionada y la del producto
-                            if(producto.getDescripcion().equals("$AR") && sisMonedas.getDescripcion().equals("u$s")) {  
-                               precioAtualizado = producto.getCostoReposicion().multiply(sisCotDolar.getCotizacion());
-                            } else if((producto.getDescripcion().equals("u$s") && sisMonedas.getDescripcion().equals("$AR"))) {
-                               precioAtualizado = producto.getCostoReposicion().divide(sisCotDolar.getCotizacion(),2, RoundingMode.HALF_UP);
-                            }
-                            //Si el precio convertido es distinto al que tiene el producto lo cambio
-                            if(!precioAtualizado.equals(producto.getCostoReposicion())) {
-                                productoFacade.editProducto(producto);
-                            }
-                        } 
-                        
-                        //Si la cantidad es igual a 0 no guarda ese articulo
-                        if(pendiente.compareTo(BigDecimal.ZERO) == 0) {
-                            continue;
-                        }
-                        
-                        if(idSisOperacionComprobante == null) {
-                            respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, Comprobante no encontrado");
-                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                        }
-                           
-                        SisOperacionComprobante sisOperacionComprobante = sisOperacionComprobanteFacade.find(idSisOperacionComprobante);
-                        System.out.println("sisOperacionComprobante: "+sisOperacionComprobante);
-                        if(sisOperacionComprobante == null) {
-                            respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, Comprobante no encontrado");
-                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                        }
-                        
-                        if(!sisOperacionComprobante.getAdmiteRelacionMultiple() && comprobanteRel != null) {
-                            listaComRel.add(comprobanteRel);
-                        }
-
-                        if(!sisOperacionComprobante.getIncluyeNeto()) {
-                            importe = BigDecimal.ZERO;
-                        }
-                        
-                        if(sisOperacionComprobante.getDifCotizacion() && importe.compareTo(BigDecimal.ZERO) < 0 && sisOperacionComprobante.getIdSisComprobantes().getIdSisComprobantes().equals(8)) {
-                            respuesta.setControl(AppCodigo.AVISO, "Debe emitir otro tipo de comprobante");
-                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                        }
-                        
-                        // verifico si debo enviar el mail, notificando que se dio de alta un comprobante ////////////
-                        System.out.println("Verifico permiso para envio de mail ..."+sisOperacionComprobante.getEnviaMail());
-                        if (sisOperacionComprobante.getEnviaMail().equals(true) || sisOperacionComprobante.getEnviaMail().equals(1)){
-                            
-                             Integer idEmpresa = accesoFacade.findByToken(token).getIdUsuario().getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa();
-                            System.out.println("Enviando correo (Empresa: "+idEmpresa+")");
-                             String nombreEmpresaSucursal = accesoFacade.findByToken(token).getIdUsuario().getIdPerfil().getIdSucursal().getNombre();
-                             System.out.println("Enviando correo (Empresa: "+nombreEmpresaSucursal+")");
-                             String emailOrigen = parametro.get("KERNEL_SMTP_USER");
-                             System.out.println("Enviando correo (Email Origen: "+emailOrigen+")");
-                             String emailDestino  = sisOperacionComprobante.getMail1();
-                             System.out.println("Enviando correo (Email Destino: "+emailDestino+")");
-                             String nombreDestino = "Nombre del Destinatario";
-                             String asunto = "Kernel Facturación: Alta de Comprobante";
-                             // Armo el cuerpo del mail 
-                            String contenido = "<!doctype html>\n" +
-                                                "<html>\n" +
-                                                "<head>\n" +
-                                                "<meta charset=\"utf-8\">\n" +
-                                                "<title>Sistema Facturación</title>\n" +
-                                                "</head>\n" +
-                                                "<body>\n" +
-                                                "<div>\n" +
-                                                "<hr>\n"+
-                                                "	<div>Estimado: "+nombreDestino+"</div>\n" +
-                                                "	<div>Asunto: "+asunto+"</div>\n" +
-                                                "	<div>"+nombreEmpresaSucursal+"</div>\n" +
-                                                "	<div>Fecha/hora de Alta: </div>\n" +
-                                                "	<hr>\n" +
-                                                "	<div><strong>Detalle del Comprobante Cargado</strong></div>\n" +
-                                                "	<div>\n" +
-                                                "		<li>Tipo de Comprobante: "+factCab.getNombre()+" - Letra: "+factCab.getLetra()+" </li>\n" +
-                                                "		<li>Nro Comprobante: "+factCab.getNombre()+" </li>\n" +
-                                                "		<li>Fecha Emsión: "+factCab.getFechaEmision()+" </li>\n" +
-                                                "		<li>Fecha Vencimiento: "+factCab.getFechaVto()+" </li>\n" +
-                                                "		<li>Observaciones: "+factCab.getObservaciones()+" </li>\n" +
-                                                "		\n" +
-                                                "	</div>\n" +
-                                                "</div>\n" +
-                                                "\n" +
-                                                "</body>\n" +
-                                                "</html>";
-                            
-                            // fin armado del cuerpo
-        
-        
-                            // String contenido = asunto+ " | Se ha agregado un nuevo comprobante | Emision: "+fechaEmision+" - Cuit: "+cuit+" -  Comprobante Nro: "+numeroFact+" - TC: "+tipoFact;
-                             utilidadesFacade.enviarMail(emailOrigen, nombreEmpresaSucursal, emailDestino, contenido, asunto, nombreDestino);
-                        }else{
-                            System.out.println("No se envia mail("+sisOperacionComprobante.getEnviaMail()+")");
-                        }
-                        /////////////////////////////////////////////////////////
-                        //Creo el factDetalle nuevo y seteo los valores
-                        FactDetalle factDetalle = new FactDetalle();
-                        factDetalle.setDetalle(articulo);
-                        factDetalle.setCantBultos(cantidadBulto);
-                        factDetalle.setCantidad(pendiente);
-                        factDetalle.setDescuento(descuento);
-                        factDetalle.setDespacho(despacho);
-                        factDetalle.setIdDepositos(deposito);
-                        factDetalle.setIdFactCab(factCab);
-                        factDetalle.setIdProducto(idProducto);
-                        factDetalle.setImputacion(imputacion);
-                        factDetalle.setItem(item);
-                        factDetalle.setIvaPorc(ivaPorc);
-                        factDetalle.setObservaciones(observacionDetalle);
-                        factDetalle.setPorcCalc(porCalc);
-                        factDetalle.setPrecio(precio);
-                        factDetalle.setTrazable(trazable);
-                        factDetalle.setImporte(importe);
-                        factDetalle.setCodProducto(producto.getCodProducto());
-                        factDetalle.setUnidadDescuento(unidadDescuento);
-                        factDetalle.setPrecioDesc(precioDesc); 
-                        factDetalle.setIdLibro(idLibro);
-                        
-                        // Busco listaPrecioDet
-                        if (listaPrecio != null) {
-                            ListaPrecioDet detalleProd = listaPrecioFacade.findByIdProductoAndIdLista(listaPrecio, idProducto);
-                            factDetalle.setAuxListaPrecioDet(detalleProd);
-                        }
-                        
-                        listaDetalles.add(factDetalle);
-                        
-                        //Empiezo la transaccion para la grabacion de FactImputa
-                        if(factImputa && idFactDetalleImputa != null) {  
-                            FactDetalle imputa = factDetalleFacade.find(idFactDetalleImputa);
-                            if(imputa == null) {
-                                respuesta.setControl(AppCodigo.ERROR, "Error al cargar Imputacion, la factura con id " + idFactDetalleImputa + " no existe");
-                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                            }
-                            FactImputa facturaImputa = new FactImputa();
-                            facturaImputa.setCantidadImputada(pendiente);
-                            facturaImputa.setIdFactDetalle(imputa);
-                            facturaImputa.setIdFactDetalleImputa(factDetalle);
-                            facturaImputa.setImporteImputado(pendiente.multiply(porCalc).multiply(precio));
-                            facturaImputa.setMasAsiento(0);
-                            facturaImputa.setMasAsientoImputado(0);
-                            listaImputa.add(facturaImputa);
-                        }
-                        
-                        //Pregunto si se graba produmo y empiezo con la transaccion
-                        if(produmo && (cteTipo.getIdSisComprobante().getStock().equals(1) || cteTipo.getIdSisComprobante().getStock().equals(2))) {
-                            Produmo prod = new Produmo();
-                            if(cteTipo.getSurenu().equals("D")){
-                                prod.setCantidad(pendiente.negate());
-                            } else {
-                                prod.setCantidad(pendiente);
-                            }   
-                            prod.setDetalle(articulo);
-                            prod.setIdCteTipo(cteTipo);
-                            prod.setIdDepositos(deposito);
-                            prod.setIdFactDetalle(factDetalle.getIdFactDetalle());
-                            prod.setIdProductos(producto);
-                            prod.setItem(item);
-                            
-                            CteNumerador cteNumerador = null;
-                            if(idNumero != null) {
-                                cteNumerador = cteNumeradorFacade.find(idNumero);
-                                if(cteNumerador == null) {
-                                    respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el numero de comprobante");
-                                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                                }
-                                String ptoVenta = cteNumerador.getIdPtoVenta().getPtoVenta().toString();
-                                String numeroVentaFormat = String.format("%08d",cteNumerador.getNumerador());
-                                String concatenado = ptoVenta.concat(numeroVentaFormat);
-                                prod.setNumero(Long.parseLong(concatenado,10));
-                            } else {
-                                prod.setNumero(numero.longValue());
-                            }                                                       
-                            prod.setFecha(fechaEmision);
-                            prod.setStock(cteTipo.getIdSisComprobante().getStock());
-                            //prod.setIdLotes(item);
-                            listaProdumo.add(prod);
-                        }                        
-                        //Le sumo uno al contador de items
-                        item++;
-                    }
-                    
-                    //Voy a fijarme si hay comprobantes relacionados y son distintos de acuerdo a la condicion de si permite relacionados multiples
-                    if(!listaComRel.isEmpty() && listaComRel.size() > 0) {
-                        //Ordeno la lista
-                        Collections.sort(listaComRel, (o1, o2) -> o1.compareTo(o2));
-                        for(int i=0; i < listaComRel.size();i++) {
-                            //Me fijo si es distinto al anterior
-                            if(i!= 0 && !listaComRel.get(i).equals(listaComRel.get(i-1))) {
-                                respuesta.setControl(AppCodigo.ERROR, "Error al cargar el comprobante, este tipo de operacion no admite la relacion de distintos comprobantes");
-                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                            }
-                        }
-                    }                    
-                    //Aca filtro por las cotas en la lista de precios seleccionada y el precio ingresado
-                    if(listaPrecio != null) {
-                        List<FactDetalle> detallesCotas = new ArrayList<>();
-                        for(FactDetalle det : listaDetalles) {
-                            BigDecimal precio = det.getPrecioDesc();
-                            if(sisMonedas.getDescripcion().equals("u$s") && det.getAuxListaPrecioDet().getIdListaPrecios().getIdMoneda().getDescripcion().equals("$AR")) {
-                                SisCotDolar sisCotDolar = sisCotDolarFacade.getLastCotizacion();
-                                precio = precio.multiply(sisCotDolar.getCotizacion());                              
-                            } else if(sisMonedas.getDescripcion().equals("$AR") && det.getAuxListaPrecioDet().getIdListaPrecios().getIdMoneda().getDescripcion().equals("u$s")) {
-                                SisCotDolar sisCotDolar = sisCotDolarFacade.getLastCotizacion();
-                                precio = precio.divide(sisCotDolar.getCotizacion(),2, RoundingMode.HALF_UP);
-                            }                          
-                            if((precio.compareTo(det.getAuxListaPrecioDet().getCotaInf()) < 0 ||
-                               precio.compareTo(det.getAuxListaPrecioDet().getCotaSup()) > 0) &&
-                               precio.compareTo(BigDecimal.ZERO) != 0) {
-                                detallesCotas.add(det);
-                            } 
-                        }
-                        String prod = "";                      
-                        if(detallesCotas.size() > 0) {
-                            for(FactDetalle d : detallesCotas) {
-                                prod = prod.concat(d.getDetalle()).concat(", ");    
-                            }
-                            respuesta.setControl(AppCodigo.ERROR, "Los productos: "+ prod + ", deben estar entre las cotas indicadas en la lista de precios");
-                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                        }
-                    }
-                    
-                    //Termina el recorrido de la Grilla de articulos y empiezo con la de factFormaPago
-                    if(factFormaPago && grillaFormaPago != null) {
-                        for(JsonElement je : grillaFormaPago) {
-                            Integer plazo = (Integer) Utils.getKeyFromJsonObject("plazo", je.getAsJsonObject(), "Integer"); 
-                            BigDecimal interes = (BigDecimal) Utils.getKeyFromJsonObject("interes", je.getAsJsonObject(), "BigDecimal");
-                            BigDecimal monto = (BigDecimal) Utils.getKeyFromJsonObject("monto", je.getAsJsonObject(), "BigDecimal");
-                            String detalle = (String) Utils.getKeyFromJsonObject("detalle", je.getAsJsonObject(), "String");
-                            String observacionesFormaPago = (String) Utils.getKeyFromJsonObject("observaciones", je.getAsJsonObject(), "String");
-                            String cuentaContable = (String) Utils.getKeyFromJsonObject("cuentaContable", je.getAsJsonObject(), "String");
-                            Integer idFormaPagoDet = (Integer) Utils.getKeyFromJsonObject("idFormaPagoDet", je.getAsJsonObject(), "Integer");
-                            //Pregunto si son nulos 
-                            if(observacionesFormaPago == null || monto == null || interes == null || plazo == null || idFormaPagoDet == null) {
-                                respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta Forma de Pago, algun campo de la grilla es nulo");
-                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                            }
-                            
-                            if(monto.compareTo(BigDecimal.ZERO) == 0) {
-                                continue;
-                            }
-                            
-                            FormaPagoDet formaPagoDet = formaPagoDetFacade.getByidFormaPagoDet(idFormaPagoDet);
-                            
-                            if(formaPagoDet == null) {
-                                respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta Forma de Pago, la forma de pago no existe");
-                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                            }
-                            
-                            //Creo FacForma de pago
-                            FactFormaPago factFPago = new FactFormaPago();
-                            factFPago.setDetalle(observacionesFormaPago);
-                            factFPago.setDiasPago(plazo);
-                            //creo la fecha con la cantidad de dias de plazo
-                            Calendar calendar = Calendar.getInstance();	
-                            calendar.setTime(fechaEmision);	
-                            calendar.add(Calendar.DAY_OF_YEAR, plazo);
-                            //seteo la fecha 
-                            factFPago.setFechaPago(calendar.getTime());
-                            factFPago.setIdFormaPago(formaPagoDet.getIdFormaPago());
-                            factFPago.setImporte(monto);
-                            factFPago.setPorcentaje(interes);
-                            factFPago.setCtaContable(cuentaContable);
-                            factFPago.setIdFactCab(factCab);
-                            listaFormaPago.add(factFPago);
-                        }                        
-                    }
-                    
-                    //Empiezo con la grilla de SubTotales para grabar FactPie
-                    if(factPie) {
-                        for(JsonElement je : grillaSubTotales) {
-                            String cuenta = (String) Utils.getKeyFromJsonObject("cuenta", je.getAsJsonObject(), "String");
-                            String descripcionPie = (String) Utils.getKeyFromJsonObject("descripcionPie", je.getAsJsonObject(), "String");
-                            BigDecimal importe = (BigDecimal) Utils.getKeyFromJsonObject("importe", je.getAsJsonObject(), "BigDecimal");
-                            BigDecimal totalComprobante = (BigDecimal) Utils.getKeyFromJsonObject("totalComprobante", je.getAsJsonObject(), "BigDecimal");
-                            BigDecimal porcentaje = (BigDecimal) Utils.getKeyFromJsonObject("porcentaje", je.getAsJsonObject(), "BigDecimal");
-                            Integer idSisTipoModelo = (Integer) Utils.getKeyFromJsonObject("idSisTipoModelo", je.getAsJsonObject(), "Integer");
-                            BigDecimal baseImponible = (BigDecimal) Utils.getKeyFromJsonObject("baseImponible", je.getAsJsonObject(), "BigDecimal");
-                            String operador = (String) Utils.getKeyFromJsonObject("operador", je.getAsJsonObject(), "String");
-                            Integer idLibro = (Integer) Utils.getKeyFromJsonObject("idLibro", je.getAsJsonObject(), "Integer");
-                            
-                            //Pregunto por los que no pueden ser Null
-                            if(cuenta == null || descripcionPie == null ||importe == null || totalComprobante == null || idSisTipoModelo == null) {
-                                respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, algun campo de la grilla es nulo");
-                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                            }
-                            
-                            if(idLibro == null) {
-                                respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, idLibro nulo");
-                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                            }
-                            
-                            SisTipoModelo sisTipoModelo = sisTipoModeloFacade.find(idSisTipoModelo);                     
-                            if(sisTipoModelo == null) {
-                                respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, sisTipoOperacion no encontrado");
-                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                            }
-                            
-                            if(idSisOperacionComprobante == null) {
-                                respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, Comprobante no encontrado");
-                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                            }
-                            
-                            SisOperacionComprobante sisOperacionComprobante = sisOperacionComprobanteFacade.find(idSisOperacionComprobante);
-                            if(sisOperacionComprobante == null) {
-                                respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, Comprobante no encontrado");
-                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                            }
-                            
-                            if(!sisOperacionComprobante.getIncluyeIva()) {
-                                importe = BigDecimal.ZERO;
-                            }
-                            //Creo el pie 
-                            FactPie facturacionPie = new FactPie();
-                            facturacionPie.setCtaContable(cuenta);
-                            facturacionPie.setDetalle(descripcionPie);
-                            facturacionPie.setImporte(importe);
-                            facturacionPie.setIdFactCab(factCab);
-                            facturacionPie.setPorcentaje(porcentaje);
-                            facturacionPie.setIdSisTipoModelo(sisTipoModelo);
-                            facturacionPie.setBaseImponible(baseImponible);
-                            facturacionPie.setOperador(operador);
-                            facturacionPie.setIdLibro(idLibro);
-                            listaPie.add(facturacionPie);
-                        }
-                    }
-                    //Termina la griila de sub totales y empieza la de trasabilidad
-                    if(lote && cteTipo.getIdSisComprobante().getStock().equals(1) && grillaTrazabilidad != null && cteTipo.getIdSisComprobante().getIdSisModulos().getIdSisModulos() == 1) {
-                        int itemTrazabilidad = 0;
-                        for(JsonElement gt : grillaTrazabilidad) {
-                            //Obtengo los atributos del body
-                            String nroLote = (String) Utils.getKeyFromJsonObject("nroLote", gt.getAsJsonObject(), "String");
-                            String serie = (String) Utils.getKeyFromJsonObject("serie", gt.getAsJsonObject(), "String");
-                            Date fechaElab = (Date) Utils.getKeyFromJsonObject("fechaElab", gt.getAsJsonObject(), "Date");
-                            Date fechaVto = (Date) Utils.getKeyFromJsonObject("fechaVto", gt.getAsJsonObject(), "Date");
-                            Boolean vigencia = (Boolean) Utils.getKeyFromJsonObject("vigencia", gt.getAsJsonObject(), "boolean");
-                            Integer idProducto = (Integer) Utils.getKeyFromJsonObject("idProducto", gt.getAsJsonObject(), "Integer");
-                            
-                            //Pregunto por los que no pueden ser null
-                            if(nroLote == null || serie == null || vigencia == null || idProducto == null) {
-                                respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el lote de la factura, algun campo de la grilla es nulo");
-                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                            }
-                                                                                   
-                            //Busco el producto por id
-                            Producto prod = productoFacade.find(idProducto);
-                            if(prod == null) {
-                                respuesta.setControl(AppCodigo.ERROR, "Error al cargar lote, el producto con id " + idProducto + " no existe");
-                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                            }
-                            
-                            //Armo el lote
-                            Lote loteNuevo = new Lote();
-                            
-                            if(loteFacade.findByNroEmpresaProducto(nroLote, user.getIdPerfil().getIdSucursal().getIdEmpresa(), prod) != null) {
-                                loteNuevo = loteFacade.findByNroEmpresaProducto(nroLote, user.getIdPerfil().getIdSucursal().getIdEmpresa(), prod);
-                            }
-                            
-                            loteNuevo.setFechaElab(fechaElab);
-                            loteNuevo.setFechaVto(fechaVto);
-                            loteNuevo.setIdEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
-                            loteNuevo.setIdproductos(prod);
-                            loteNuevo.setItem(itemTrazabilidad);
-                            loteNuevo.setNroLote(nroLote);
-                            loteNuevo.setSerie(serie);
-                            loteNuevo.setVigencia(vigencia);
-                           
-                            //Recorro produmo y si es el mismo producto le agreego el lote
-                            for(Produmo p : listaProdumo) {
-                                if(p.getIdProductos().equals(prod)) {
-                                    p.setNroLote(nroLote);
-                                }
-                            }                            
-                            listaLotes.add(loteNuevo);
-                            
-                            //Le sumo uno al item
-                            itemTrazabilidad ++;
-                        }
-                    } else if(lote && cteTipo.getIdSisComprobante().getStock().equals(1) && grillaTrazabilidad != null && cteTipo.getIdSisComprobante().getIdSisModulos().getIdSisModulos() == 2) {
-                        int itemTrazabilidad = 0;
-                        //No guardo el lote pero si lo agrego a la tabla produmo
-                        for(JsonElement gt : grillaTrazabilidad) {
-                            //Obtengo los atributos del body
-                            String nroLote = (String) Utils.getKeyFromJsonObject("nroLote", gt.getAsJsonObject(), "String");
-                            String serie = (String) Utils.getKeyFromJsonObject("serie", gt.getAsJsonObject(), "String");
-                            Date fechaElab = (Date) Utils.getKeyFromJsonObject("fechaElab", gt.getAsJsonObject(), "Date");
-                            Date fechaVto = (Date) Utils.getKeyFromJsonObject("fechaVto", gt.getAsJsonObject(), "Date");
-                            Boolean vigencia = (Boolean) Utils.getKeyFromJsonObject("vigencia", gt.getAsJsonObject(), "boolean");
-                            Integer idProducto = (Integer) Utils.getKeyFromJsonObject("idProducto", gt.getAsJsonObject(), "Integer");
-                            
-                            //Pregunto por los que no pueden ser null
-                            if(nroLote == null || serie == null || vigencia == null || idProducto == null) {
-                                respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el lote de la factura, algun campo de la grilla es nulo");
-                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                            }
-
-                            //Busco el producto por id
-                            Producto prod = productoFacade.find(idProducto);
-                            if(prod == null) {
-                                respuesta.setControl(AppCodigo.ERROR, "Error al cargar lote, el producto con id " + idProducto + " no existe");
-                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                            }
-                            
-                            //Armo el lote
-                            Lote loteNuevo = new Lote();
-                            
-                            if(loteFacade.findByNroEmpresaProducto(nroLote, user.getIdPerfil().getIdSucursal().getIdEmpresa(), prod) != null) {
-                                loteNuevo = loteFacade.findByNroEmpresaProducto(nroLote, user.getIdPerfil().getIdSucursal().getIdEmpresa(), prod);
-                            }
-                            
-                            loteNuevo.setFechaElab(fechaElab);
-                            loteNuevo.setFechaVto(fechaVto);
-                            loteNuevo.setIdEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
-                            loteNuevo.setIdproductos(prod);
-                            loteNuevo.setItem(itemTrazabilidad);
-                            loteNuevo.setNroLote(nroLote);
-                            loteNuevo.setSerie(serie);
-                            loteNuevo.setVigencia(vigencia);
-                           
-                            //Recorro produmo y si es el mismo producto le agreego el lote
-                            for(Produmo p : listaProdumo) {
-                                if(p.getIdProductos().equals(prod)) {
-                                    p.setNroLote(nroLote);
-                                }
-                            }                                                       
-                            //Le sumo uno al item
-                            itemTrazabilidad ++;
-                        }
-                    }
-                    //Me fijo si guarda la factura del remito asociado
-                    if(!grabaFactura) {
-                        CteNumerador cteNumerador = null;
-                        if(idNumero != null) {
-                            cteNumerador = cteNumeradorFacade.find(idNumero);
-                            if(cteNumerador == null) {
-                                respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el numero de comprobante");
-                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                            }
-                            String ptoVenta = cteNumerador.getIdPtoVenta().getPtoVenta().toString();
-                            String numeroVentaFormat = String.format("%08d",cteNumerador.getNumerador());
-                            String concatenado = ptoVenta.concat(numeroVentaFormat);
-                            factCab.setNumero(Long.parseLong(concatenado,10));
-                            factCab.setIdCteNumerador(cteNumerador);
-                            //Guardo cai en factCab si tiene el numerador
-                            if(cteNumerador.getCai() != null) {
-                                factCab.setCai(cteNumerador.getCai());
-                            }
-                            //Guardo vtoCai en factCab si tiene el numerador
-                            if(cteNumerador.getVtoCai() != null) {
-                                factCab.setCaiVto(cteNumerador.getVtoCai());
-                            }
-                        }
-                        return this.persistirObjetos(factCab, contratoDet,listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumerador);
-                    } else if(tipoFact != null || letraFact != null || numeroFact != null || fechaVencimientoFact != null || fechaContaFact != null){                                              
-                        CteNumerador cteNumerador = null;
-                        if(idNumero != null) {
-                            cteNumerador = cteNumeradorFacade.find(idNumero);
-                            if(cteNumerador == null) {
-                                respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el numero de comprobante");
-                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                            }
-                            String ptoVenta = cteNumerador.getIdPtoVenta().getPtoVenta().toString();
-                            String numeroVentaFormat = String.format("%08d",cteNumerador.getNumerador());
-                            String concatenado = ptoVenta.concat(numeroVentaFormat);
-                            factCab.setNumero(Long.parseLong(concatenado,10));
-                            factCab.setIdCteNumerador(cteNumerador);
-                            //Guardo cai en factCab si tiene el numerador
-                            if(cteNumerador.getCai() != null) {
-                                factCab.setCai(cteNumerador.getCai());
-                            }
-                            //Guardo vtoCai en factCab si tiene el numerador
-                            if(cteNumerador.getVtoCai() != null) {
-                                factCab.setCaiVto(cteNumerador.getVtoCai());
-                            }
-                        }
-                        
-                       //Persisto Primero los objetos del remito
-                        this.persistirObjetos(factCab, contratoDet, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumerador);
-                        
-                        //Luego empiezo con los datos de la factura relacionada
-                        CteTipo cteTipoFac = cteTipoFacade.find(tipoFact);
-                        if(cteTipoFac == null) {
-                            respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el tipo de comprobante");
-                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                        }
-                        
-                        //Creo la nueva FactCab
-                        FactCab fc = new FactCab();                        
-                        //Busco el numerador del relacionado                        
-                        CteNumerador cteNumeradorRel = null;
-                        if(idNumeroFact != null) {
-                            cteNumeradorRel = cteNumeradorFacade.find(idNumeroFact);
-                            if(cteNumeradorRel == null) {
-                                respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el numero de comprobante");
-                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                            }
-                            String ptoVenta = cteNumeradorRel.getIdPtoVenta().getPtoVenta().toString();
-                            String numeroVentaFormat = String.format("%08d",cteNumeradorRel.getNumerador());
-                            String concatenado = ptoVenta.concat(numeroVentaFormat);
-                            fc.setNumero(Long.parseLong(concatenado,10));
-                            fc.setIdCteNumerador(cteNumerador);
-                            //Guardo cai en factCab si tiene el numerador
-                            if(cteNumerador.getCai() != null) {
-                                fc.setCai(cteNumerador.getCai());
-                            }
-                            //Guardo vtoCai en factCab si tiene el numerador
-                            if(cteNumerador.getVtoCai() != null) {
-                                fc.setCaiVto(cteNumerador.getVtoCai());
-                            }
-                        } else {
-                            fc.setNumero(numeroFact.longValue());
-                        }
-                        fc.setCodigoAfip(codigoAfipFact);
-                        fc.setCai(cai);
-                        fc.setCaiVto(caiVto);
-                        fc.setCodBarra(codBarra);
-                        fc.setCodigoPostal(codigoPostal);
-                        fc.setCotDolar(cotDolar);
-                        fc.setCuit(cuit);
-                        fc.setFechaConta(fechaContaFact);
-                        fc.setFechaDolar(fechaDolar);
-                        fc.setFechaEmision(fechaEmision);
-                        fc.setFechaVto(fechaVencimientoFact);
-                        fc.setIdCteTipo(cteTipoFac);
-                        fc.setIdListaPrecios(listaPrecio);
-                        fc.setIdPadron(idPadron);
-                        fc.setIdProductoCanje(productoCanje);
-                        fc.setIdmoneda(sisMonedas);
-                        fc.setInteresCanje(interesCanje);
-                        fc.setLetra(letraFact);
-                        fc.setNombre(nombre);
-                        fc.setObservaciones(observaciones);
-                        fc.setPrecioReferenciaCanje(precioReferenciaCanje);
-                        fc.setSitIVA(sisSitIva);
-                        fc.setIdSisTipoOperacion(sisTipoOperacion);
-                        fc.setIdVendedor(idVendedor);
-                        return this.generarFacturaRelacionada(fc, contratoDet, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumeradorRel);
-                    } else {
-                        respuesta.setControl(AppCodigo.ERROR, "No pudo grabar la factura asociada, algun campo no es valido");
+                    if (idLibro == null) {
+                        respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el detalle de la factura, idLibro nulo");
                         return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                     }
+
+                    //Pregunto por los campos que son NOTNULL
+                    if (idProducto == null || articulo == null || pendiente == null || precio == null || porCalc == null
+                            || ivaPorc == null || cantidadBulto == null || despacho == null || trazable == null || idDeposito == null
+                            || observacionDetalle == null) {
+                        respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, algun campo esta vacio");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+
+                    //Busco el deposito por id, si no encuentro alguno desarmo la transaccion.
+                    Deposito deposito = depositoFacade.find(idDeposito);
+                    if (deposito == null) {
+                        respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, el deposito con id " + idDeposito + " no existe");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+
+                    //Busco el producto 
+                    Producto producto = productoFacade.find(idProducto);
+                    if (producto == null) {
+                        respuesta.setControl(AppCodigo.ERROR, "Error al cargar detalles, el producto con id " + idProducto + " no existe");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+
+                    //Actualizo el precio del aritulo si es compra, si es distinto de 0 y si el precio es distinto. Ademas lo convierto de acuerdo al tipo de moneda
+                    if (!precio.equals(producto.getCostoReposicion()) && cteTipo.getIdSisComprobante().getIdSisModulos().getIdSisModulos().equals(1) && precio.compareTo(BigDecimal.ZERO) != 0) {
+                        SisCotDolar sisCotDolar = sisCotDolarFacade.getLastCotizacion();
+                        BigDecimal precioAtualizado = new BigDecimal(0);
+                        //Me fijo la moneda seleccionada y la del producto
+                        if (producto.getDescripcion().equals("$AR") && sisMonedas.getDescripcion().equals("u$s")) {
+                            precioAtualizado = producto.getCostoReposicion().multiply(sisCotDolar.getCotizacion());
+                        } else if ((producto.getDescripcion().equals("u$s") && sisMonedas.getDescripcion().equals("$AR"))) {
+                            precioAtualizado = producto.getCostoReposicion().divide(sisCotDolar.getCotizacion(), 2, RoundingMode.HALF_UP);
+                        }
+                        //Si el precio convertido es distinto al que tiene el producto lo cambio
+                        if (!precioAtualizado.equals(producto.getCostoReposicion())) {
+                            productoFacade.editProducto(producto);
+                        }
+                    }
+
+                    //Si la cantidad es igual a 0 no guarda ese articulo
+                    if (pendiente.compareTo(BigDecimal.ZERO) == 0) {
+                        continue;
+                    }
+
+                    if (idSisOperacionComprobante == null) {
+                        respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, Comprobante no encontrado");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+
+                    SisOperacionComprobante sisOperacionComprobante = sisOperacionComprobanteFacade.find(idSisOperacionComprobante);
+                    System.out.println("sisOperacionComprobante: " + sisOperacionComprobante);
+                    if (sisOperacionComprobante == null) {
+                        respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, Comprobante no encontrado");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+
+                    if (!sisOperacionComprobante.getAdmiteRelacionMultiple() && comprobanteRel != null) {
+                        listaComRel.add(comprobanteRel);
+                    }
+
+                    if (!sisOperacionComprobante.getIncluyeNeto()) {
+                        importe = BigDecimal.ZERO;
+                    }
+
+                    if (sisOperacionComprobante.getDifCotizacion() && importe.compareTo(BigDecimal.ZERO) < 0 && sisOperacionComprobante.getIdSisComprobantes().getIdSisComprobantes().equals(8)) {
+                        respuesta.setControl(AppCodigo.AVISO, "Debe emitir otro tipo de comprobante");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+
+                    /////////////////////////////////////////////////////////
+                    //Creo el factDetalle nuevo y seteo los valores
+                    FactDetalle factDetalle = new FactDetalle();
+                    factDetalle.setDetalle(articulo);
+                    factDetalle.setCantBultos(cantidadBulto);
+                    factDetalle.setCantidad(pendiente);
+                    factDetalle.setDescuento(descuento);
+                    factDetalle.setDespacho(despacho);
+                    factDetalle.setIdDepositos(deposito);
+                    factDetalle.setIdFactCab(factCab);
+                    factDetalle.setIdProducto(idProducto);
+                    factDetalle.setImputacion(imputacion);
+                    factDetalle.setItem(item);
+                    factDetalle.setIvaPorc(ivaPorc);
+                    factDetalle.setObservaciones(observacionDetalle);
+                    factDetalle.setPorcCalc(porCalc);
+                    factDetalle.setPrecio(precio);
+                    factDetalle.setTrazable(trazable);
+                    factDetalle.setImporte(importe);
+                    factDetalle.setCodProducto(producto.getCodProducto());
+                    factDetalle.setUnidadDescuento(unidadDescuento);
+                    factDetalle.setPrecioDesc(precioDesc);
+                    factDetalle.setIdLibro(idLibro);
+
+                    // Busco listaPrecioDet
+                    if (listaPrecio != null) {
+                        ListaPrecioDet detalleProd = listaPrecioFacade.findByIdProductoAndIdLista(listaPrecio, idProducto);
+                        factDetalle.setAuxListaPrecioDet(detalleProd);
+                    }
+
+                    listaDetalles.add(factDetalle);
+
+                    //Empiezo la transaccion para la grabacion de FactImputa
+                    if (factImputa && idFactDetalleImputa != null) {
+                        FactDetalle imputa = factDetalleFacade.find(idFactDetalleImputa);
+                        if (imputa == null) {
+                            respuesta.setControl(AppCodigo.ERROR, "Error al cargar Imputacion, la factura con id " + idFactDetalleImputa + " no existe");
+                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                        }
+                        FactImputa facturaImputa = new FactImputa();
+                        facturaImputa.setCantidadImputada(pendiente);
+                        facturaImputa.setIdFactDetalle(imputa);
+                        facturaImputa.setIdFactDetalleImputa(factDetalle);
+                        facturaImputa.setImporteImputado(pendiente.multiply(porCalc).multiply(precio));
+                        facturaImputa.setMasAsiento(0);
+                        facturaImputa.setMasAsientoImputado(0);
+                        listaImputa.add(facturaImputa);
+                    }
+
+                    //Pregunto si se graba produmo y empiezo con la transaccion
+                    if (produmo && (cteTipo.getIdSisComprobante().getStock().equals(1) || cteTipo.getIdSisComprobante().getStock().equals(2))) {
+                        Produmo prod = new Produmo();
+                        if (cteTipo.getSurenu().equals("D")) {
+                            prod.setCantidad(pendiente.negate());
+                        } else {
+                            prod.setCantidad(pendiente);
+                        }
+                        prod.setDetalle(articulo);
+                        prod.setIdCteTipo(cteTipo);
+                        prod.setIdDepositos(deposito);
+                        prod.setIdFactDetalle(factDetalle.getIdFactDetalle());
+                        prod.setIdProductos(producto);
+                        prod.setItem(item);
+
+                        CteNumerador cteNumerador = null;
+                        if (idNumero != null) {
+                            cteNumerador = cteNumeradorFacade.find(idNumero);
+                            if (cteNumerador == null) {
+                                respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el numero de comprobante");
+                                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                            }
+                            String ptoVenta = cteNumerador.getIdPtoVenta().getPtoVenta().toString();
+                            String numeroVentaFormat = String.format("%08d", cteNumerador.getNumerador());
+                            String concatenado = ptoVenta.concat(numeroVentaFormat);
+                            prod.setNumero(Long.parseLong(concatenado, 10));
+                        } else {
+                            prod.setNumero(numero.longValue());
+                        }
+                        prod.setFecha(fechaEmision);
+                        prod.setStock(cteTipo.getIdSisComprobante().getStock());
+                        //prod.setIdLotes(item);
+                        listaProdumo.add(prod);
+                        // verifico si debo enviar el mail, notificando que se dio de alta un comprobante ////////////
+
+                    }
+
+                    //Le sumo uno al contador de items
+                    item++;
+                }
+
+                //Voy a fijarme si hay comprobantes relacionados y son distintos de acuerdo a la condicion de si permite relacionados multiples
+                if (!listaComRel.isEmpty() && listaComRel.size() > 0) {
+                    //Ordeno la lista
+                    Collections.sort(listaComRel, (o1, o2) -> o1.compareTo(o2));
+                    for (int i = 0; i < listaComRel.size(); i++) {
+                        //Me fijo si es distinto al anterior
+                        if (i != 0 && !listaComRel.get(i).equals(listaComRel.get(i - 1))) {
+                            respuesta.setControl(AppCodigo.ERROR, "Error al cargar el comprobante, este tipo de operacion no admite la relacion de distintos comprobantes");
+                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                        }
+                    }
+                }
+                //Aca filtro por las cotas en la lista de precios seleccionada y el precio ingresado
+                if (listaPrecio != null) {
+                    List<FactDetalle> detallesCotas = new ArrayList<>();
+                    for (FactDetalle det : listaDetalles) {
+                        BigDecimal precio = det.getPrecioDesc();
+                        if (sisMonedas.getDescripcion().equals("u$s") && det.getAuxListaPrecioDet().getIdListaPrecios().getIdMoneda().getDescripcion().equals("$AR")) {
+                            SisCotDolar sisCotDolar = sisCotDolarFacade.getLastCotizacion();
+                            precio = precio.multiply(sisCotDolar.getCotizacion());
+                        } else if (sisMonedas.getDescripcion().equals("$AR") && det.getAuxListaPrecioDet().getIdListaPrecios().getIdMoneda().getDescripcion().equals("u$s")) {
+                            SisCotDolar sisCotDolar = sisCotDolarFacade.getLastCotizacion();
+                            precio = precio.divide(sisCotDolar.getCotizacion(), 2, RoundingMode.HALF_UP);
+                        }
+                        if ((precio.compareTo(det.getAuxListaPrecioDet().getCotaInf()) < 0
+                                || precio.compareTo(det.getAuxListaPrecioDet().getCotaSup()) > 0)
+                                && precio.compareTo(BigDecimal.ZERO) != 0) {
+                            detallesCotas.add(det);
+                        }
+                    }
+                    String prod = "";
+                    if (detallesCotas.size() > 0) {
+                        for (FactDetalle d : detallesCotas) {
+                            prod = prod.concat(d.getDetalle()).concat(", ");
+                        }
+                        respuesta.setControl(AppCodigo.ERROR, "Los productos: " + prod + ", deben estar entre las cotas indicadas en la lista de precios");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                }
+
+                //Termina el recorrido de la Grilla de articulos y empiezo con la de factFormaPago
+                if (factFormaPago && grillaFormaPago != null) {
+                    for (JsonElement je : grillaFormaPago) {
+                        Integer plazo = (Integer) Utils.getKeyFromJsonObject("plazo", je.getAsJsonObject(), "Integer");
+                        BigDecimal interes = (BigDecimal) Utils.getKeyFromJsonObject("interes", je.getAsJsonObject(), "BigDecimal");
+                        BigDecimal monto = (BigDecimal) Utils.getKeyFromJsonObject("monto", je.getAsJsonObject(), "BigDecimal");
+                        String detalle = (String) Utils.getKeyFromJsonObject("detalle", je.getAsJsonObject(), "String");
+                        String observacionesFormaPago = (String) Utils.getKeyFromJsonObject("observaciones", je.getAsJsonObject(), "String");
+                        String cuentaContable = (String) Utils.getKeyFromJsonObject("cuentaContable", je.getAsJsonObject(), "String");
+                        Integer idFormaPagoDet = (Integer) Utils.getKeyFromJsonObject("idFormaPagoDet", je.getAsJsonObject(), "Integer");
+                        //Pregunto si son nulos 
+                        if (observacionesFormaPago == null || monto == null || interes == null || plazo == null || idFormaPagoDet == null) {
+                            respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta Forma de Pago, algun campo de la grilla es nulo");
+                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                        }
+
+                        if (monto.compareTo(BigDecimal.ZERO) == 0) {
+                            continue;
+                        }
+
+                        FormaPagoDet formaPagoDet = formaPagoDetFacade.getByidFormaPagoDet(idFormaPagoDet);
+
+                        if (formaPagoDet == null) {
+                            respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta Forma de Pago, la forma de pago no existe");
+                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                        }
+
+                        //Creo FacForma de pago
+                        FactFormaPago factFPago = new FactFormaPago();
+                        factFPago.setDetalle(observacionesFormaPago);
+                        factFPago.setDiasPago(plazo);
+                        //creo la fecha con la cantidad de dias de plazo
+                        Calendar calendar = Calendar.getInstance();
+                        calendar.setTime(fechaEmision);
+                        calendar.add(Calendar.DAY_OF_YEAR, plazo);
+                        //seteo la fecha 
+                        factFPago.setFechaPago(calendar.getTime());
+                        factFPago.setIdFormaPago(formaPagoDet.getIdFormaPago());
+                        factFPago.setImporte(monto);
+                        factFPago.setPorcentaje(interes);
+                        factFPago.setCtaContable(cuentaContable);
+                        factFPago.setIdFactCab(factCab);
+                        listaFormaPago.add(factFPago);
+                    }
+                }
+
+                //Empiezo con la grilla de SubTotales para grabar FactPie
+                if (factPie) {
+                    for (JsonElement je : grillaSubTotales) {
+                        String cuenta = (String) Utils.getKeyFromJsonObject("cuenta", je.getAsJsonObject(), "String");
+                        String descripcionPie = (String) Utils.getKeyFromJsonObject("descripcionPie", je.getAsJsonObject(), "String");
+                        BigDecimal importe = (BigDecimal) Utils.getKeyFromJsonObject("importe", je.getAsJsonObject(), "BigDecimal");
+                        BigDecimal totalComprobante = (BigDecimal) Utils.getKeyFromJsonObject("totalComprobante", je.getAsJsonObject(), "BigDecimal");
+                        BigDecimal porcentaje = (BigDecimal) Utils.getKeyFromJsonObject("porcentaje", je.getAsJsonObject(), "BigDecimal");
+                        Integer idSisTipoModelo = (Integer) Utils.getKeyFromJsonObject("idSisTipoModelo", je.getAsJsonObject(), "Integer");
+                        BigDecimal baseImponible = (BigDecimal) Utils.getKeyFromJsonObject("baseImponible", je.getAsJsonObject(), "BigDecimal");
+                        String operador = (String) Utils.getKeyFromJsonObject("operador", je.getAsJsonObject(), "String");
+                        Integer idLibro = (Integer) Utils.getKeyFromJsonObject("idLibro", je.getAsJsonObject(), "Integer");
+
+                        //Pregunto por los que no pueden ser Null
+                        if (cuenta == null || descripcionPie == null || importe == null || totalComprobante == null || idSisTipoModelo == null) {
+                            respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, algun campo de la grilla es nulo");
+                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                        }
+
+                        if (idLibro == null) {
+                            respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, idLibro nulo");
+                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                        }
+
+                        SisTipoModelo sisTipoModelo = sisTipoModeloFacade.find(idSisTipoModelo);
+                        if (sisTipoModelo == null) {
+                            respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, sisTipoOperacion no encontrado");
+                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                        }
+
+                        if (idSisOperacionComprobante == null) {
+                            respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, Comprobante no encontrado");
+                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                        }
+
+                        SisOperacionComprobante sisOperacionComprobante = sisOperacionComprobanteFacade.find(idSisOperacionComprobante);
+                        if (sisOperacionComprobante == null) {
+                            respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, Comprobante no encontrado");
+                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                        }
+
+                        if (!sisOperacionComprobante.getIncluyeIva()) {
+                            importe = BigDecimal.ZERO;
+                        }
+                        //Creo el pie 
+                        FactPie facturacionPie = new FactPie();
+                        facturacionPie.setCtaContable(cuenta);
+                        facturacionPie.setDetalle(descripcionPie);
+                        facturacionPie.setImporte(importe);
+                        facturacionPie.setIdFactCab(factCab);
+                        facturacionPie.setPorcentaje(porcentaje);
+                        facturacionPie.setIdSisTipoModelo(sisTipoModelo);
+                        facturacionPie.setBaseImponible(baseImponible);
+                        facturacionPie.setOperador(operador);
+                        facturacionPie.setIdLibro(idLibro);
+                        listaPie.add(facturacionPie);
+
+                    }
+                }
+                
+                // envio de mail 
+                SisOperacionComprobante sisOperacionComprobante = sisOperacionComprobanteFacade.find(idSisOperacionComprobante);
+                System.out.println("Verifico permiso para envio de mail (Alta de Comprobante) = " + sisOperacionComprobante.getEnviaMail());
+                if (sisOperacionComprobante.getEnviaMail().equals(true) || sisOperacionComprobante.getEnviaMail().equals(1)) {
+                    Integer idEmpresa = accesoFacade.findByToken(token).getIdUsuario().getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa();
+                    String nombreEmpresa = accesoFacade.findByToken(token).getIdUsuario().getIdPerfil().getIdSucursal().getIdEmpresa().getDescripcion();
+                    String nombreSucursal = accesoFacade.findByToken(token).getIdUsuario().getIdPerfil().getIdSucursal().getNombre();
+                    String emailOrigen = parametro.get("KERNEL_SMTP_USER");
+                    String emailDestino = sisOperacionComprobante.getMail1();
+                    String nombreDestino = sisOperacionComprobante.getNombreApellidoParaMail1();
+                    String asunto = "Sistema de Facturación: Alta de " + cteTipo.getDescripcion();
+                    String detallePieComprobante = "";
+                    BigDecimal baseImponible = new BigDecimal(0);
+                    BigDecimal totalComprobante = new BigDecimal(0);
+                    BigDecimal porcentaje = new BigDecimal(0);
+                    for (FactPie pie : listaPie) {
+                      detallePieComprobante = pie.getDetalle();
+                      baseImponible = pie.getBaseImponible();
+                      
+                    }
+                    // armo nro de comprobante
+                    CteNumerador cteNumerador = null;
+                    Produmo nroComp = new Produmo();
+                    if (idNumero != null) {
+                        cteNumerador = cteNumeradorFacade.find(idNumero);
+                        if (cteNumerador == null) {
+                            respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el numero de comprobante");
+                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                        }
+
+                        String ptoVenta = cteNumerador.getIdPtoVenta().getPtoVenta().toString();
+                        String numeroVentaFormat = String.format("%08d", cteNumerador.getNumerador());
+                        String concatenado = ptoVenta.concat(numeroVentaFormat);
+                        nroComp.setNumero(Long.parseLong(concatenado, 10));
+                    } else {
+                        nroComp.setNumero(numero.longValue());
+                    }
+
+                    String nroCompString = Long.toString(nroComp.getNumero());
+                    // Fechas:
+                    String fechaEmi = new SimpleDateFormat("dd-MM-yyyy").format(factCab.getFechaEmision());
+                    String fechaVence = new SimpleDateFormat("dd-MM-yyyy").format(factCab.getFechaVto());
+                    // Armo el cuerpo del mail 
+                    String contenido = "<!doctype html>\n"
+                            + "<html>\n"
+                            + "<head>\n"
+                            + "<meta charset=\"utf-8\">\n"
+                            + "<title>Sistema Facturación</title>\n"
+                            + "</head>\n"
+                            + "<body>\n"
+                            + "<div  style='font-size:14px;'>\n"
+                            + "<hr>\n"
+                            + "<div><strong>" + accesoFacade.findByToken(token).getIdUsuario().getIdPerfil().getIdSucursal().getIdEmpresa().getDescripcion() + "</strong></div>\n"
+                            + "<div> Sucursal: " + nombreSucursal + "</div>"
+                            + "<div>Asunto: " + asunto + "</div>"
+                            + "<div>Para: " + nombreDestino + "</div>\n"
+                            + "<hr>\n"
+                            + "<div  style='font-size:12px; padding: 20px;'>"
+                            + "	<div><strong>Detalle del Comprobante Cargado</strong></div>\n"
+                            + "	<div>\n"
+                            + "		<li>Comprobante emitido a: " + factCab.getNombre() + " (" + factCab.getCuit() + ")" + "</li>\n"
+                            + "		<li>Nro Cuenta Corriente: " + factCab.getIdPadron() + "</li>\n"
+                            + "		<li>Tipo Comprobante: " + cteTipo.getDescripcion() + "\n"
+                            + "		<li>Nro Comprobante: " + nroCompString + " </li>\n"
+                            + "		<li>Fecha Emsión: " + fechaEmi + " </li>\n"
+                            + "		<li>Fecha Vencimiento: " +fechaVence + " </li>\n" 
+                            + "		<li>Importe Neto: $" + baseImponible + " </li>\n"
+                            + "		<li>Detalle: " + detallePieComprobante + " </li>\n"    
+                            + "		<br><li>Observaciones: <br><i>" + factCab.getObservaciones() + "</i><br><strong>"
+                            + "		<br><i>Operador que emitio el comprobante: " + accesoFacade.findByToken(token).getIdUsuario().getNombre() + " " + accesoFacade.findByToken(token).getIdUsuario().getApellido() + "</i>\n"
+                            + "		\n"
+                            + "	</div>\n"
+                            + "</div>\n"
+                            + "</div>\n"
+                            + "\n"
+                            + "</body>\n"
+                            + "</html>";
+
+                    // fin armado del cuerpo
+                    // String contenido = asunto+ " | Se ha agregado un nuevo comprobante | Emision: "+fechaEmision+" - Cuit: "+cuit+" -  Comprobante Nro: "+numeroFact+" - TC: "+tipoFact;
+                    utilidadesFacade.enviarMail(emailOrigen, nombreEmpresa + " : " + nombreSucursal, emailDestino, contenido, asunto, nombreDestino);
                 } else {
-                    respuesta.setControl(AppCodigo.ERROR, "No se graban detalles");
+                    System.out.println("No se envia mail");
+                }
+                // fin envio de mail 
+
+                //Termina la griila de sub totales y empieza la de trasabilidad
+                if (lote && cteTipo.getIdSisComprobante().getStock().equals(1) && grillaTrazabilidad != null && cteTipo.getIdSisComprobante().getIdSisModulos().getIdSisModulos() == 1) {
+                    int itemTrazabilidad = 0;
+                    for (JsonElement gt : grillaTrazabilidad) {
+                        //Obtengo los atributos del body
+                        String nroLote = (String) Utils.getKeyFromJsonObject("nroLote", gt.getAsJsonObject(), "String");
+                        String serie = (String) Utils.getKeyFromJsonObject("serie", gt.getAsJsonObject(), "String");
+                        Date fechaElab = (Date) Utils.getKeyFromJsonObject("fechaElab", gt.getAsJsonObject(), "Date");
+                        Date fechaVto = (Date) Utils.getKeyFromJsonObject("fechaVto", gt.getAsJsonObject(), "Date");
+                        Boolean vigencia = (Boolean) Utils.getKeyFromJsonObject("vigencia", gt.getAsJsonObject(), "boolean");
+                        Integer idProducto = (Integer) Utils.getKeyFromJsonObject("idProducto", gt.getAsJsonObject(), "Integer");
+
+                        //Pregunto por los que no pueden ser null
+                        if (nroLote == null || serie == null || vigencia == null || idProducto == null) {
+                            respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el lote de la factura, algun campo de la grilla es nulo");
+                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                        }
+
+                        //Busco el producto por id
+                        Producto prod = productoFacade.find(idProducto);
+                        if (prod == null) {
+                            respuesta.setControl(AppCodigo.ERROR, "Error al cargar lote, el producto con id " + idProducto + " no existe");
+                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                        }
+
+                        //Armo el lote
+                        Lote loteNuevo = new Lote();
+
+                        if (loteFacade.findByNroEmpresaProducto(nroLote, user.getIdPerfil().getIdSucursal().getIdEmpresa(), prod) != null) {
+                            loteNuevo = loteFacade.findByNroEmpresaProducto(nroLote, user.getIdPerfil().getIdSucursal().getIdEmpresa(), prod);
+                        }
+
+                        loteNuevo.setFechaElab(fechaElab);
+                        loteNuevo.setFechaVto(fechaVto);
+                        loteNuevo.setIdEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
+                        loteNuevo.setIdproductos(prod);
+                        loteNuevo.setItem(itemTrazabilidad);
+                        loteNuevo.setNroLote(nroLote);
+                        loteNuevo.setSerie(serie);
+                        loteNuevo.setVigencia(vigencia);
+
+                        //Recorro produmo y si es el mismo producto le agreego el lote
+                        for (Produmo p : listaProdumo) {
+                            if (p.getIdProductos().equals(prod)) {
+                                p.setNroLote(nroLote);
+                            }
+                        }
+                        listaLotes.add(loteNuevo);
+
+                        //Le sumo uno al item
+                        itemTrazabilidad++;
+                    }
+                } else if (lote && cteTipo.getIdSisComprobante().getStock().equals(1) && grillaTrazabilidad != null && cteTipo.getIdSisComprobante().getIdSisModulos().getIdSisModulos() == 2) {
+                    int itemTrazabilidad = 0;
+                    //No guardo el lote pero si lo agrego a la tabla produmo
+                    for (JsonElement gt : grillaTrazabilidad) {
+                        //Obtengo los atributos del body
+                        String nroLote = (String) Utils.getKeyFromJsonObject("nroLote", gt.getAsJsonObject(), "String");
+                        String serie = (String) Utils.getKeyFromJsonObject("serie", gt.getAsJsonObject(), "String");
+                        Date fechaElab = (Date) Utils.getKeyFromJsonObject("fechaElab", gt.getAsJsonObject(), "Date");
+                        Date fechaVto = (Date) Utils.getKeyFromJsonObject("fechaVto", gt.getAsJsonObject(), "Date");
+                        Boolean vigencia = (Boolean) Utils.getKeyFromJsonObject("vigencia", gt.getAsJsonObject(), "boolean");
+                        Integer idProducto = (Integer) Utils.getKeyFromJsonObject("idProducto", gt.getAsJsonObject(), "Integer");
+
+                        //Pregunto por los que no pueden ser null
+                        if (nroLote == null || serie == null || vigencia == null || idProducto == null) {
+                            respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el lote de la factura, algun campo de la grilla es nulo");
+                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                        }
+
+                        //Busco el producto por id
+                        Producto prod = productoFacade.find(idProducto);
+                        if (prod == null) {
+                            respuesta.setControl(AppCodigo.ERROR, "Error al cargar lote, el producto con id " + idProducto + " no existe");
+                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                        }
+
+                        //Armo el lote
+                        Lote loteNuevo = new Lote();
+
+                        if (loteFacade.findByNroEmpresaProducto(nroLote, user.getIdPerfil().getIdSucursal().getIdEmpresa(), prod) != null) {
+                            loteNuevo = loteFacade.findByNroEmpresaProducto(nroLote, user.getIdPerfil().getIdSucursal().getIdEmpresa(), prod);
+                        }
+
+                        loteNuevo.setFechaElab(fechaElab);
+                        loteNuevo.setFechaVto(fechaVto);
+                        loteNuevo.setIdEmpresa(user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
+                        loteNuevo.setIdproductos(prod);
+                        loteNuevo.setItem(itemTrazabilidad);
+                        loteNuevo.setNroLote(nroLote);
+                        loteNuevo.setSerie(serie);
+                        loteNuevo.setVigencia(vigencia);
+
+                        //Recorro produmo y si es el mismo producto le agreego el lote
+                        for (Produmo p : listaProdumo) {
+                            if (p.getIdProductos().equals(prod)) {
+                                p.setNroLote(nroLote);
+                            }
+                        }
+                        //Le sumo uno al item
+                        itemTrazabilidad++;
+                    }
+                }
+                //Me fijo si guarda la factura del remito asociado
+                if (!grabaFactura) {
+                    CteNumerador cteNumerador = null;
+                    if (idNumero != null) {
+                        cteNumerador = cteNumeradorFacade.find(idNumero);
+                        if (cteNumerador == null) {
+                            respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el numero de comprobante");
+                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                        }
+                        String ptoVenta = cteNumerador.getIdPtoVenta().getPtoVenta().toString();
+                        String numeroVentaFormat = String.format("%08d", cteNumerador.getNumerador());
+                        String concatenado = ptoVenta.concat(numeroVentaFormat);
+                        factCab.setNumero(Long.parseLong(concatenado, 10));
+                        factCab.setIdCteNumerador(cteNumerador);
+                        //Guardo cai en factCab si tiene el numerador
+                        if (cteNumerador.getCai() != null) {
+                            factCab.setCai(cteNumerador.getCai());
+                        }
+                        //Guardo vtoCai en factCab si tiene el numerador
+                        if (cteNumerador.getVtoCai() != null) {
+                            factCab.setCaiVto(cteNumerador.getVtoCai());
+                        }
+                    }
+                    return this.persistirObjetos(factCab, contratoDet, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumerador);
+                } else if (tipoFact != null || letraFact != null || numeroFact != null || fechaVencimientoFact != null || fechaContaFact != null) {
+                    CteNumerador cteNumerador = null;
+                    if (idNumero != null) {
+                        cteNumerador = cteNumeradorFacade.find(idNumero);
+                        if (cteNumerador == null) {
+                            respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el numero de comprobante");
+                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                        }
+                        String ptoVenta = cteNumerador.getIdPtoVenta().getPtoVenta().toString();
+                        String numeroVentaFormat = String.format("%08d", cteNumerador.getNumerador());
+                        String concatenado = ptoVenta.concat(numeroVentaFormat);
+                        factCab.setNumero(Long.parseLong(concatenado, 10));
+                        factCab.setIdCteNumerador(cteNumerador);
+                        //Guardo cai en factCab si tiene el numerador
+                        if (cteNumerador.getCai() != null) {
+                            factCab.setCai(cteNumerador.getCai());
+                        }
+                        //Guardo vtoCai en factCab si tiene el numerador
+                        if (cteNumerador.getVtoCai() != null) {
+                            factCab.setCaiVto(cteNumerador.getVtoCai());
+                        }
+                    }
+
+                    //Persisto Primero los objetos del remito
+                    this.persistirObjetos(factCab, contratoDet, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumerador);
+
+                    //Luego empiezo con los datos de la factura relacionada
+                    CteTipo cteTipoFac = cteTipoFacade.find(tipoFact);
+                    if (cteTipoFac == null) {
+                        respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el tipo de comprobante");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+
+                    //Creo la nueva FactCab
+                    FactCab fc = new FactCab();
+                    //Busco el numerador del relacionado                        
+                    CteNumerador cteNumeradorRel = null;
+                    if (idNumeroFact != null) {
+                        cteNumeradorRel = cteNumeradorFacade.find(idNumeroFact);
+                        if (cteNumeradorRel == null) {
+                            respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el numero de comprobante");
+                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                        }
+                        String ptoVenta = cteNumeradorRel.getIdPtoVenta().getPtoVenta().toString();
+                        String numeroVentaFormat = String.format("%08d", cteNumeradorRel.getNumerador());
+                        String concatenado = ptoVenta.concat(numeroVentaFormat);
+                        fc.setNumero(Long.parseLong(concatenado, 10));
+                        fc.setIdCteNumerador(cteNumerador);
+                        //Guardo cai en factCab si tiene el numerador
+                        if (cteNumerador.getCai() != null) {
+                            fc.setCai(cteNumerador.getCai());
+                        }
+                        //Guardo vtoCai en factCab si tiene el numerador
+                        if (cteNumerador.getVtoCai() != null) {
+                            fc.setCaiVto(cteNumerador.getVtoCai());
+                        }
+                    } else {
+                        fc.setNumero(numeroFact.longValue());
+                    }
+                    fc.setCodigoAfip(codigoAfipFact);
+                    fc.setCai(cai);
+                    fc.setCaiVto(caiVto);
+                    fc.setCodBarra(codBarra);
+                    fc.setCodigoPostal(codigoPostal);
+                    fc.setCotDolar(cotDolar);
+                    fc.setCuit(cuit);
+                    fc.setFechaConta(fechaContaFact);
+                    fc.setFechaDolar(fechaDolar);
+                    fc.setFechaEmision(fechaEmision);
+                    fc.setFechaVto(fechaVencimientoFact);
+                    fc.setIdCteTipo(cteTipoFac);
+                    fc.setIdListaPrecios(listaPrecio);
+                    fc.setIdPadron(idPadron);
+                    fc.setIdProductoCanje(productoCanje);
+                    fc.setIdmoneda(sisMonedas);
+                    fc.setInteresCanje(interesCanje);
+                    fc.setLetra(letraFact);
+                    fc.setNombre(nombre);
+                    fc.setObservaciones(observaciones);
+                    fc.setPrecioReferenciaCanje(precioReferenciaCanje);
+                    fc.setSitIVA(sisSitIva);
+                    fc.setIdSisTipoOperacion(sisTipoOperacion);
+                    fc.setIdVendedor(idVendedor);
+
+                    return this.generarFacturaRelacionada(fc, contratoDet, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumeradorRel);
+                } else {
+                    respuesta.setControl(AppCodigo.ERROR, "No pudo grabar la factura asociada, algun campo no es valido");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
-        } catch (Exception ex) { 
+            } else {
+                respuesta.setControl(AppCodigo.ERROR, "No se graban detalles");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+        } catch (Exception ex) {
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
         }
     }
-    
+
     public Response persistirObjetos(FactCab factCab, ContratoDet contratoDet, List<FactDetalle> factDetalle, List<FactImputa> factImputa, List<Produmo> produmo, List<FactPie> factPie, List<Lote> listaLotes, List<FactFormaPago> factFormaPago, CteNumerador cteNumerador) {
         ServicioResponse respuesta = new ServicioResponse();
         try {
             //Comienzo con la transaccion de FactCab
             boolean transaccion;
             transaccion = factCabFacade.setFactCabNuevo(factCab);
-            if(!transaccion) {
+            if (!transaccion) {
                 respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta la Cabecera, clave primaria repetida");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            
+
             //Comienzo con la transaccion de contratoDet si existe
-            if(contratoDet != null && contratoDet.getIdContratos() != null) {
+            if (contratoDet != null && contratoDet.getIdContratos() != null) {
                 boolean transaccionContrato;
                 transaccionContrato = contratoDetFacade.setContratoDetNuevo(contratoDet);
-                if(!transaccionContrato) {
+                if (!transaccionContrato) {
                     respuesta.setControl(AppCodigo.ERROR, "Error, no se pudo dar de alta el detalle del contrato");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
             }
-            
+
             //Comienzo con la transaccion de FacDetalle
-            if(!factDetalle.isEmpty()) {
-                for(FactDetalle d : factDetalle) {
+            if (!factDetalle.isEmpty()) {
+                for (FactDetalle d : factDetalle) {
                     boolean transaccion2;
                     transaccion2 = factDetalleFacade.setFactDetalleNuevo(d);
                     //si la trnsaccion fallo devuelvo el mensaje
-                    if(!transaccion2) {
+                    if (!transaccion2) {
                         respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Detalle con el articulo: " + d.getDetalle());
                         return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                     }
                 }
             }
             //Comienzo con la transaccion de FactImputa
-            if(!factImputa.isEmpty()) {
-                for(FactImputa i : factImputa) {
-                   boolean transaccion3;
+            if (!factImputa.isEmpty()) {
+                for (FactImputa i : factImputa) {
+                    boolean transaccion3;
                     transaccion3 = factImputaFacade.setFactImputaNuevo(i);
                     //si la trnsaccion fallo devuelvo el mensaje
-                    if(!transaccion3) {
+                    if (!transaccion3) {
                         respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta la imputacion con el articulo: " + i.getIdFactDetalle().getCodProducto());
                         return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                    }      
+                    }
                 }
             }
             //Comienzo con la transaccion de FactPie
-            if(!factPie.isEmpty()) {
-                for(FactPie p : factPie) {
-                    boolean transaccion4;           
+            if (!factPie.isEmpty()) {
+                for (FactPie p : factPie) {
+                    boolean transaccion4;
                     transaccion4 = factPieFacade.setFactPieNuevo(p);
                     //si la trnsaccion fallo devuelvo el mensaje
-                    if(!transaccion4) {
+                    if (!transaccion4) {
                         respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura con la cuenta nro:: " + p.getCtaContable());
                         return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                    }         
+                    }
                 }
             }
-            if(!produmo.isEmpty()) {
+            if (!produmo.isEmpty()) {
                 //Comienzo con la transaccion de produmo
-                for(Produmo pr : produmo) {
+                for (Produmo pr : produmo) {
                     boolean transaccion5;
                     transaccion5 = produmoFacade.setProdumoNuevo(pr);
                     //si la trnsaccion fallo devuelvo el mensaje
-                    if(!transaccion5) {
+                    if (!transaccion5) {
                         respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta produmo con el articulo: " + pr.getDetalle());
                         return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                     }
                 }
             }
-            if(!listaLotes.isEmpty()) {
+            if (!listaLotes.isEmpty()) {
                 //Comienzo con la transaccion de Lotes
-                for(Lote l : listaLotes) {
+                for (Lote l : listaLotes) {
                     boolean transaccion6;
-                    if(l.getIdLotes() == null) {
+                    if (l.getIdLotes() == null) {
                         transaccion6 = loteFacade.setLoteNuevo(l);
                     } else {
                         transaccion6 = loteFacade.editLote(l);
                     }
                     //si la trnsaccion fallo devuelvo el mensaje
-                    if(!transaccion6) {
+                    if (!transaccion6) {
                         respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el lote con el articulo: " + l.getIdproductos().getDescripcion());
                         return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                     }
                 }
             }
-            if(!factFormaPago.isEmpty()) {
+            if (!factFormaPago.isEmpty()) {
                 //Comienzo con la transaccion de Lotes
-                for(FactFormaPago f : factFormaPago) {
+                for (FactFormaPago f : factFormaPago) {
                     boolean transaccion7;
                     transaccion7 = factFormaPagoFacade.setFactFormaPagoNuevo(f);
                     //si la trnsaccion fallo devuelvo el mensaje
-                    if(!transaccion7) {
+                    if (!transaccion7) {
                         respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta la forma de pago: " + f.getDetalle());
                         return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                     }
                 }
-            }           
-            if(factCab.getIdCteTipo().getCursoLegal()) {
-                this.grabarMaster(factCab,factDetalle,factFormaPago,factPie);
             }
-        } catch(Exception ex) {
+            if (factCab.getIdCteTipo().getCursoLegal()) {
+                this.grabarMaster(factCab, factDetalle, factFormaPago, factPie);
+            }
+        } catch (Exception ex) {
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-        } try {
+        }
+        try {
             //Edito produmo para agregarle la el idDetalle y el lote
-            if(!produmo.isEmpty() && !factDetalle.isEmpty()) {
+            if (!produmo.isEmpty() && !factDetalle.isEmpty()) {
                 //Comienzo con la transaccion de produmo para agregarle el idFactDetalle
                 int i = 0;
-                for(Produmo pr : produmo) {
+                for (Produmo pr : produmo) {
                     boolean transaccion7;
-                    pr.setIdFactDetalle(factDetalle.get(i).getIdFactDetalle());                    
+                    pr.setIdFactDetalle(factDetalle.get(i).getIdFactDetalle());
                     transaccion7 = produmoFacade.editProdumo(pr);
                     //si la trnsaccion fallo devuelvo el mensaje
-                    if(!transaccion7) {
+                    if (!transaccion7) {
                         respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta produmo con el articulo: " + pr.getDetalle());
                         return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                     }
@@ -1234,22 +1304,23 @@ public class GrabaComprobanteRest {
                 }
             }
             //Edito el numero si es distinto de null
-            if(cteNumerador != null) {
-                cteNumerador.setNumerador(cteNumerador.getNumerador()+1);
+            if (cteNumerador != null) {
+                cteNumerador.setNumerador(cteNumerador.getNumerador() + 1);
                 cteNumeradorFacade.edit(cteNumerador);
             }
-            if(factCab.getIdFactCab() != null) {
+            if (factCab.getIdFactCab() != null) {
                 DatosResponse r = new DatosResponse(factCab.getIdFactCab());
                 respuesta.setDatos(r);
             }
+
             respuesta.setControl(AppCodigo.CREADO, "Comprobante creado con exito, con detalles");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-        } 
+        }
     }
-    
+
     public Response generarFacturaRelacionada(FactCab factCab, ContratoDet contratoDet, List<FactDetalle> factDetalle, List<FactImputa> factImputa, List<Produmo> produmo, List<FactPie> factPie, List<Lote> listaLotes, List<FactFormaPago> factFormaPago, CteNumerador cteNumerador) {
         ServicioResponse respuesta = new ServicioResponse();
         try {
@@ -1257,9 +1328,9 @@ public class GrabaComprobanteRest {
             List<FactImputa> listaImputa = new ArrayList<>();
             List<FactPie> listaPie = new ArrayList<>();
             List<FactFormaPago> listaFormaPago = new ArrayList<>();
-            
+
             //Le asigno el nuevo FactCab a la lista de detalles
-            for(FactDetalle d : factDetalle) {
+            for (FactDetalle d : factDetalle) {
                 FactDetalle factDet = new FactDetalle();
                 factDet.setCantBultos(d.getCantBultos());
                 factDet.setCantidad(d.getCantidad());
@@ -1282,14 +1353,14 @@ public class GrabaComprobanteRest {
                 factDet.setPrecioDesc(d.getPrecioDesc());
                 listaDetalles.add(factDet);
             }
-            
+
             //Le asigno el remito y el nuevo factCab en imputa
-            if(!factImputa.isEmpty()) {
-                for(FactImputa l : factImputa) {
+            if (!factImputa.isEmpty()) {
+                for (FactImputa l : factImputa) {
                     FactImputa factImp = new FactImputa();
-                    factImp.setCantidadImputada(l.getCantidadImputada());                   
-                    for(FactDetalle d : listaDetalles) {
-                        if(d.getCodProducto().equals(l.getIdFactDetalle().getCodProducto())) {   
+                    factImp.setCantidadImputada(l.getCantidadImputada());
+                    for (FactDetalle d : listaDetalles) {
+                        if (d.getCodProducto().equals(l.getIdFactDetalle().getCodProducto())) {
                             //Factura
                             factImp.setIdFactDetalleImputa(d);
                         } else {
@@ -1297,18 +1368,18 @@ public class GrabaComprobanteRest {
                         }
                     }
                     //Remito
-                    factImp.setIdFactDetalle(l.getIdFactDetalle());                   
+                    factImp.setIdFactDetalle(l.getIdFactDetalle());
                     factImp.setImporteImputado(l.getImporteImputado());
                     factImp.setMasAsiento(l.getMasAsiento());
                     factImp.setMasAsientoImputado(l.getMasAsientoImputado());
                     listaImputa.add(factImp);
                 }
             } else {
-                for(FactDetalle d : factDetalle) {
+                for (FactDetalle d : factDetalle) {
                     FactImputa facturaImputa = new FactImputa();
                     facturaImputa.setCantidadImputada(d.getCantidad());
-                    for(FactDetalle det : listaDetalles) {
-                        if(d.getCodProducto().equals(det.getCodProducto())) {   
+                    for (FactDetalle det : listaDetalles) {
+                        if (d.getCodProducto().equals(det.getCodProducto())) {
                             //Factura
                             facturaImputa.setIdFactDetalleImputa(det);
                         } else {
@@ -1324,9 +1395,9 @@ public class GrabaComprobanteRest {
             }
             //Limpio la coleccion de produmo porque no se guarda
             produmo.clear();
-            
+
             //Guardo el nuevo factCab en factPie
-            for(FactPie p : factPie) {
+            for (FactPie p : factPie) {
                 FactPie faPie = new FactPie();
                 faPie.setCtaContable(p.getCtaContable());
                 faPie.setDetalle(p.getDetalle());
@@ -1337,12 +1408,12 @@ public class GrabaComprobanteRest {
                 faPie.setIdSisTipoModelo(p.getIdSisTipoModelo());
                 listaPie.add(faPie);
             }
-            
+
             //Limpio la lista de lotes porque no se guardan
             listaLotes.clear();
-            
+
             //Guardo el nuevo FactCab en la forma de pago
-            for(FactFormaPago fp : factFormaPago) {
+            for (FactFormaPago fp : factFormaPago) {
                 FactFormaPago ffp = new FactFormaPago();
                 ffp.setCtaContable(fp.getCtaContable());
                 ffp.setDetalle(fp.getDetalle());
@@ -1354,42 +1425,42 @@ public class GrabaComprobanteRest {
                 ffp.setPorcentaje(fp.getPorcentaje());
                 listaFormaPago.add(ffp);
             }
-            
+
             //Persisto los objetos y devuelvo la respuesta          
             return this.persistirObjetos(factCab, contratoDet, listaDetalles, listaImputa, produmo, listaPie, listaLotes, listaFormaPago, cteNumerador);
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
         }
     }
-    
+
     public Response grabarMaster(FactCab factCab, List<FactDetalle> factDetalle, List<FactFormaPago> factFormaPago, List<FactPie> factPie) {
-        ServicioResponse respuesta = new ServicioResponse();                 
+        ServicioResponse respuesta = new ServicioResponse();
         //Seteo la fecha de hoy
-        Calendar calendario = new GregorianCalendar();           
+        Calendar calendario = new GregorianCalendar();
         Date fechaHoy = calendario.getTime();
-        
+
         //Busco el proximo numero del asiento
         Integer masAsiento = 0;
         Integer idMaster = masterFacade.findProximoByEmpresa(factCab.getIdCteTipo().getIdEmpresa());
-        if(idMaster != null) {
+        if (idMaster != null) {
             Master master = masterFacade.find(idMaster);
-            if(master != null) {
+            if (master != null) {
                 masAsiento = master.getMAsiento();
             }
-        }    
+        }
         masAsiento = masAsiento + 1;
-        
+
         //Contadores para los pases
         Integer paseDetalle = 1;
-        
+
         //Me fijo si es debe o haber
         BigDecimal signo = new BigDecimal(1);
-        if(factCab.getIdCteTipo().getSurenu().equals("D")) {
+        if (factCab.getIdCteTipo().getSurenu().equals("D")) {
             signo = signo.negate();
         }
-        try{
-            for(FactDetalle det : factDetalle) {
+        try {
+            for (FactDetalle det : factDetalle) {
                 Master masterDetalle = new Master();
                 masterDetalle.setIdFactCab(factCab);
                 masterDetalle.setCodigoLibro(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdSisComprobante().getIdSisModulos().getIdSisModulos())));
@@ -1408,10 +1479,9 @@ public class GrabaComprobanteRest {
                 masterDetalle.setPlanCuentas(det.getImputacion());
                 masterDetalle.setTipoComp(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdCteTipo())));
                 masterDetalle.setMColumIva(Short.valueOf(Integer.toString(det.getIdLibro())));
-                
-                
+
                 //Parametros que van en 0
-                masterDetalle.setAutorizaCodigo(Short.valueOf("0"));                
+                masterDetalle.setAutorizaCodigo(Short.valueOf("0"));
                 masterDetalle.setTipoCompAsoc(Short.valueOf("0"));
                 masterDetalle.setConceptoCodigo(Short.valueOf("0"));
                 masterDetalle.setCondGan(Short.valueOf("0"));
@@ -1424,19 +1494,19 @@ public class GrabaComprobanteRest {
                 masterDetalle.setMCtacte("0");
                 masterDetalle.setOperadorCodigo("0");
                 masterDetalle.setMAsientoRub(0);
-                
-                boolean transaccion1; 
+
+                boolean transaccion1;
                 transaccion1 = masterFacade.setMasterNuevo(masterDetalle);
                 //si la trnsaccion fallo devuelvo el mensaje
-                if(!transaccion1) {
+                if (!transaccion1) {
                     respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta la master con el detalle: " + det.getDetalle());
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
-                
+
                 //Sumo uno al contador de pases
                 paseDetalle++;
             }
-            for(FactFormaPago fp : factFormaPago) {
+            for (FactFormaPago fp : factFormaPago) {
                 Master masterFormaPago = new Master();
                 masterFormaPago.setIdFactCab(factCab);
                 masterFormaPago.setCodigoLibro(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdSisComprobante().getIdSisModulos().getIdSisModulos())));
@@ -1454,16 +1524,16 @@ public class GrabaComprobanteRest {
                 masterFormaPago.setPadronCodigo(factCab.getIdPadron());
                 masterFormaPago.setPlanCuentas(fp.getCtaContable());
                 masterFormaPago.setTipoComp(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdCteTipo())));
-                if(fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(2) ||
-                   fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(3) ||
-                   fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(4)) {
+                if (fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(2)
+                        || fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(3)
+                        || fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(4)) {
                     masterFormaPago.setMCtacte("1");
                 } else {
                     masterFormaPago.setMCtacte("0");
                 }
-                
+
                 //Parametros que van en 0
-                masterFormaPago.setAutorizaCodigo(Short.valueOf("0"));                
+                masterFormaPago.setAutorizaCodigo(Short.valueOf("0"));
                 masterFormaPago.setTipoCompAsoc(Short.valueOf("0"));
                 masterFormaPago.setConceptoCodigo(Short.valueOf("0"));
                 masterFormaPago.setCondGan(Short.valueOf("0"));
@@ -1476,21 +1546,21 @@ public class GrabaComprobanteRest {
                 masterFormaPago.setMMinuta(Long.valueOf("0"));
                 masterFormaPago.setOperadorCodigo("0");
                 masterFormaPago.setMAsientoRub(0);
-                
-                boolean transaccion2; 
+
+                boolean transaccion2;
                 transaccion2 = masterFacade.setMasterNuevo(masterFormaPago);
                 //si la trnsaccion fallo devuelvo el mensaje
-                if(!transaccion2) {
+                if (!transaccion2) {
                     respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta la master con la forma de pago: " + fp.getDetalle());
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
-                
+
                 //Sumo uno al contador de pases
                 paseDetalle++;
             }
-            
-            for(FactPie fi : factPie) {
-                if(fi.getImporte().equals(BigDecimal.ZERO)) {
+
+            for (FactPie fi : factPie) {
+                if (fi.getImporte().equals(BigDecimal.ZERO)) {
                     continue;
                 }
                 Master masterImputa = new Master();
@@ -1511,9 +1581,9 @@ public class GrabaComprobanteRest {
                 masterImputa.setPlanCuentas(fi.getCtaContable());
                 masterImputa.setTipoComp(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdCteTipo())));
                 masterImputa.setMColumIva(Short.valueOf(Integer.toString(fi.getIdLibro())));
-                
+
                 //Parametros que van en 0
-                masterImputa.setAutorizaCodigo(Short.valueOf("0"));                
+                masterImputa.setAutorizaCodigo(Short.valueOf("0"));
                 masterImputa.setTipoCompAsoc(Short.valueOf("0"));
                 masterImputa.setConceptoCodigo(Short.valueOf("0"));
                 masterImputa.setCondGan(Short.valueOf("0"));
@@ -1526,19 +1596,19 @@ public class GrabaComprobanteRest {
                 masterImputa.setMCtacte("0");
                 masterImputa.setOperadorCodigo("0");
                 masterImputa.setMAsientoRub(0);
-                
-                boolean transaccion3; 
+
+                boolean transaccion3;
                 transaccion3 = masterFacade.setMasterNuevo(masterImputa);
                 //si la trnsaccion fallo devuelvo el mensaje
-                if(!transaccion3) {
+                if (!transaccion3) {
                     respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta la master con la imputacion: " + fi.getDetalle());
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
-                
+
                 //Sumo uno al contador de pases
                 paseDetalle++;
             }
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
         }
