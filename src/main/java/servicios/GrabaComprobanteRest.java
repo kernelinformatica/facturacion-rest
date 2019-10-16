@@ -1313,44 +1313,24 @@ public class GrabaComprobanteRest {
                 }
             }
             if (factCab.getIdCteTipo().getCursoLegal()) {
-                
-               // grabarMaster(factCab, factDetalle, factFormaPago, factPie, user);
-               //grabarFactCompras(factCab, factDetalle, factFormaPago, factPie, user);
-               //grabarMasterSybase(factCab, factDetalle, factFormaPago, factPie, user); 
-               System.out.println("--------------------> grabarFactComprasSybase() <------------------------");
-               Response respGrabarFactComprasSybase =  grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
-                    if (respGrabarFactComprasSybase.getStatusInfo().equals(Response.Status.CREATED)) {
-                       
-                        Response respGrabarMasterSybase = this.grabarMasterSybase(factCab, factDetalle, factFormaPago, factPie, user);
-                        if (respGrabarMasterSybase.getStatusInfo().equals(Response.Status.CREATED)) {
-                            Response respGrabaMaster = this.grabarMaster(factCab, factDetalle, factFormaPago, factPie, user);
-                        }else{
-                            respuesta.setControl(AppCodigo.ERROR, "Facturación Master Sybase: No se ha podido pasar la información a la contabilidad central, contacte con el administrador del Sistema.");
-                             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                        
-                        }
-                        
-                    }else{
-                        respuesta.setControl(AppCodigo.ERROR, "Facturación Compras Sybase: No se ha podido pasar la información a la administración central, contacte con el administrador del Sistema.");
-                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                   
+               Response respGrabarMaster = grabarMaster(factCab, factDetalle, factFormaPago, factPie, user); 
+                if (respGrabarMaster.getStatusInfo().equals(Response.Status.CREATED) || respGrabarMaster.getStatusInfo().equals(Response.Status.BAD_REQUEST)) {
+                    Boolean respGrabaMasterSybase = this.grabarMasterSybase(factCab, factDetalle, factFormaPago, factPie, user);
+                    //System.out.println("RESP GRABA MASTER SYBASE -> "+respGrabaMasterSybase);
+                    if(respGrabaMasterSybase == true){
+                        boolean respGrabaFacComprasSybase = this.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
                     }
-            /* Response respGrabaMaster = this.grabarMaster(factCab, factDetalle, factFormaPago, factPie, user);
-             if (respGrabaMaster.getStatusInfo().equals(Response.Status.CREATED)){
-                 Response respGrabarMasterSybase = this.grabarMasterSybase(factCab, factDetalle, factFormaPago, factPie, user);
-                if (respGrabarMasterSybase.getStatusInfo().equals(Response.Status.CREATED)) {
-                    Response respGrabarFactCompras = this.grabarFactCompras(factCab, factDetalle, factFormaPago, factPie, user);
-                    if (respGrabarFactCompras.getStatusInfo().equals(Response.Status.CREATED)) {
-                        System.out.println("--------------------> grabarFactComprasSybase() <------------------------");
-                         Response respGrabarFactComprasSybase = this.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
-                    }
+                    //
+               
                 }
-             }*/
+                  
             }
         } catch (Exception ex) {
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
         }
-        try {
+        try { 
             //Edito produmo para agregarle la el idDetalle y el lote
             if (!produmo.isEmpty() && !factDetalle.isEmpty()) {
                 //Comienzo con la transaccion de produmo para agregarle el idFactDetalle
@@ -1359,7 +1339,7 @@ public class GrabaComprobanteRest {
                     boolean transaccion7;
                     pr.setIdFactDetalle(factDetalle.get(i).getIdFactDetalle());
                     transaccion7 = produmoFacade.editProdumo(pr);
-                    //Si la trnsaccion fallo devuelvo el mensaje
+                    //Si la trnsaccion fallo devuelvo el mensaje 
                     if (!transaccion7) {
                         respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta produmo con el articulo: " + pr.getDetalle());
                         return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
@@ -1377,7 +1357,7 @@ public class GrabaComprobanteRest {
                 respuesta.setDatos(r);
             }
 
-            respuesta.setControl(AppCodigo.CREADO, "Comprobante creado con exito, con detalles");
+            respuesta.setControl(AppCodigo.CREADO, "Comprobante creado con exito, con detalles ("+factCab.getIdFactCab()+")");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception ex) {
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
@@ -1499,7 +1479,7 @@ public class GrabaComprobanteRest {
     }
 
     public Response grabarMaster(FactCab factCab, List<FactDetalle> factDetalle, List<FactFormaPago> factFormaPago, List<FactPie> factPie, Usuario user) {
-
+          System.out.println("::::::::: Ejecuta  ----------------------> GrabaMaster()-> Nro Comprobante: "+factCab.getNumero());
         ServicioResponse respuesta = new ServicioResponse();
         //Seteo la fecha de hoy
         Calendar calendario = new GregorianCalendar();
@@ -1592,17 +1572,13 @@ public class GrabaComprobanteRest {
                 masterFormaPago.setPlanCuentas(fp.getCtaContable());
                 masterFormaPago.setTipoComp(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdCteTipo())));
 
-                if (fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(2)
-                        || fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(3)
-                        || fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(4)
-                        // empresa 2
-                        || fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(8)
-                        || fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(9)
-                        || fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(11)) {
-                    masterFormaPago.setMCtacte("1");
+                if (fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(1)
+                        || fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(6)){
+                   masterFormaPago.setMCtacte("0");
 
                 } else {
-                    masterFormaPago.setMCtacte("0");
+                    masterFormaPago.setMCtacte("1");
+ 
                 }
 
                 //Parametros que van en 0
@@ -1681,25 +1657,55 @@ public class GrabaComprobanteRest {
                 paseDetalle++;
             }
             
-            
+            respuesta.setControl(AppCodigo.CREADO, "Comprobante creado con exito, con detalles");
+            return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+    
         } catch (Exception ex) {
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
         }
-        System.out.println("::::::::: FIN  ----------------------> GrabaMaster() :: Comprobante contabilizado (master local) con exito " + masAsiento + " - " + factCab.getFechaEmision() + " - " + factCab.getNumero());
+       
+            
         
-     
-        respuesta.setControl(AppCodigo.CREADO, "Comprobante creado con exito, con detalles");
-        return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
     }
-
+    
     /*
     
     Fin graba a Master
     A Continuacion ... Grabo  en fac_compras !!! STOCK
     
      */
-    public Response grabarFactCompras(FactCab factCab, List<FactDetalle> factDetalle, List<FactFormaPago> factFormaPago, List<FactPie> factPie, Usuario user) {
+    
+     
+        
+        /* public Response contabilizaSybase(FactCab factCab, List<FactDetalle> factDetalle, List<FactFormaPago> factFormaPago, List<FactPie> factPie, Usuario user) {
+             ServicioResponse respuesta = new ServicioResponse();
+             Response respGrabarMasterSybase = this.grabarMasterSybase(factCab, factDetalle, factFormaPago, factPie, user);
+                    if (respGrabarMasterSybase.getStatusInfo().equals(Response.Status.CREATED) || respGrabarMasterSybase.getStatusInfo().equals(Response.Status.BAD_REQUEST)) {
+                        Response respGrabarFactComprasSybase =  grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
+                        
+                        if (respGrabarFactComprasSybase.getStatusInfo().equals(Response.Status.CREATED) || respGrabarMasterSybase.getStatusInfo().equals(Response.Status.BAD_REQUEST)) {
+                             Response respGrabarFactCompras = this.grabarFactCompras(factCab, factDetalle, factFormaPago, factPie, user);
+                           
+                        }else{
+                            respuesta.setControl(AppCodigo.ERROR, "Facturación Master Sybase: No se ha podido pasar la información a la contabilidad central, contacte con el administrador del Sistema. "+respGrabarFactComprasSybase.getStatusInfo());
+                            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                        }
+                        
+                    }else{
+                        respuesta.setControl(AppCodigo.ERROR, "Facturación Compras Sybase: No se ha podido pasar la información a la administración central, contacte con el administrador del Sistema."+respGrabarMasterSybase.getStatusInfo());
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+            System.out.println("::::::::: FIN  ----------------------> contabilizaSybase() "  + factCab.getNumero()+" | Respuesta Sybase: ");
+        
+     
+            respuesta.setControl(AppCodigo.CREADO, "Comprobante contabilizado con exito en Sybase");
+            return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+        
+             
+         }*/
+        
+    public Boolean grabarFactCompras(FactCab factCab, List<FactDetalle> factDetalle, List<FactFormaPago> factFormaPago, List<FactPie> factPie, Usuario user) {
         System.out.println("::::::::: Ejecuta ----------------------> FacCompras() ");
         ServicioResponse respuesta = new ServicioResponse();
         //Seteo la fecha de hoy
@@ -1855,8 +1861,7 @@ public class GrabaComprobanteRest {
                 transaccionFacC = facComprasFacade.setFacComprasNuevo(facComprasDetalle);
                 //si la transaccion fallo devuelvo el mensaje
                 if (!transaccionFacC) {
-                    respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta la master con la imputacion: ");
-                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                   return false;
                 }
 
                 //Sumo uno al contador de pases
@@ -1867,7 +1872,7 @@ public class GrabaComprobanteRest {
             // Movimiento cierre = 0
 
             FacCompras movCierre = new FacCompras(idFacCompras,
-                    "CIERRE LIB 50",
+                    "CIERRE",
                     Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdCteTipo())),
                     factCab.getFechaEmision(),
                     Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdCteTipo())),
@@ -1879,7 +1884,6 @@ public class GrabaComprobanteRest {
 
             for (FactPie pie : factPie) {
                 ModeloDetalle modeloDetalle = modeloDetalleFacade.getBuscaModeloDetallePorLibro(pie.getIdLibro());
-
                 if (modeloDetalle == null) {
                     movCierre.setCPercepcion1(BigDecimal.ZERO);
                     totalPercep1 = new BigDecimal(0);
@@ -1971,19 +1975,16 @@ public class GrabaComprobanteRest {
             transaccion0 = facComprasFacade.setFacComprasNuevo(movCierre);
             //si la trnsaccion fallo devuelvo el mensaje
             if (!transaccion0) {
-                respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta la master con la imputacion: ");
-                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+               return false;
             }
 
             // fin movimiento 0 
         } catch (Exception ex) {
             System.out.println(AppCodigo.ERROR + " :::::::::::::::::: ----> " + ex.getMessage());
-            respuesta.setControl(AppCodigo.ERROR, ex.getMessage() + " - " + respuesta.toJson());
-            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            return false;
         }
         System.out.println("::::::::: FIN  ----------------------> FacCompras() :: Stock pasado exitosamente !!!");
-        respuesta.setControl(AppCodigo.CREADO, "Comprobante creado con exito, con detalles");
-        return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+        return true;
     }
 
     /*
@@ -1999,8 +2000,8 @@ public class GrabaComprobanteRest {
   */
     
     
-    public Response grabarFactComprasSybase(FactCab factCab, List<FactDetalle> factDetalle, List<FactFormaPago> factFormaPago, List<FactPie> factPie, Usuario user) {
-        System.out.println("::::::::: Ejecuta ----------------------> grabarFactComprasSybase() -> Padron: "+factCab.getIdPadron());
+    public Boolean grabarFactComprasSybase(FactCab factCab, List<FactDetalle> factDetalle, List<FactFormaPago> factFormaPago, List<FactPie> factPie, Usuario user) {
+        System.out.println("::::::::: Ejecuta ----------------------> grabarFactComprasSybase() -> nroComprobante: "+factCab.getNumero());
         ServicioResponse respuesta = new ServicioResponse();
         //Seteo la fecha de hoy
         Calendar calendario = new GregorianCalendar();
@@ -2008,13 +2009,6 @@ public class GrabaComprobanteRest {
         // categoria sybase de iva
         List<ModeloDetalle> modeloDetalleArray = new ArrayList<>();
         Padron condiIva = padronFacade.find(factCab.getIdPadron());
-        /*Integer idFacCompras = facComprasFacade.findProximoIdByEmpresa(factCab.getIdCteTipo().getIdEmpresa());
-        if (idFacCompras != null) {
-            idFacCompras = idFacCompras + 1;
-        } else {
-            idFacCompras = 1;
-        }
-        */
         //Contadores para los pases
         Integer paseDetalle = 1;
         //Me fijo si es debe o haber
@@ -2141,7 +2135,7 @@ public class GrabaComprobanteRest {
                 facComprasDetalle.setCCodigoRelacion(0);
                 facComprasDetalle.setCTipoComprobanteAsoc(Short.valueOf(Integer.toString(0)));
                 facComprasDetalle.setCNumeroComprobanteAsoc(Long.parseLong("0"));
-                facComprasDetalle.setCContabil("N");
+                facComprasDetalle.setCContabil("S");
                 facComprasDetalle.setCRetencionMiel(BigDecimal.ZERO);
                 facComprasDetalle.setCRetencion2da(BigDecimal.ZERO);
                 facComprasDetalle.setCanjeSn("N");
@@ -2154,18 +2148,17 @@ public class GrabaComprobanteRest {
                 transaccionFacC = factComprasSybaseFacade.setFacComprasSybaseNuevo(facComprasDetalle);
                 //si la transaccion fallo devuelvo el mensaje
                 if (!transaccionFacC) {
-                    respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta la master con la imputacion: ");
-                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                 
+                    return false;
+
                 }
 
                 //Sumo uno al contador de pases
                 paseDetalle++;
             }
 
-            System.out.print("<=========== MOVIMIENTO CERO ==============>");
             /* Movimiento 0 cierre */
-
-            FacComprasSybase movCierre = new FacComprasSybase("CIERRE",
+            FacComprasSybase movCierre = new FacComprasSybase("CIERRE LIB 50",
                     Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdCteTipo())),
                     factCab.getFechaEmision(),
                     Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdCteTipo())),
@@ -2250,7 +2243,7 @@ public class GrabaComprobanteRest {
             movCierre.setCCodigoRelacion(0);
             movCierre.setCTipoComprobanteAsoc(Short.valueOf(Integer.toString(0)));
             movCierre.setCNumeroComprobanteAsoc(Long.parseLong("0"));
-            movCierre.setCContabil("N");
+            movCierre.setCContabil("S");
             movCierre.setCRetencionMiel(BigDecimal.ZERO);
             movCierre.setCRetencion2da(BigDecimal.ZERO);
             movCierre.setCanjeSn("N");
@@ -2262,18 +2255,16 @@ public class GrabaComprobanteRest {
             //si la trnsaccion fallo devuelvo el mensaje
             if (!transaccion0) {
                 respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta la master con la imputacion: ");
-                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                return false;
             }
 
             // fin movimiento 0 
         } catch (Exception ex) {
             System.out.println(AppCodigo.ERROR + " :::::::::::::::::: ----> " + ex.getMessage());
-            respuesta.setControl(AppCodigo.ERROR, ex.getMessage() + " - " + respuesta.toJson());
-            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            return false;
         }
         System.out.println("::::::::: FIN  ----------------------> FacCompras Sybase() :: Stock pasado exitosamente !!!");
-        respuesta.setControl(AppCodigo.CREADO, "Comprobante creado con exito, con detalles");
-        return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+       return false;
     }
   
     
@@ -2282,8 +2273,8 @@ public class GrabaComprobanteRest {
     
     
     // fin factCompras Sybase
-    public Response grabarMasterSybase(FactCab factCab, List<FactDetalle> factDetalle, List<FactFormaPago> factFormaPago, List<FactPie> factPie, Usuario user) {
-        System.out.println("::::::::: Ejecuta  ----------------------> GrabaMasterSybase()");
+    public Boolean grabarMasterSybase(FactCab factCab, List<FactDetalle> factDetalle, List<FactFormaPago> factFormaPago, List<FactPie> factPie, Usuario user) {
+        System.out.println("::::::::: Ejecuta  ----------------------> GrabaMasterSybase()-> Nro Comprobante: "+factCab.getNumero());
         ServicioResponse respuesta = new ServicioResponse();
         //Seteo la fecha de hoy
         Calendar calendario = new GregorianCalendar();
@@ -2292,11 +2283,15 @@ public class GrabaComprobanteRest {
         Integer masAsiento = masterSybaseFacade.findProximoNroAsiento(libroCodigo);
         masAsiento = masAsiento + 1;
         String detalleGlobal = "";
+        
         Integer paseDetalle = 0;
         //Me fijo si es debe o haber
         BigDecimal signo = new BigDecimal(1);
         if (factCab.getIdCteTipo().getSurenu().equals("D")) {
             signo = signo.negate();
+           
+        }else{
+           
         }
         try {
             for (FactDetalle det : factDetalle) {
@@ -2335,15 +2330,14 @@ public class GrabaComprobanteRest {
                 transaccionSybase1 = masterSybaseFacade.masterSybaseNuevo(masterDetalle);
                 //si la trnsaccion fallo devuelvo el mensaje
                 if (!transaccionSybase1) {
-                    respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta la en Master Sybase con  el detalle: " + det.getDetalle());
-                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                   return false;
                 }
 
             }
             for (FactFormaPago fp : factFormaPago) {
                 //Sumo uno al contador de pases
                 paseDetalle = paseDetalle + 1;
-                System.out.println("FORMA DE PAGO ----------------------> factFormaPago: " + paseDetalle);
+                System.out.println(" ----------------------> factFormaPago: " + paseDetalle);
                 MasterSybase masterFormaPago = new MasterSybase(fechaHoy, masAsiento, Short.valueOf(Integer.toString(paseDetalle)), Short.valueOf(Integer.toString(libroCodigo)));
                 masterFormaPago.setCotizacion(factCab.getCotDolar());
                 masterFormaPago.setFechayhora(fechaHoy);
@@ -2356,16 +2350,13 @@ public class GrabaComprobanteRest {
                 masterFormaPago.setPadronCodigo(factCab.getIdPadron());
                 masterFormaPago.setPlanCuentas(Integer.parseInt(fp.getCtaContable()));
                 masterFormaPago.setTipoComp(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdCteTipo())));
-                if (fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(2)
-                        || fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(3)
-                        || fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(4)
-                        // empresa 2
-                        || fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(8)
-                        || fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(9)
-                        || fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(11)) {
-                    masterFormaPago.setMCtacte("S");
+                if (fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(1)
+                        || fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(6)
+                        ) {
+                    masterFormaPago.setMCtacte("N");                  
                 } else {
-                    masterFormaPago.setMCtacte("N");
+                     masterFormaPago.setMCtacte("S");
+ 
                 }
 
                 //Parametros que van en 0
@@ -2382,13 +2373,12 @@ public class GrabaComprobanteRest {
                 masterFormaPago.setMMinuta(Long.valueOf(masAsiento));
                 masterFormaPago.setOperadorCodigo(user.getUsuarioSybase());
                 masterFormaPago.setMAsientoRub(0);
-
+ 
                 boolean transaccionSybase2;
                 transaccionSybase2 = masterSybaseFacade.masterSybaseNuevo(masterFormaPago);
                 //si la trnsaccion fallo devuelvo el mensaje
                 if (!transaccionSybase2) {
-                    respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta la en Master Sybase  con la forma de pago: " + fp.getDetalle());
-                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                   return false;
                 }
 
             }
@@ -2424,15 +2414,14 @@ public class GrabaComprobanteRest {
                 masterImputa.setNroCompPreimp(Long.valueOf("0"));
                 masterImputa.setCodActividad(Long.valueOf("0"));
                 masterImputa.setMMinuta(Long.valueOf(masAsiento));
-                masterImputa.setMCtacte("0");
+                masterImputa.setMCtacte("N");
                 masterImputa.setOperadorCodigo(user.getUsuarioSybase());
                 masterImputa.setMAsientoRub(0);
                 boolean transaccionSybase3;
                 transaccionSybase3 = masterSybaseFacade.masterSybaseNuevo(masterImputa);
                 //si la transaccion fallo devuelvo el mensaje
                 if (!transaccionSybase3) {
-                    respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta la en Master Sybase con la imputacion: " + fi.getDetalle());
-                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    return false;
                 }
 
             }
@@ -2448,13 +2437,12 @@ public class GrabaComprobanteRest {
           }*/
         } catch (Exception ex) {
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
-            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+          //  return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
         }
         System.out.println("::::::::: FIN  ----------------------> GrabaMasterSybase() :: Comprobante contabilizado (" + paseDetalle + " pases) (Sybase) con exito ");
-        
-        
-        respuesta.setControl(AppCodigo.CREADO, "Comprobante contabilizado (Sybase) con exito , con detalles");
-        return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+        return true;
+        //respuesta.setControl(AppCodigo.CREADO, "Comprobante contabilizado (Sybase) con exito , con detalles");
+        //return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
     }
 
     /*
