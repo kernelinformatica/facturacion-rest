@@ -232,7 +232,9 @@ public class BuscaModeloRest {
                                 && !p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(1).getTipo())
                                 && !p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(6).getTipo())
                                 && !p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(7).getTipo())
-                                && !p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(8).getTipo())) {                            
+                                && !p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(8).getTipo())) {
+                            // es 2
+                           
                             total = total.add(precio.multiply(cantidad));
                             if(p.getValor().compareTo(BigDecimal.ZERO) == 0) {
                                 porcentaje = porcentaje.add(producto.getIdIVA().getPorcIVA());

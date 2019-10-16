@@ -10,6 +10,8 @@ import entidades.Deposito;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 import javax.ejb.Stateless;
@@ -44,7 +46,7 @@ public class DepositoRest {
     @Inject UsuarioFacade usuarioFacade;
     @Inject AccesoFacade accesoFacade;
     @Inject DepositoFacade depositoFacade;
- 
+    @Inject Utils utils; 
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -87,6 +89,7 @@ public class DepositoRest {
             List<Payload> depositos = new ArrayList<>();
             if(!todos) {
                 //valido que la sucursal tenga Depositos disponibles
+                /* consulta de datos via objetos java 
                 if(user.getIdPerfil().getIdSucursal().getDepositoCollection().isEmpty()) {
                     respuesta.setControl(AppCodigo.ERROR, "No hay Depositos disponibles");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
@@ -97,19 +100,86 @@ public class DepositoRest {
                     DepositoResponse fp = new DepositoResponse(p);
                     depositos.add(fp);
                 }
+                */
+                 
+                // consulta de datos via store procedure de base de datos
+               String nombreSP = "call s_buscaDepositos(?,?,?,?)";
+               CallableStatement callableStatement = this.utils.procedimientoAlmacenado(user, nombreSP);
+               //valido que el Procedimiento Almacenado no sea null
+               if(callableStatement == null) {
+                   respuesta.setControl(AppCodigo.ERROR, "Error, no existe el procedimiento, "+callableStatement+" | "+user.getIdPerfil().getIdSucursal().getIdSucursal());
+                   return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                //Seteo los parametros del SP
+              
+               callableStatement.setInt(1,user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
+               callableStatement.setInt(2, user.getIdPerfil().getIdSucursal().getIdSucursal());
+               callableStatement.setInt(3, 0);
+               callableStatement.setInt(4,user.getIdUsuarios());
+               ResultSet rs = callableStatement.executeQuery();
+                  while (rs.next()) {
+                       DepositoResponse dep = new DepositoResponse(
+                               rs.getInt("idDeposito"),
+                               rs.getInt("codigoDep"),
+                               rs.getString("descripcion"),
+                               rs.getString("domicilio"),
+                               rs.getString("codigoPostal"));
+                       depositos.add(dep);
+                   }
+             
+                
             } else {
-                //valido que la empresa tenga Depositos disponibles 
-                if(user.getIdPerfil().getIdSucursal().getIdEmpresa().getDepositoCollection().isEmpty()) {
+                //valido que la empresa tenga Depositos disponibles
+                
+                /*if(user.getIdPerfil().getIdSucursal().getIdEmpresa().getDepositoCollection().isEmpty()) {
                     respuesta.setControl(AppCodigo.ERROR, "No hay Depositos disponibles");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
-
+                
                 //busco los depositos de la empresa del usuario
+                
                 for(Deposito p : user.getIdPerfil().getIdSucursal().getIdEmpresa().getDepositoCollection()){
                     DepositoResponse fp = new DepositoResponse(p);
                     depositos.add(fp);
+                }*/
+               
+                
+               // consulta de datos via store procedure de base de datos
+              
+               String nombreSP = "call s_buscaDepositos(?,?,?,?)";
+               CallableStatement callableStatement = this.utils.procedimientoAlmacenado(user, nombreSP);
+               //valido que el Procedimiento Almacenado no sea null
+               if(callableStatement == null) {
+                   respuesta.setControl(AppCodigo.ERROR, "Error, no existe el procedimiento");
+                   return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
+               //Seteo los parametros del SP
+               callableStatement.setInt(1,user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
+               callableStatement.setInt(2,  user.getIdPerfil().getIdSucursal().getIdSucursal());
+               callableStatement.setInt(3, 0);
+               callableStatement.setInt(4,user.getIdUsuarios());
+             //Integer aInt, Integer aInt0, String string, String string0, String string1
+               ResultSet rs = callableStatement.executeQuery();
+                   while (rs.next()) {
+                       DepositoResponse dep = new DepositoResponse(
+                               rs.getInt("idDeposito"),
+                               rs.getInt("codigoDep"),
+                               rs.getString("descripcion"),
+                               rs.getString("domicilio"),
+                               rs.getString("codigoPostal"));
+                       depositos.add(dep);
+                   }
+               
+               
+               
+               
+               
+               
+              
+               
+               
             }
+            // Dario
             respuesta.setArraydatos(depositos);
             respuesta.setControl(AppCodigo.OK, "Lista de Depositos");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();

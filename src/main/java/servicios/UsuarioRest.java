@@ -39,6 +39,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import org.apache.commons.codec.digest.DigestUtils;
 import persistencia.AccesoFacade;
 import persistencia.ListaPrecioFacade;
 import persistencia.ParametroGeneralFacade;
@@ -87,8 +88,10 @@ public class UsuarioRest {
         System.out.println(usuario);
         
         //Si no se encuentra, devuelvo error
+        
+        
         if (usuario == null) {
-            respuesta.setControl(AppCodigo.ERROR, "Usuario o contraseña invalida");
+            respuesta.setControl(AppCodigo.ERROR, "Usuario Nulo: Usuario o contraseña invalida "+usuario+" - "+clave);
             return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
         }
         System.out.println("claveMandada: ");
@@ -119,7 +122,7 @@ public class UsuarioRest {
             respuesta.setControl(AppCodigo.OK, "");
         } else {
             //Usuario existe pero está mal la clave, se devuelve mismo error que si no existiera
-            respuesta.setControl(AppCodigo.ERROR, "Usuario o contraseña invalida");
+            respuesta.setControl(AppCodigo.ERROR, "Contraseña invalida "+usuario+"-"+clave);
             return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
         }
          return Response.ok(respuesta.toJson(), MediaType.APPLICATION_JSON).build();

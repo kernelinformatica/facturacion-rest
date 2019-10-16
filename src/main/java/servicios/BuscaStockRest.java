@@ -165,7 +165,6 @@ public class BuscaStockRest {
             } else if(tipo != null && tipo.equals("general")){
                //seteo el nombre del store
                String noombreSP = "call s_buscaStockGral(?,?,?,?,?,?,?,?,?)";
-
                //invoco al store
                CallableStatement callableStatement = this.utils.procedimientoAlmacenado(user, noombreSP);
 

@@ -20,6 +20,7 @@ public class UsuarioResponse implements Payload{
     private String usuario;
     private String clave;
     private String observaciones;
+    private String usuarioSybase;
     private List<PtoVentaResponse> ptoVentas;
     private List<ListaPreciosResponse> listaPrecios;
     
@@ -36,9 +37,13 @@ public class UsuarioResponse implements Payload{
         this.usuario = u.getUsuario();
         this.clave = u.getClave();
         this.observaciones = u.getObservaciones();
+        this.usuarioSybase = u.getUsuarioSybase();
         this.listaPrecios = new ArrayList<>();
         this.ptoVentas = new ArrayList<>();
+        
     }
+
+    
     
     public int getId() {
         return id;
@@ -119,7 +124,13 @@ public class UsuarioResponse implements Payload{
     public void setObservaciones(String observaciones) {
         this.observaciones = observaciones;
     }
-    
+    public String getUsuarioSybase() {
+        return usuarioSybase;
+    }
+
+    public void setUsuarioSybase(String usuarioSybase) {
+        this.usuarioSybase = usuarioSybase;
+    }
     public void agregarListaPrecios(Collection<UsuarioListaPrecio> lista) {
         for(UsuarioListaPrecio l : lista) {
             ListaPreciosResponse lr  = new ListaPreciosResponse(l.getIdListaPrecios());

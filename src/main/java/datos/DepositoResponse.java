@@ -4,23 +4,24 @@ import entidades.Deposito;
 
 /**
  *
- * @author FrancoSili
+ * @author Dario Quiroga
  */
 public class DepositoResponse implements Payload {
-
     private Integer idDeposito;    
-    private int codigoDep;   
+    private Integer codigoDep;   
     private String descripcion;    
     private String domicilio;   
     private String codigoPostal;
 
-    public DepositoResponse(Deposito s) {
-        this.idDeposito = s.getIdDepositos();
-        this.descripcion = s.getDescripcion();
-        this.codigoPostal = s.getCodigoPostal();
-        this.domicilio = s.getDomicilio();
-        this.codigoDep = s.getCodigoDep();
+    public DepositoResponse (Integer aInt, Integer aInt0, String string, String string0, String string1){
+      this.idDeposito = aInt;
+      this.codigoDep =aInt0;
+      this.descripcion = string;
+      this.codigoPostal = string0;
+      this.domicilio = string1;
     }
+  
+    
     public Integer getIdDeposito() {
         return idDeposito;
     }
@@ -29,13 +30,15 @@ public class DepositoResponse implements Payload {
         this.idDeposito = idDeposito;
     }
 
-    public int getCodigoDep() {
+    public Integer getCodigoDep() {
         return codigoDep;
     }
 
-    public void setCodigoDep(int codigoDep) {
+    public void setCodigoDep(Integer codigoDep) {
         this.codigoDep = codigoDep;
     }
+
+   
 
     public String getDescripcion() {
         return descripcion;
@@ -63,7 +66,7 @@ public class DepositoResponse implements Payload {
 
     @Override
     public String getClassName() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Operación no compatible. (getClassName)"); //To change body of generated methods, choose Tools | Templates.
     }
 
 }
