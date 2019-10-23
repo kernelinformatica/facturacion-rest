@@ -1724,14 +1724,27 @@ public class GrabaComprobanteRest {
         Integer paseDetalle = 1;
         //Me fijo si es debe o haber
         BigDecimal signo = new BigDecimal(1);
-
         String formateada = String.format("%012d", factCab.getNumero());
         String ptoVtaTemp = formateada.substring(0, 4);
         String nroCompTemp = formateada.substring(4, formateada.length());
+        String facturadoSn = "N";
+        String contabilSn = "N";
         Integer ptoVta = Integer.parseInt(ptoVtaTemp);
         Integer nroComp = Integer.parseInt(nroCompTemp);
         ptoVtaTemp = "";
         nroCompTemp = "";
+        
+        // Verifico si son remitos o otro tipo de comprobante
+         if (factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(1) || factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(31)) {
+             facturadoSn = "N";
+             contabilSn = "N";
+         }else{
+             facturadoSn = "S";
+             contabilSn = "S";
+         }
+        
+        
+        
         if (factCab.getIdCteTipo().getSurenu().equals("D")) {
             signo = signo.negate();
         }
@@ -1754,9 +1767,9 @@ public class GrabaComprobanteRest {
 
                 FacCompras facComprasDetalle = new FacCompras(idFacCompras,
                         det.getCodProducto(),
-                        Short.valueOf(Integer.toString(det.getIdFactCab().getIdCteTipo().getIdCteTipo())),
+                        Short.valueOf(Integer.toString(det.getIdFactCab().getIdCteTipo().getcTipoOperacion())),
                         det.getIdFactCab().getFechaEmision(),
-                        Short.valueOf(Integer.toString(det.getIdFactCab().getIdCteTipo().getIdCteTipo())),
+                        Short.valueOf(Integer.toString(det.getIdFactCab().getIdCteTipo().getcTipoOperacion())),
                         Long.valueOf(nroComp),
                         det.getIdFactCab().getIdPadron(),
                         Short.valueOf(Integer.toString(paseDetalle)),
@@ -1770,7 +1783,7 @@ public class GrabaComprobanteRest {
                 facComprasDetalle.setCDescripcion(det.getDetalle());
                 facComprasDetalle.setCPrecioUnitario(det.getPrecio());
                 facComprasDetalle.setCFechaVencimiento(det.getIdFactCab().getFechaVto());
-                facComprasDetalle.setCFacturadoSn('S');
+                facComprasDetalle.setCFacturadoSn(facturadoSn.charAt(0));
                 facComprasDetalle.setCCodigoOperador(user.getUsuario());
                 facComprasDetalle.setCHora(fechaHoy);
                 facComprasDetalle.setCFechaContabil(det.getIdFactCab().getFechaConta());
@@ -1848,7 +1861,7 @@ public class GrabaComprobanteRest {
                 facComprasDetalle.setCCodigoRelacion(0);
                 facComprasDetalle.setCTipoComprobanteAsoc(Short.valueOf(Integer.toString(0)));
                 facComprasDetalle.setCNumeroComprobanteAsoc(Long.parseLong("0"));
-                facComprasDetalle.setCContabil("S");
+                facComprasDetalle.setCContabil(contabilSn);
                 facComprasDetalle.setCRetencionMiel(BigDecimal.ZERO);
                 facComprasDetalle.setCRetencion2da(BigDecimal.ZERO);
                 facComprasDetalle.setCanjeSn("N");
@@ -1870,9 +1883,9 @@ public class GrabaComprobanteRest {
             // Movimiento cierre = 0
             FacCompras movCierre = new FacCompras(idFacCompras,
                     "CIERRE",
-                    Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdCteTipo())),
+                    Short.valueOf(Integer.toString(factCab.getIdCteTipo().getcTipoOperacion())),
                     factCab.getFechaEmision(),
-                    Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdCteTipo())),
+                    Short.valueOf(Integer.toString(factCab.getIdCteTipo().getcTipoOperacion())),
                     Long.valueOf(nroComp),
                     factCab.getIdPadron(),
                     Short.valueOf(Integer.toString(0)),
@@ -1939,7 +1952,7 @@ public class GrabaComprobanteRest {
             movCierre.setCDescripcion(factCab.getObservaciones());
 
             movCierre.setCFechaVencimiento(factCab.getFechaVto());
-            movCierre.setCFacturadoSn('S');
+            movCierre.setCFacturadoSn(facturadoSn.charAt(0));
             movCierre.setCCodigoOperador(user.getUsuario());
             movCierre.setCHora(fechaHoy);
             movCierre.setCFechaContabil(factCab.getFechaConta());
@@ -1958,7 +1971,7 @@ public class GrabaComprobanteRest {
             movCierre.setCTipoComprobanteAsoc(Short.valueOf(Integer.toString(0)));
             movCierre.setCNumeroComprobanteAsoc(Long.parseLong("0"));
 
-            movCierre.setCContabil("N");
+            movCierre.setCContabil(contabilSn);
             movCierre.setCRetencionMiel(BigDecimal.ZERO);
             movCierre.setCRetencion2da(BigDecimal.ZERO);
             movCierre.setCanjeSn("N");
@@ -2031,7 +2044,7 @@ public class GrabaComprobanteRest {
             BigDecimal totalIva105 = new BigDecimal(0);
             BigDecimal totalIva27 = new BigDecimal(0);
             BigDecimal totalPercep1 = new BigDecimal(0);
-             BigDecimal totalPercep2 = new BigDecimal(0);
+            BigDecimal totalPercep2 = new BigDecimal(0);
             BigDecimal netoIva21 = new BigDecimal(0);
             BigDecimal netoIva105 = new BigDecimal(0);
             BigDecimal netoIva27 = new BigDecimal(0);
