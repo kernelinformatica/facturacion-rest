@@ -1313,16 +1313,20 @@ public class GrabaComprobanteRest {
                 }
             }
             // Verifico si son remitos y paso solamente a facComprasSybase //
+
             if (factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(1) || factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(31)) {
                 this.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
+
             } else {
                 // caso contrario verifico el curso legal si es verdadero (true) contabilizao y paso a factComprasSybase
                 if (factCab.getIdCteTipo().getCursoLegal()) {
                     Response respGrabarMaster = grabarMaster(factCab, factDetalle, factFormaPago, factPie, user);
                     if (respGrabarMaster.getStatusInfo().equals(Response.Status.CREATED) || respGrabarMaster.getStatusInfo().equals(Response.Status.BAD_REQUEST)) {
                         Boolean respGrabaMasterSybase = this.grabarMasterSybase(factCab, factDetalle, factFormaPago, factPie, user);
+
                         if (respGrabaMasterSybase == true) {
                             this.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
+
                         }
                     }
                 }
@@ -2154,7 +2158,10 @@ public class GrabaComprobanteRest {
                 facComprasDetalle.setCCodigoRelacion(0);
                 facComprasDetalle.setCTipoComprobanteAsoc(Short.valueOf(Integer.toString(0)));
                 facComprasDetalle.setCNumeroComprobanteAsoc(Long.parseLong("0"));
+
                 facComprasDetalle.setCContabil(contabilSn);
+
+
                 facComprasDetalle.setCRetencionMiel(Double.valueOf(0));
                 facComprasDetalle.setCRetencion2da(Double.valueOf(0));
                 facComprasDetalle.setCanjeSn("N");
@@ -2262,7 +2269,7 @@ public class GrabaComprobanteRest {
             movCierre.setCanjeSn("N");
             movCierre.setCanjeNroCto("N");
             movCierre.setCSircrebStafe(Double.valueOf(0));
-            movCierre.setCSircrebCdba(Double.valueOf(0));
+            movCierre.setCSircrebCdba(Double.valueOf(0)); 
             boolean transaccion0;
             transaccion0 = factComprasSybaseFacade.setFacComprasSybaseNuevo(movCierre);
             //si la trnsaccion fallo devuelvo el mensaje
@@ -2392,7 +2399,7 @@ public class GrabaComprobanteRest {
                     return false;
                 }
 
-            }
+            } 
 
             for (FactPie fi : factPie) {
                 if (fi.getImporte().equals(BigDecimal.ZERO)) {
