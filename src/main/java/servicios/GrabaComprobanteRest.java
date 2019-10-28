@@ -1321,8 +1321,6 @@ public class GrabaComprobanteRest {
                 if (factCab.getIdCteTipo().getCursoLegal()) {
                     Response respGrabarMaster = grabarMaster(factCab, factDetalle, factFormaPago, factPie, user);
                     if (respGrabarMaster.getStatusInfo().equals(Response.Status.CREATED) || respGrabarMaster.getStatusInfo().equals(Response.Status.BAD_REQUEST)) {
-                        System.out.println("NO ES REMITO ES OTRO COMPROBANTE COMO FACTURA PASO A MASTER SYBASE Y A FAC COMPRAS SYBASE: " + factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes());
-
                         Boolean respGrabaMasterSybase = this.grabarMasterSybase(factCab, factDetalle, factFormaPago, factPie, user);
                         if (respGrabaMasterSybase == true) {
 
@@ -2067,8 +2065,7 @@ public class GrabaComprobanteRest {
                     }
            }*/
 
-            System.out.println("SI VIENE EN DOLARES LA DEBO DE PESIFICAR (cotizacion: " + cotizacionDolar + ") ");
-            for (FactDetalle det : factDetalle) {
+             for (FactDetalle det : factDetalle) {
 
                 FacComprasSybase facComprasDetalle = new FacComprasSybase(det.getCodProducto(),
                         Short.valueOf(Integer.toString(det.getIdFactCab().getIdCteTipo().getcTipoOperacion())),
@@ -2288,7 +2285,7 @@ public class GrabaComprobanteRest {
 
     // fin factCompras Sybase
     public Boolean grabarMasterSybase(FactCab factCab, List<FactDetalle> factDetalle, List<FactFormaPago> factFormaPago, List<FactPie> factPie, Usuario user) {
-        System.out.println("::::::::: Master Sybase  ----------------------> GrabaMasterSybase()-> Nro Comprobante: " + factCab.getNumero());
+        System.out.println("::::::::: Master Sybase  ----------------------> GrabaMasterSybase()-> Nro Comprobante: " + factCab.getNumero()+" | tipo operacion: "+factCab.getIdCteTipo().getcTipoOperacion());
         ServicioResponse respuesta = new ServicioResponse();
         //Seteo la fecha de hoy
         Calendar calendario = new GregorianCalendar();
@@ -2306,14 +2303,14 @@ public class GrabaComprobanteRest {
         if (factCab.getIdCteTipo().getcTipoOperacion() < 17) {
             // factura
             if (factCab.getIdmoneda().getIdMoneda() > 1) {
-                cotizacionDolar = factCab.getCotDolar();
+               cotizacionDolar = factCab.getCotDolar();
+               // System.out.println("ES EN DOLARES LA DEBO DE PESIFICAR (cotizacion: " + cotizacionDolar + ") ");
             } else {
                 cotizacionDolar = new BigDecimal(1);
             }
 
         }
-        System.out.println("::::::::: Master Sybase  ----------------------> GrabaMasterSybase()-> getcTipoOperacion: " + factCab.getIdCteTipo().getcTipoOperacion());
-
+       
         //Sumo uno al contador de pases
         if (factCab.getIdCteTipo().getSurenu().equals("D")) {
             signo = signo.negate();
@@ -2334,9 +2331,7 @@ public class GrabaComprobanteRest {
                 masterDetalle.setFechayhora(fechaHoy);
                 masterDetalle.setMDetalle(detalleCorto);
                 masterDetalle.setMFechaEmi(factCab.getFechaEmision());
-                masterDetalle.setMImporte(det.getImporte().multiply(signo).doubleValue());
-                //System.out.println("::::::::: Detalle  ----------------------> GrabaMasterSybase() ->  " + paseDetalle + " $ " + det.getImporte());
-
+                masterDetalle.setMImporte(det.getImporte().multiply(signo).multiply(cotizacionDolar).doubleValue());
                 masterDetalle.setMVence(factCab.getFechaVto());
                 masterDetalle.setNroComp(factCab.getNumero());
                 masterDetalle.setPadronCodigo(factCab.getIdPadron());
