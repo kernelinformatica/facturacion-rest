@@ -1314,14 +1314,18 @@ public class GrabaComprobanteRest {
             }
             // Verifico si son remitos y paso solamente a facComprasSybase //
             if (factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(1) || factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(31)) {
+                System.out.println("ES REMITO PASO SOLO A FACTCOMPRAS SYBASE: " + factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes());
                 this.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
             } else {
                 // caso contrario verifico el curso legal si es verdadero (true) contabilizao y paso a factComprasSybase
                 if (factCab.getIdCteTipo().getCursoLegal()) {
                     Response respGrabarMaster = grabarMaster(factCab, factDetalle, factFormaPago, factPie, user);
                     if (respGrabarMaster.getStatusInfo().equals(Response.Status.CREATED) || respGrabarMaster.getStatusInfo().equals(Response.Status.BAD_REQUEST)) {
+                        System.out.println("NO ES REMITO ES OTRO COMPROBANTE COMO FACTURA PASO A MASTER SYBASE Y A FAC COMPRAS SYBASE: " + factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes());
+
                         Boolean respGrabaMasterSybase = this.grabarMasterSybase(factCab, factDetalle, factFormaPago, factPie, user);
                         if (respGrabaMasterSybase == true) {
+
                             this.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
                         }
                     }
@@ -1730,18 +1734,16 @@ public class GrabaComprobanteRest {
         Integer nroComp = Integer.parseInt(nroCompTemp);
         ptoVtaTemp = "";
         nroCompTemp = "";
-        
+
         // Verifico si son remitos o otro tipo de comprobante
-         if (factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(1) || factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(31)) {
-             facturadoSn = "N";
-             contabilSn = "N";
-         }else{
-             facturadoSn = "S";
-             contabilSn = "S";
-         }
-        
-        
-        
+        if (factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(1) || factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(31)) {
+            facturadoSn = "N";
+            contabilSn = "N";
+        } else {
+            facturadoSn = "S";
+            contabilSn = "S";
+        }
+
         if (factCab.getIdCteTipo().getSurenu().equals("D")) {
             signo = signo.negate();
         }
@@ -2006,7 +2008,7 @@ public class GrabaComprobanteRest {
     
      */
     public Boolean grabarFactComprasSybase(FactCab factCab, List<FactDetalle> factDetalle, List<FactFormaPago> factFormaPago, List<FactPie> factPie, Usuario user) {
-        System.out.println("::::::::: Ejecuta ----------------------> grabarFactComprasSybase() -> nroComprobante: " + factCab.getNumero());
+        System.out.println("::::::::: Ejecuta ----------------------> grabarFactComprasSybase() v3 -> nroComprobante: " + factCab.getNumero());
         ServicioResponse respuesta = new ServicioResponse();
         //Seteo la fecha de hoy
         Calendar calendario = new GregorianCalendar();
@@ -2024,29 +2026,23 @@ public class GrabaComprobanteRest {
         String nroCompTemp = formateada.substring(4, formateada.length());
         Integer ptoVta = Integer.parseInt(ptoVtaTemp);
         Integer nroComp = Integer.parseInt(nroCompTemp);
+        Integer cbteTipoCompSybase = 0;
         ptoVtaTemp = "";
         nroCompTemp = "";
         String contabilSn;
         String facturadoSn;
-        String pesiFicarSn;
-        
         // SI SON REMITOS VAN ESTAS MARCAS
-        if (factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(1)  || factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(31)) {
+        if (factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(1) || factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(31)) {
             contabilSn = "N";
             facturadoSn = "N";
-        }else{
+        } else {
             contabilSn = "S";
             facturadoSn = "S";
         }
-        
-       
-        
-        
         if (factCab.getIdCteTipo().getSurenu().equals("D")) {
             signo = signo.negate();
         }
         try {
-
             // arranco desde el moviemnto 1 
             BigDecimal totalPieFactura = new BigDecimal(0);
             BigDecimal totalDetalleFactura = new BigDecimal(0);
@@ -2062,18 +2058,18 @@ public class GrabaComprobanteRest {
             BigDecimal netoIva105 = new BigDecimal(0);
             BigDecimal netoIva27 = new BigDecimal(0);
             BigDecimal cotizacionDolar = new BigDecimal(1);
-        
-            for (FactDetalle det : factDetalle) {
-                 cotizacionDolar = new BigDecimal(1);
-                 if (det.getIdFactCab().getIdCteTipo().getcTipoOperacion() < 17){
-                    // factura
-                    if (factCab.getIdmoneda().getIdMoneda() > 1){
+            /* 
+            if (factCab.getIdCteTipo().getcTipoOperacion() < 17){
+               if (factCab.getIdmoneda().getIdMoneda() > 1){
                         cotizacionDolar = factCab.getCotDolar();
                     }else{
                         cotizacionDolar = new BigDecimal(1);
                     }
-                     //va pesificada // si viene en dolar la pesifico si no no
-                  }
+           }*/
+
+            System.out.println("SI VIENE EN DOLARES LA DEBO DE PESIFICAR (cotizacion: " + cotizacionDolar + ") ");
+            for (FactDetalle det : factDetalle) {
+
                 FacComprasSybase facComprasDetalle = new FacComprasSybase(det.getCodProducto(),
                         Short.valueOf(Integer.toString(det.getIdFactCab().getIdCteTipo().getcTipoOperacion())),
                         det.getIdFactCab().getFechaEmision(),
@@ -2088,8 +2084,7 @@ public class GrabaComprobanteRest {
                 facComprasDetalle.setCNombre(det.getIdFactCab().getNombre());
                 facComprasDetalle.setCCantidad(det.getCantidad().doubleValue());
                 facComprasDetalle.setCDescripcion(det.getDetalle());
-
-                Double precioUnitario = (det.getPrecio().multiply(cotizacionDolar)).doubleValue();
+                Double precioUnitario = det.getPrecio().doubleValue();
                 facComprasDetalle.setCPrecioUnitario(precioUnitario);
                 facComprasDetalle.setCFechaVencimiento(det.getIdFactCab().getFechaVto());
                 facComprasDetalle.setCFacturadoSn(facturadoSn.charAt(0));
@@ -2107,7 +2102,7 @@ public class GrabaComprobanteRest {
                     } else {
                         // Percepciones
                         if (modeloDetalle.getIdLibro().getPosicion().equals("D")) {
-                            totalPercep1 = det.getImporte().multiply(pie.getPorcentaje().divide(new BigDecimal(100))).multiply(cotizacionDolar);
+                            totalPercep1 = det.getImporte().multiply(pie.getPorcentaje().divide(new BigDecimal(100)));
                             facComprasDetalle.setCPercepcion1(totalPercep1.doubleValue());
 
                         } else {
@@ -2117,33 +2112,33 @@ public class GrabaComprobanteRest {
                     }
                 }
                 if (det.getIvaPorc().equals(new BigDecimal(10.5)) || det.getIvaPorc().equals(new BigDecimal(10.50)) || det.getIvaPorc().equals(new BigDecimal(1050))) {
-                    totalIva105 = det.getImporte().multiply(det.getIvaPorc()).divide(new BigDecimal(100)).multiply(cotizacionDolar);
+                    totalIva105 = det.getImporte().multiply(det.getIvaPorc()).divide(new BigDecimal(100));
                     facComprasDetalle.setCIvaRi(Double.valueOf(0));
                     facComprasDetalle.setCIva105(totalIva105.doubleValue());
                     facComprasDetalle.setCIvaRni(Double.valueOf(0));
                     facComprasDetalle.setCPercepcion2(Double.valueOf(0));
-                    netoIva105 = det.getImporte().multiply(cotizacionDolar);
+                    netoIva105 = det.getImporte();
                     totalDetalleFactura = netoIva105.add(totalIva105).add(totalPercep1);
 
                 } else if (det.getIvaPorc().equals(new BigDecimal(21))) {
                     // System.out.println("IVA 21 ivaRi -> " + det.getIvaPorc());
-                    totalIva21 = det.getImporte().multiply(det.getIvaPorc()).divide(new BigDecimal(100)).multiply(cotizacionDolar);
+                    totalIva21 = det.getImporte().multiply(det.getIvaPorc()).divide(new BigDecimal(100));
                     facComprasDetalle.setCIvaRi(totalIva21.doubleValue());
                     facComprasDetalle.setCIva105(Double.valueOf(0));
                     facComprasDetalle.setCIvaRni(Double.valueOf(0));
                     facComprasDetalle.setCPercepcion2(Double.valueOf(0));
 
-                    netoIva21 = det.getImporte().multiply(cotizacionDolar);
+                    netoIva21 = det.getImporte();
                     totalDetalleFactura = netoIva21.add(totalIva21).add(totalPercep1);
 
                 } else if (det.getIvaPorc().equals(new BigDecimal(27))) {
                     // System.out.println("IVA 27 c_percepcion2 -> " + det.getIvaPorc());
                     facComprasDetalle.setCIvaRi(Double.valueOf(0));
                     facComprasDetalle.setCIva105(Double.valueOf(0));
-                    totalIva27 = det.getImporte().multiply(det.getIvaPorc()).divide(new BigDecimal(100)).multiply(cotizacionDolar);
+                    totalIva27 = det.getImporte().multiply(det.getIvaPorc()).divide(new BigDecimal(100));
                     facComprasDetalle.setCPercepcion2(totalIva27.doubleValue());
                     facComprasDetalle.setCIvaRni(Double.valueOf(0));
-                    netoIva27 = det.getImporte().multiply(cotizacionDolar);
+                    netoIva27 = det.getImporte();
                     totalDetalleFactura = netoIva27.add(totalIva27).add(totalPercep1);
 
                 } else if (det.getIvaPorc().equals(0)) {
@@ -2175,22 +2170,20 @@ public class GrabaComprobanteRest {
                 facComprasDetalle.setCanjeNroCto("N");
                 facComprasDetalle.setCSircrebStafe(Double.valueOf(0));
                 facComprasDetalle.setCSircrebCdba(Double.valueOf(0));
-                    
                 // si es factura no se graba detalle en facCompras Sybase y hacemos la persistencia
-                if (det.getIdFactCab().getIdCteTipo().getcTipoOperacion() >= 17){
+                if (det.getIdFactCab().getIdCteTipo().getcTipoOperacion() >= 17) {
                     boolean transaccionFacC;
                     transaccionFacC = factComprasSybaseFacade.setFacComprasSybaseNuevo(facComprasDetalle);
                     //si la transaccion fallo devuelvo el mensaje
                     if (!transaccionFacC) {
                         return false;
                     }
-                    //Sumo uno al contador de pases
                     paseDetalle++;
                 }
-               
             }
-             /* Movimiento 0 cierre */
-            FacComprasSybase movCierre = new FacComprasSybase("CIERRE LIB 50 | "+factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes(),
+            /* Movimiento 0 cierre */
+
+            FacComprasSybase movCierre = new FacComprasSybase("CIERRE LIB 50",
                     Short.valueOf(Integer.toString(factCab.getIdCteTipo().getcTipoOperacion())),
                     factCab.getFechaEmision(),
                     Short.valueOf(Integer.toString(factCab.getIdCteTipo().getcTipoOperacion())),
@@ -2223,30 +2216,29 @@ public class GrabaComprobanteRest {
 
                     } else if (pie.getPorcentaje().equals(new BigDecimal(21)) || pie.getPorcentaje().equals(new BigDecimal(21.00))) {
 
-                        totalIva21 = pie.getImporte().multiply(cotizacionDolar);
-                        movCierre.setCIvaRi((pie.getImporte().multiply(cotizacionDolar)).doubleValue());
+                        totalIva21 = pie.getImporte();
+                        movCierre.setCIvaRi(pie.getImporte().doubleValue());
 
                     } else if (pie.getPorcentaje().equals(new BigDecimal(27))) {
-                        totalIva27 =pie.getImporte().multiply(cotizacionDolar);
-                        movCierre.setCPercepcion2((pie.getImporte().multiply(cotizacionDolar)).doubleValue());
+                        totalIva27 = pie.getImporte();
+                        movCierre.setCPercepcion2(pie.getImporte().doubleValue());
 
                     }
 
                 }
 
-                totalPieFactura = (pie.getBaseImponible().multiply(cotizacionDolar)).add(totalIva21).add(totalIva27).add(totalIva105).add(totalPercep1).add(totalPercep2);
+                totalPieFactura = pie.getBaseImponible().add(totalIva21).add(totalIva27).add(totalIva105).add(totalPercep1).add(totalPercep2);
 
             }
             for (FactDetalle det : factDetalle) {
-                
+
                 totalPrecioUnitario = totalPrecioUnitario.add(det.getCantidad().multiply(det.getPrecio()));
-                //System.out.println("CANTIDAD X PRECIO: "+det.getCantidad()+" * "+det.getPrecio()+" = "+totalPrecioUnitario);
                 totalCantidad = new BigDecimal(0); //totalCantidad.add(det.getCantidad());
                 movCierre.setCDeposito(det.getIdDepositos().getCodigoDep());
             }
 
             // aca van los totalizados del iva
-            movCierre.setCPrecioUnitario((totalPrecioUnitario.multiply(cotizacionDolar)).doubleValue());
+            movCierre.setCPrecioUnitario(totalPrecioUnitario.doubleValue());
             movCierre.setCCantidad(totalCantidad.doubleValue());
             movCierre.setCBonificacion(totalPieFactura.doubleValue());
             ///////////////////////////////////////////////
@@ -2287,7 +2279,7 @@ public class GrabaComprobanteRest {
 
             // fin movimiento 0 
         } catch (Exception ex) {
-            System.out.println(AppCodigo.ERROR + " :::::::::::::::::: ----> " + ex.getMessage());
+            System.out.println(AppCodigo.ERROR + " | FacCompras Sybase():::::::::::::::::: ----> " + ex.getLocalizedMessage());
             return false;
         }
         System.out.println("::::::::: FIN  ----------------------> FacCompras Sybase() :: Stock pasado exitosamente !!!");
@@ -2296,7 +2288,7 @@ public class GrabaComprobanteRest {
 
     // fin factCompras Sybase
     public Boolean grabarMasterSybase(FactCab factCab, List<FactDetalle> factDetalle, List<FactFormaPago> factFormaPago, List<FactPie> factPie, Usuario user) {
-        System.out.println("::::::::: Ejecuta  ----------------------> GrabaMasterSybase()-> Nro Comprobante: " + factCab.getNumero());
+        System.out.println("::::::::: Master Sybase  ----------------------> GrabaMasterSybase()-> Nro Comprobante: " + factCab.getNumero());
         ServicioResponse respuesta = new ServicioResponse();
         //Seteo la fecha de hoy
         Calendar calendario = new GregorianCalendar();
@@ -2309,32 +2301,31 @@ public class GrabaComprobanteRest {
         BigDecimal cotizacionDolar = new BigDecimal(1);
         //Me fijo si es debe o haber
         BigDecimal signo = new BigDecimal(1);
+        cotizacionDolar = new BigDecimal(1);
+
+        if (factCab.getIdCteTipo().getcTipoOperacion() < 17) {
+            // factura
+            if (factCab.getIdmoneda().getIdMoneda() > 1) {
+                cotizacionDolar = factCab.getCotDolar();
+            } else {
+                cotizacionDolar = new BigDecimal(1);
+            }
+
+        }
+        System.out.println("::::::::: Master Sybase  ----------------------> GrabaMasterSybase()-> getcTipoOperacion: " + factCab.getIdCteTipo().getcTipoOperacion());
+
+        //Sumo uno al contador de pases
         if (factCab.getIdCteTipo().getSurenu().equals("D")) {
             signo = signo.negate();
-
-        } else {
-
         }
         try {
             for (FactDetalle det : factDetalle) {
-                
-                cotizacionDolar = new BigDecimal(1);
-                 if (det.getIdFactCab().getIdCteTipo().getcTipoOperacion() < 17){
-                    // factura
-                    if (factCab.getIdmoneda().getIdMoneda() > 1){
-                        cotizacionDolar = factCab.getCotDolar();
-                    }else{
-                        cotizacionDolar = new BigDecimal(1);
-                    }
-                     //va pesificada // si viene en dolar la pesifico si no no
-                  }
-                 
-                //Sumo uno al contador de pases
+
                 paseDetalle = paseDetalle + 1;
                 String detalleCompleto = det.getDetalle();
                 if (detalleCompleto.length() > 30) {
                     detalleCorto = det.getDetalle().substring(0, 29);
-                    
+
                 } else {
                     detalleCorto = detalleCompleto;
                 }
@@ -2343,7 +2334,9 @@ public class GrabaComprobanteRest {
                 masterDetalle.setFechayhora(fechaHoy);
                 masterDetalle.setMDetalle(detalleCorto);
                 masterDetalle.setMFechaEmi(factCab.getFechaEmision());
-                masterDetalle.setMImporte((det.getImporte().multiply(cotizacionDolar)).multiply(signo).doubleValue());
+                masterDetalle.setMImporte(det.getImporte().multiply(signo).doubleValue());
+                //System.out.println("::::::::: Detalle  ----------------------> GrabaMasterSybase() ->  " + paseDetalle + " $ " + det.getImporte());
+
                 masterDetalle.setMVence(factCab.getFechaVto());
                 masterDetalle.setNroComp(factCab.getNumero());
                 masterDetalle.setPadronCodigo(factCab.getIdPadron());
@@ -2380,7 +2373,7 @@ public class GrabaComprobanteRest {
                 masterFormaPago.setFechayhora(fechaHoy);
                 masterFormaPago.setMDetalle(fp.getDetalle());
                 masterFormaPago.setMFechaEmi(factCab.getFechaEmision());
-                masterFormaPago.setMImporte((fp.getImporte().multiply(cotizacionDolar)).multiply(signo).negate().doubleValue());
+                masterFormaPago.setMImporte(fp.getImporte().multiply(signo).negate().doubleValue());
                 masterFormaPago.setMVence(factCab.getFechaVto());
                 masterFormaPago.setNroComp(factCab.getNumero());
                 masterFormaPago.setPadronCodigo(factCab.getIdPadron());
@@ -2393,6 +2386,7 @@ public class GrabaComprobanteRest {
                     masterFormaPago.setMCtacte("S");
 
                 }
+                System.out.println("::::::::: Forma de Pago  ----------------------> GrabaMasterSybase() forma de pago ->  " + paseDetalle + " $ " + fp.getImporte());
 
                 //Parametros que van en 0
                 masterFormaPago.setAutorizaCodigo(Short.valueOf("0"));
@@ -2424,13 +2418,12 @@ public class GrabaComprobanteRest {
                 }
                 //Sumo uno al contador de pases
                 paseDetalle = paseDetalle + 1;
-                System.out.println("----------------------> masterInputa: factPie()-> " + paseDetalle);
                 MasterSybase masterImputa = new MasterSybase(fechaHoy, masAsiento, Short.valueOf(Integer.toString(paseDetalle)), Short.valueOf(Integer.toString(libroCodigo)));
                 masterImputa.setCotizacion(factCab.getCotDolar().doubleValue());
                 masterImputa.setFechayhora(fechaHoy);
                 masterImputa.setMDetalle(fi.getDetalle());
                 masterImputa.setMFechaEmi(factCab.getFechaEmision());
-                masterImputa.setMImporte(((fi.getImporte().multiply(cotizacionDolar)).multiply(signo)).doubleValue());
+                masterImputa.setMImporte(fi.getImporte().multiply(signo).doubleValue());
                 masterImputa.setMVence(factCab.getFechaVto());
                 masterImputa.setNroComp(factCab.getNumero());
                 masterImputa.setPadronCodigo(factCab.getIdPadron());
