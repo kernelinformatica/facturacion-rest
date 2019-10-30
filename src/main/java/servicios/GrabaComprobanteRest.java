@@ -1922,7 +1922,7 @@ public class GrabaComprobanteRest {
 
                 }
 
-                totalPieFactura = pie.getBaseImponible().add(pie.getImporte()).add(totalIva21).add(totalIva27).add(totalIva105);
+                totalPieFactura = pie.getBaseImponible().add(pie.getImporte()).add(totalIva21).add(totalIva27).add(totalIva105).add(totalPercep1);
 
             }
             for (FactDetalle det : factDetalle) {
@@ -2336,7 +2336,7 @@ public class GrabaComprobanteRest {
                 masterDetalle.setNroComp(factCab.getNumero());
                 masterDetalle.setPadronCodigo(factCab.getIdPadron());
                 masterDetalle.setPlanCuentas(Integer.parseInt(det.getImputacion()));
-                masterDetalle.setTipoComp(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdCteTipo())));
+                masterDetalle.setTipoComp(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getcTipoOperacion())));
                 masterDetalle.setMColumIva(Short.valueOf(Integer.toString(det.getIdLibro())));
                 masterDetalle.setAutorizaCodigo(Short.valueOf("0"));
                 masterDetalle.setTipoCompAsoc(Short.valueOf("0"));
@@ -2373,7 +2373,7 @@ public class GrabaComprobanteRest {
                 masterFormaPago.setNroComp(factCab.getNumero());
                 masterFormaPago.setPadronCodigo(factCab.getIdPadron());
                 masterFormaPago.setPlanCuentas(Integer.parseInt(fp.getCtaContable()));
-                masterFormaPago.setTipoComp(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdCteTipo())));
+                masterFormaPago.setTipoComp(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getcTipoOperacion())));
                 if (fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(1)
                         || fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(6)) {
                     masterFormaPago.setMCtacte("N");
@@ -2423,7 +2423,7 @@ public class GrabaComprobanteRest {
                 masterImputa.setNroComp(factCab.getNumero());
                 masterImputa.setPadronCodigo(factCab.getIdPadron());
                 masterImputa.setPlanCuentas(Integer.parseInt(fi.getCtaContable()));
-                masterImputa.setTipoComp(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdCteTipo())));
+                masterImputa.setTipoComp(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getcTipoOperacion())));
                 masterImputa.setMColumIva(Short.valueOf(Integer.toString(fi.getIdLibro())));
 
                 //Parametros que van en 0
@@ -2460,7 +2460,7 @@ public class GrabaComprobanteRest {
           }*/
         } catch (Exception ex) {
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
-            //  return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            //return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
         }
         System.out.println("::::::::: FIN  ----------------------> GrabaMasterSybase() :: Comprobante contabilizado (" + paseDetalle + " pases) (Sybase) con exito ");
         return true;
