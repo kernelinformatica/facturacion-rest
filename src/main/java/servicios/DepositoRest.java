@@ -5,8 +5,10 @@ import datos.AppCodigo;
 import datos.DepositoResponse;
 import datos.Payload;
 import datos.ServicioResponse;
+import datos.TiposOpDepositosResponse;
 import entidades.Acceso;
 import entidades.Deposito;
+import entidades.TiposOpDepositos;
 import entidades.Usuario;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
@@ -32,6 +34,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
 import persistencia.DepositoFacade;
+import persistencia.TiposOpDepositosFacade;
 import persistencia.UsuarioFacade;
 import utils.Utils;
 
@@ -47,6 +50,7 @@ public class DepositoRest {
     @Inject AccesoFacade accesoFacade;
     @Inject DepositoFacade depositoFacade;
     @Inject Utils utils; 
+    @Inject TiposOpDepositosFacade tiposOpDepositosFacade;
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -409,5 +413,55 @@ public class DepositoRest {
             respuesta.setControl(AppCodigo.ERROR, e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
         } 
-    }    
+    }
+
+    @GET
+    @Path("/tiposop")
+    @Produces(MediaType.APPLICATION_JSON) 
+    public Response getTiposOpDepositos() {
+        ServicioResponse respuesta = new ServicioResponse();
+        try {
+            //valido que token y el id no sea null
+            /*if(token == null || token.trim().isEmpty()) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, token vacio");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+
+            //Busco el token
+            Acceso userToken = accesoFacade.findByToken(token);
+
+            //valido que Acceso no sea null
+            if(userToken == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, Acceso nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+
+            //Busco el usuario
+            Usuario user = usuarioFacade.getByToken(userToken);
+
+            //valido que el Usuario no sea null
+            if(user == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, Usuario nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+
+            //valido vencimiento token
+            if(!accesoFacade.validarToken(userToken, user)) {
+                respuesta.setControl(AppCodigo.ERROR, "Credenciales incorrectas");
+                return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
+            }*/
+            List<TiposOpDepositos> depositosList = tiposOpDepositosFacade.getTiposOpDepositos();
+            List<Payload> depositos = new ArrayList<>();
+            for(TiposOpDepositos dep : depositosList) {
+                TiposOpDepositosResponse tempObj = new TiposOpDepositosResponse(dep.getIdTipoOpDeposito(), dep.getIdSisTipoOperacion().getIdSisTipoOperacion(), dep.getIdDepositos().getIdDepositos());
+                depositos.add(tempObj);
+            }
+            respuesta.setArraydatos(depositos);
+            respuesta.setControl(AppCodigo.OK, "Lista de Depositos");
+            return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+        } catch (Exception e) {
+            respuesta.setControl(AppCodigo.ERROR, e.getMessage());
+            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+        }
+    }
 }

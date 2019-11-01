@@ -108,6 +108,7 @@ public class DescargarPdfRest extends HttpServlet {
             }
             
             String nombreReporte = factCab.getIdCteTipo().getIdReportes().getNombre();
+            System.out.println(nombreReporte);
             
              if(nombreReporte == null) {
                 respuesta.setControl(AppCodigo.ERROR, "El comprobante nro: "+factCab.getNumero()+" no tiene un reporte asociado");
@@ -132,8 +133,10 @@ public class DescargarPdfRest extends HttpServlet {
             HashMap hm = new HashMap();
             hm.put("idFactCab", idFactCab);
             hm.put("codigoVerificador", codigoVerificador);
+            System.out.println(idFactCab + " - " + codigoVerificador);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             byte[] bytes = utils.generateJasperReportPDF(request, nombreReporte, hm, user, outputStream);
+            System.out.println(request.toString() + " - " + nombreReporte + " - " + user.toString());
             String nomeRelatorio= nombreReporte + ".pdf";
             return Response.ok(bytes).type("application/pdf").header("Content-Disposition", "filename=\"" + nomeRelatorio + "\"").build();
         } catch (Exception e) {
