@@ -163,6 +163,7 @@ public class GrabaComprobanteRest {
     RelacionesCanjeFacade relacionesCanjeFacade;
     @Inject
     ParametroGeneralFacade parametro;
+    
     @Inject
     MasterSybaseFacade masterSybaseFacade;
     @Inject
@@ -209,7 +210,8 @@ public class GrabaComprobanteRest {
             Integer idSisOperacionComprobante = (Integer) Utils.getKeyFromJsonObject("idSisOperacionComprobante", jsonBody, "Integer");
             Integer idContrato = (Integer) Utils.getKeyFromJsonObject("idContrato", jsonBody, "Integer");
             String direccion = (String) Utils.getKeyFromJsonObject("direccion", jsonBody, "String");
-
+           
+            
             //Para canje
             String productoCanje = (String) Utils.getKeyFromJsonObject("productoCanje", jsonBody, "String");
             BigDecimal precioReferenciaCanje = (BigDecimal) Utils.getKeyFromJsonObject("precioReferenciaCanje", jsonBody, "BigDecimal");
@@ -623,10 +625,16 @@ public class GrabaComprobanteRest {
                         } else if ((producto.getDescripcion().equals("u$s") && sisMonedas.getDescripcion().equals("$AR"))) {
                             precioAtualizado = producto.getCostoReposicion().divide(sisCotDolar.getCotizacion(), 2, RoundingMode.HALF_UP);
                         }
-                        //Si el precio convertido es distinto al que tiene el producto lo cambio
+                        //Si si tiene la marca de actualizar costo y el precio convertido es distinto al que tiene el producto lo cambio
+                        SisOperacionComprobante sisOperacionComprobante = sisOperacionComprobanteFacade.find(idSisOperacionComprobante);
+                       if (sisOperacionComprobante.getActualizaCosto().equals(true)){
                         if (!precioAtualizado.equals(producto.getCostoReposicion())) {
-                            productoFacade.editProducto(producto);
-                        }
+                             productoFacade.editProducto(producto);
+                         }
+                       }
+                        
+                        
+                        
                     }
 
                     //Si la cantidad es igual a 0 no guarda ese articulo
@@ -1314,8 +1322,7 @@ public class GrabaComprobanteRest {
             }
             // Verifico si son remitos y paso solamente a facComprasSybase //
             if (factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(1) || factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(31)) {
-                System.out.println("ES REMITO PASO SOLO A FACTCOMPRAS SYBASE: " + factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes());
-                this.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
+                 this.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
             } else {
                 // caso contrario verifico el curso legal si es verdadero (true) contabilizao y paso a factComprasSybase
                 if (factCab.getIdCteTipo().getCursoLegal()) {
@@ -2107,6 +2114,7 @@ public class GrabaComprobanteRest {
                         }
 
                     }
+                    
                 }
                 if (det.getIvaPorc().equals(new BigDecimal(10.5)) || det.getIvaPorc().equals(new BigDecimal(10.50)) || det.getIvaPorc().equals(new BigDecimal(1050))) {
                     totalIva105 = det.getImporte().multiply(det.getIvaPorc()).divide(new BigDecimal(100));
@@ -2180,7 +2188,7 @@ public class GrabaComprobanteRest {
             }
             /* Movimiento 0 cierre */
 
-            FacComprasSybase movCierre = new FacComprasSybase("CIERRE LIB 50",
+            FacComprasSybase movCierre = new FacComprasSybase("CIERRE L50",
                     Short.valueOf(Integer.toString(factCab.getIdCteTipo().getcTipoOperacion())),
                     factCab.getFechaEmision(),
                     Short.valueOf(Integer.toString(factCab.getIdCteTipo().getcTipoOperacion())),
@@ -2225,7 +2233,7 @@ public class GrabaComprobanteRest {
                 }
 
                 totalPieFactura = pie.getBaseImponible().add(totalIva21).add(totalIva27).add(totalIva105).add(totalPercep1).add(totalPercep2);
-
+                System.out.print("totalPieFactura ----> " +totalPieFactura+" | DETALLE (INCLUYE LA PERCEPCION) -> Base imponible: "+pie.getBaseImponible()+" ,totalIva21: "+totalIva21+" + ,totalIva27: "+totalIva27+" ,totalIva105: "+totalIva105+" + ,TOTAL PERCEPCION 1: "+totalPercep1);
             }
             for (FactDetalle det : factDetalle) {
 
