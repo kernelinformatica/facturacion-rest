@@ -1583,8 +1583,7 @@ public class GrabaComprobanteRest {
                 masterFormaPago.setPlanCuentas(fp.getCtaContable());
                 masterFormaPago.setTipoComp(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdCteTipo())));
 
-                if (fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(1)
-                        || fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(6)) {
+                if (fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(1) || fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(6)) {
                     masterFormaPago.setMCtacte("0");
 
                 } else {
@@ -2013,7 +2012,7 @@ public class GrabaComprobanteRest {
     
      */
     public Boolean grabarFactComprasSybase(FactCab factCab, List<FactDetalle> factDetalle, List<FactFormaPago> factFormaPago, List<FactPie> factPie, Usuario user) {
-        System.out.println("::::::::: Ejecuta ----------------------> grabarFactComprasSybase() v3 -> nroComprobante: " + factCab.getNumero());
+        System.out.println("::::::::: Ejecuta ----------------------> grabarFactComprasSybase()  -> nroComprobante: " + factCab.getNumero());
         ServicioResponse respuesta = new ServicioResponse();
         //Seteo la fecha de hoy
         Calendar calendario = new GregorianCalendar();
@@ -2099,23 +2098,37 @@ public class GrabaComprobanteRest {
 
                 // percepciones e impuestos particulares
                 for (FactPie pie : factPie) {
+                    //dario
                     ModeloDetalle modeloDetalle = modeloDetalleFacade.getBuscaModeloDetallePorLibro(pie.getIdLibro());
-                    if (modeloDetalle == null) {
-                        facComprasDetalle.setCPercepcion1(Double.valueOf(0));
-                        totalPercep1 = new BigDecimal(0);
-                    } else {
-                        // Percepciones
-                        if (modeloDetalle.getIdLibro().getPosicion().equals("D")) {
-                            totalPercep1 = det.getImporte().multiply(pie.getPorcentaje().divide(new BigDecimal(100)));
-                            facComprasDetalle.setCPercepcion1(totalPercep1.doubleValue());
-
-                        } else {
-                            facComprasDetalle.setCPercepcion1(Double.valueOf(0));
-                        }
-
-                    }
+                    System.out.println("1) factPie: -----------------------------------------------------------------> "+pie.getIdLibro()+" | ->"+modeloDetalle.getDescripcion());
                     
+                   /* if (modeloDetalle.getIdModeloDetalle() > 0) {
+                        System.out.println("2) getIdModeloDetalle: -----------------------------------------------------------------> "+modeloDetalle.getIdModeloDetalle());
+                    
+                       if (modeloDetalle.getValor().equals(BigDecimal.ZERO) ){
+                             facComprasDetalle.setCPercepcion1(Double.valueOf(0));
+                        } else {
+                           System.out.println("3) PERCEPCION VALOR : modeloDetalle.getValor(): -----------------------------------------------------------------> "+modeloDetalle.getValor()+" - GETLIBRO().GETPOSICION: "+modeloDetalle.getIdLibro().getPosicion());
+                    
+                            if (modeloDetalle.getIdLibro().getPosicion().equals("D")) {
+                                System.out.println("4) -----------------------------------------------------------------> GET POSICION ES IGUAL A = D -> "+modeloDetalle.getCtaContable());
+                                totalPercep1 = det.getImporte().multiply(pie.getPorcentaje().divide(new BigDecimal(100)));
+                                facComprasDetalle.setCPercepcion1(totalPercep1.doubleValue());
+                                System.out.println("-----------------------------------------------------------------> TOTAL PERCEPCION 1: "+modeloDetalle.getCtaContable());
+                            }
+                        }
+                    }    */
+                   
+                   if (modeloDetalle.getIdLibro().getPosicion().equals("D")) {
+                                totalPercep1 = totalPercep1.add(det.getImporte().multiply(pie.getPorcentaje().divide(new BigDecimal(100))));
+                                //facComprasDetalle.setCPercepcion1(totalPercep1.doubleValue());
+                   }else{
+                       //facComprasDetalle.setCPercepcion1(Double.valueOf(0));
+                       
+                   }
                 }
+                facComprasDetalle.setCPercepcion1(totalPercep1.doubleValue());
+                
                 if (det.getIvaPorc().equals(new BigDecimal(10.5)) || det.getIvaPorc().equals(new BigDecimal(10.50)) || det.getIvaPorc().equals(new BigDecimal(1050))) {
                     totalIva105 = det.getImporte().multiply(det.getIvaPorc()).divide(new BigDecimal(100));
                     facComprasDetalle.setCIvaRi(Double.valueOf(0));
@@ -2188,7 +2201,7 @@ public class GrabaComprobanteRest {
             }
             /* Movimiento 0 cierre */
 
-            FacComprasSybase movCierre = new FacComprasSybase("CIERRE L50",
+                    FacComprasSybase movCierre = new FacComprasSybase("CIERRE L50",
                     Short.valueOf(Integer.toString(factCab.getIdCteTipo().getcTipoOperacion())),
                     factCab.getFechaEmision(),
                     Short.valueOf(Integer.toString(factCab.getIdCteTipo().getcTipoOperacion())),
@@ -2284,7 +2297,7 @@ public class GrabaComprobanteRest {
 
             // fin movimiento 0 
         } catch (Exception ex) {
-            System.out.println(AppCodigo.ERROR + " | FacCompras Sybase():::::::::::::::::: ----> " + ex.getLocalizedMessage());
+            System.out.println(AppCodigo.ERROR + " | FacCompras Sybase():::::::::::::::::: ----> " + ex.toString());
             return false;
         }
         System.out.println("::::::::: FIN  ----------------------> FacCompras Sybase() :: Stock pasado exitosamente !!!");
