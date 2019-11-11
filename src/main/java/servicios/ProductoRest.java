@@ -170,12 +170,12 @@ public class ProductoRest {
                 //Armo la respuesta
                 for(Producto s : productos) {
                     //Filtro por existencia en deposito
-                    if((!s.getProdumoCollection().isEmpty()) || !s.getStock()) {
-                        if(produmoFacade.vigenciaEnDeposito(idDeposito,s) || !s.getStock()) {
+                    //if((!s.getProdumoCollection().isEmpty()) || !s.getStock()) {
+                     //   if(produmoFacade.vigenciaEnDeposito(idDeposito,s) || !s.getStock()) {
                             ProductoResponse sr = new ProductoResponse(s.getIdProductos(),s.getDescripcion(),s.getCodProducto());
                             productosResponse.add(sr);
-                        }
-                    }
+                       // }
+                   // }
                 }               
             } else {
                 for(Producto s : productos) {

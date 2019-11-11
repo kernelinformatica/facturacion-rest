@@ -42,6 +42,7 @@ import java.math.RoundingMode;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -583,6 +584,11 @@ public class GrabaComprobanteRest {
                     String imputacion = (String) Utils.getKeyFromJsonObject("imputacion", j.getAsJsonObject(), "String");
                     Integer idFactDetalleImputa = (Integer) Utils.getKeyFromJsonObject("idFactDetalleImputa", j.getAsJsonObject(), "Integer");
                     BigDecimal importe = (BigDecimal) Utils.getKeyFromJsonObject("importe", j.getAsJsonObject(), "BigDecimal");
+                    if(importe.intValue() == 0) {
+                        System.out.println("da 0 esto" + importe.intValue());
+                    } else {
+                        System.out.println("no da 0 esto" + importe.intValue());
+                    }
                     BigDecimal precioDesc = (BigDecimal) Utils.getKeyFromJsonObject("precioDesc", j.getAsJsonObject(), "BigDecimal");
                     String unidadDescuento = (String) Utils.getKeyFromJsonObject("unidadDescuento", j.getAsJsonObject(), "String");
                     BigDecimal comprobanteRel = (BigDecimal) Utils.getKeyFromJsonObject("comprobanteRel", j.getAsJsonObject(), "BigDecimal");
@@ -1122,6 +1128,7 @@ public class GrabaComprobanteRest {
                             factCab.setCaiVto(cteNumerador.getVtoCai());
                         }
                     }
+                    System.out.println("aca -> " + Arrays.toString(listaDetalles.toArray()));
                     return this.persistirObjetos(factCab, contratoDet, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumerador, user);
                 } else if (tipoFact != null || letraFact != null || numeroFact != null || fechaVencimientoFact != null || fechaContaFact != null) {
                     CteNumerador cteNumerador = null;
@@ -1794,21 +1801,24 @@ public class GrabaComprobanteRest {
 
                 // percepciones e impuestos particulares
                 for (FactPie pie : factPie) {
-                    ModeloDetalle modeloDetalle = modeloDetalleFacade.getBuscaModeloDetallePorLibro(pie.getIdLibro());
-                    if (modeloDetalle == null) {
-                        facComprasDetalle.setCPercepcion1(BigDecimal.ZERO);
-                        totalPercep1 = new BigDecimal(0);
-                    } else {
-                        // Percepciones
-                        if (modeloDetalle.getIdLibro().getPosicion().equals("D")) {
-                            totalPercep1 = det.getImporte().multiply(pie.getPorcentaje().divide(new BigDecimal(100)));
-                            facComprasDetalle.setCPercepcion1(totalPercep1);
-
-                        } else {
+                    List<ModeloDetalle> modelosDetalle = modeloDetalleFacade.getBuscaModeloDetallePorLibro(pie.getIdLibro());
+                    for(ModeloDetalle modeloDetalle : modelosDetalle) {
+                        if (modeloDetalle == null) {
                             facComprasDetalle.setCPercepcion1(BigDecimal.ZERO);
-                        }
+                            totalPercep1 = new BigDecimal(0);
+                        } else {
+                            // Percepciones
+                            if (modeloDetalle.getIdLibro().getPosicion().equals("D")) {
+                                totalPercep1 = det.getImporte().multiply(pie.getPorcentaje().divide(new BigDecimal(100)));
+                                facComprasDetalle.setCPercepcion1(totalPercep1);
 
+                            } else {
+                                facComprasDetalle.setCPercepcion1(BigDecimal.ZERO);
+                            }
+
+                        }
                     }
+                    
                 }
                 if (det.getIvaPorc().equals(new BigDecimal(10.5)) || det.getIvaPorc().equals(new BigDecimal(10.50)) || det.getIvaPorc().equals(new BigDecimal(1050))) {
                     totalIva105 = det.getImporte().multiply(new BigDecimal(10.5)).divide(new BigDecimal(100));
@@ -1896,39 +1906,42 @@ public class GrabaComprobanteRest {
                     Short.valueOf(Integer.toString(ptoVta)));
 
             for (FactPie pie : factPie) {
-                ModeloDetalle modeloDetalle = modeloDetalleFacade.getBuscaModeloDetallePorLibro(pie.getIdLibro());
-                if (modeloDetalle == null) {
-                    movCierre.setCPercepcion1(BigDecimal.ZERO);
-                    totalPercep1 = new BigDecimal(0);
-                } else {
-                    // Percepciones
-                    if (modeloDetalle.getIdLibro().getPosicion().equals("D")) {
-
-                        movCierre.setCPercepcion1(pie.getImporte());
-                        totalPercep1 = pie.getImporte();
-
-                    } else {
+                List<ModeloDetalle> modelosDetalle = modeloDetalleFacade.getBuscaModeloDetallePorLibro(pie.getIdLibro());
+                for(ModeloDetalle modeloDetalle : modelosDetalle) {
+                    if (modeloDetalle == null) {
                         movCierre.setCPercepcion1(BigDecimal.ZERO);
+                        totalPercep1 = new BigDecimal(0);
+                    } else {
+                        // Percepciones
+                        if (modeloDetalle.getIdLibro().getPosicion().equals("D")) {
+
+                            movCierre.setCPercepcion1(pie.getImporte());
+                            totalPercep1 = pie.getImporte();
+
+                        } else {
+                            movCierre.setCPercepcion1(BigDecimal.ZERO);
+                        }
+                        // grago los iva en el mov 0
+                        if (pie.getPorcentaje().equals(new BigDecimal(10.5)) || pie.getPorcentaje().equals(new BigDecimal(10.50)) || pie.getPorcentaje().equals(new BigDecimal(1050))) {
+                            movCierre.setCIva105(pie.getImporte());
+                            totalIva105 = pie.getImporte();
+
+                        } else if (pie.getPorcentaje().equals(new BigDecimal(21)) || pie.getPorcentaje().equals(new BigDecimal(21.00))) {
+
+                            totalIva21 = pie.getImporte();
+                            movCierre.setCIvaRi(pie.getImporte());
+
+                        } else if (pie.getPorcentaje().equals(new BigDecimal(27))) {
+                            totalIva27 = pie.getImporte();
+                            movCierre.setCPercepcion2(pie.getImporte());
+
+                        }
+
                     }
-                    // grago los iva en el mov 0
-                    if (pie.getPorcentaje().equals(new BigDecimal(10.5)) || pie.getPorcentaje().equals(new BigDecimal(10.50)) || pie.getPorcentaje().equals(new BigDecimal(1050))) {
-                        movCierre.setCIva105(pie.getImporte());
-                        totalIva105 = pie.getImporte();
 
-                    } else if (pie.getPorcentaje().equals(new BigDecimal(21)) || pie.getPorcentaje().equals(new BigDecimal(21.00))) {
-
-                        totalIva21 = pie.getImporte();
-                        movCierre.setCIvaRi(pie.getImporte());
-
-                    } else if (pie.getPorcentaje().equals(new BigDecimal(27))) {
-                        totalIva27 = pie.getImporte();
-                        movCierre.setCPercepcion2(pie.getImporte());
-
-                    }
-
+                    totalPieFactura = pie.getBaseImponible().add(pie.getImporte()).add(totalIva21).add(totalIva27).add(totalIva105).add(totalPercep1);
                 }
-
-                totalPieFactura = pie.getBaseImponible().add(pie.getImporte()).add(totalIva21).add(totalIva27).add(totalIva105).add(totalPercep1);
+                
 
             }
             for (FactDetalle det : factDetalle) {
@@ -2048,20 +2061,7 @@ public class GrabaComprobanteRest {
         }
         try {
             // arranco desde el moviemnto 1 
-            BigDecimal totalPieFactura = new BigDecimal(0);
-            BigDecimal totalDetalleFactura = new BigDecimal(0);
-            BigDecimal totalImpuestos = new BigDecimal(0);
-            BigDecimal totalPrecioUnitario = new BigDecimal(0);
-            BigDecimal totalCantidad = new BigDecimal(0);
-            BigDecimal totalIva21 = new BigDecimal(0);
-            BigDecimal totalIva105 = new BigDecimal(0);
-            BigDecimal totalIva27 = new BigDecimal(0);
-            BigDecimal totalPercep1 = new BigDecimal(0);
-            BigDecimal totalPercep2 = new BigDecimal(0);
-            BigDecimal netoIva21 = new BigDecimal(0);
-            BigDecimal netoIva105 = new BigDecimal(0);
-            BigDecimal netoIva27 = new BigDecimal(0);
-            BigDecimal cotizacionDolar = new BigDecimal(1);
+            
             /* 
             if (factCab.getIdCteTipo().getcTipoOperacion() < 17){
                if (factCab.getIdmoneda().getIdMoneda() > 1){
@@ -2070,9 +2070,36 @@ public class GrabaComprobanteRest {
                         cotizacionDolar = new BigDecimal(1);
                     }
            }*/
+            BigDecimal totalPieFactura = new BigDecimal(0);
+                BigDecimal totalDetalleFactura = new BigDecimal(0);
+                BigDecimal totalImpuestos = new BigDecimal(0);
+                BigDecimal totalPrecioUnitario = new BigDecimal(0);
+                BigDecimal totalCantidad = new BigDecimal(0);
+                BigDecimal totalIva21 = new BigDecimal(0);
+                BigDecimal totalIva105 = new BigDecimal(0);
+                BigDecimal totalIva27 = new BigDecimal(0);
+                BigDecimal totalPercep1 = new BigDecimal(0);
+                BigDecimal totalPercep2 = new BigDecimal(0);
+                BigDecimal netoIva21 = new BigDecimal(0);
+                BigDecimal netoIva105 = new BigDecimal(0);
+                BigDecimal netoIva27 = new BigDecimal(0);
+                BigDecimal cotizacionDolar = new BigDecimal(1);
 
              for (FactDetalle det : factDetalle) {
-
+                totalPieFactura = new BigDecimal(0);
+                totalDetalleFactura = new BigDecimal(0);
+                totalImpuestos = new BigDecimal(0);
+                totalPrecioUnitario = new BigDecimal(0);
+                totalCantidad = new BigDecimal(0);
+                totalIva21 = new BigDecimal(0);
+                totalIva105 = new BigDecimal(0);
+                totalIva27 = new BigDecimal(0);
+                totalPercep1 = new BigDecimal(0);
+                totalPercep2 = new BigDecimal(0);
+                netoIva21 = new BigDecimal(0);
+                netoIva105 = new BigDecimal(0);
+                netoIva27 = new BigDecimal(0);
+                cotizacionDolar = new BigDecimal(1);
                 FacComprasSybase facComprasDetalle = new FacComprasSybase(det.getCodProducto(),
                         Short.valueOf(Integer.toString(det.getIdFactCab().getIdCteTipo().getcTipoOperacion())),
                         det.getIdFactCab().getFechaEmision(),
@@ -2099,33 +2126,34 @@ public class GrabaComprobanteRest {
                 // percepciones e impuestos particulares
                 for (FactPie pie : factPie) {
                     //dario
-                    ModeloDetalle modeloDetalle = modeloDetalleFacade.getBuscaModeloDetallePorLibro(pie.getIdLibro());
-                    System.out.println("1) factPie: -----------------------------------------------------------------> "+pie.getIdLibro()+" | ->"+modeloDetalle.getDescripcion());
+                    List<ModeloDetalle> modelosDetalle = modeloDetalleFacade.getBuscaModeloDetallePorLibro(pie.getIdLibro());
+                    for(ModeloDetalle modeloDetalle : modelosDetalle) {
+                        System.out.println("1) factPie: -----------------------------------------------------------------> "+pie.getIdLibro()+" | ->"+modeloDetalle.getDescripcion());
                     
-                   /* if (modeloDetalle.getIdModeloDetalle() > 0) {
-                        System.out.println("2) getIdModeloDetalle: -----------------------------------------------------------------> "+modeloDetalle.getIdModeloDetalle());
-                    
-                       if (modeloDetalle.getValor().equals(BigDecimal.ZERO) ){
-                             facComprasDetalle.setCPercepcion1(Double.valueOf(0));
-                        } else {
-                           System.out.println("3) PERCEPCION VALOR : modeloDetalle.getValor(): -----------------------------------------------------------------> "+modeloDetalle.getValor()+" - GETLIBRO().GETPOSICION: "+modeloDetalle.getIdLibro().getPosicion());
-                    
-                            if (modeloDetalle.getIdLibro().getPosicion().equals("D")) {
-                                System.out.println("4) -----------------------------------------------------------------> GET POSICION ES IGUAL A = D -> "+modeloDetalle.getCtaContable());
-                                totalPercep1 = det.getImporte().multiply(pie.getPorcentaje().divide(new BigDecimal(100)));
-                                facComprasDetalle.setCPercepcion1(totalPercep1.doubleValue());
-                                System.out.println("-----------------------------------------------------------------> TOTAL PERCEPCION 1: "+modeloDetalle.getCtaContable());
-                            }
+                        /* if (modeloDetalle.getIdModeloDetalle() > 0) {
+                             System.out.println("2) getIdModeloDetalle: -----------------------------------------------------------------> "+modeloDetalle.getIdModeloDetalle());
+
+                            if (modeloDetalle.getValor().equals(BigDecimal.ZERO) ){
+                                  facComprasDetalle.setCPercepcion1(Double.valueOf(0));
+                             } else {
+                                System.out.println("3) PERCEPCION VALOR : modeloDetalle.getValor(): -----------------------------------------------------------------> "+modeloDetalle.getValor()+" - GETLIBRO().GETPOSICION: "+modeloDetalle.getIdLibro().getPosicion());
+
+                                 if (modeloDetalle.getIdLibro().getPosicion().equals("D")) {
+                                     System.out.println("4) -----------------------------------------------------------------> GET POSICION ES IGUAL A = D -> "+modeloDetalle.getCtaContable());
+                                     totalPercep1 = det.getImporte().multiply(pie.getPorcentaje().divide(new BigDecimal(100)));
+                                     facComprasDetalle.setCPercepcion1(totalPercep1.doubleValue());
+                                     System.out.println("-----------------------------------------------------------------> TOTAL PERCEPCION 1: "+modeloDetalle.getCtaContable());
+                                 }
+                             }
+                         }    */
+
+                        if (modeloDetalle.getIdLibro().getPosicion().equals("D") && modeloDetalle.getDescripcion().equals(pie.getDetalle())) {
+                            totalPercep1 = totalPercep1.add(pie.getImporte());
+                            //facComprasDetalle.setCPercepcion1(totalPercep1.doubleValue());
+                        }else{
+                            //facComprasDetalle.setCPercepcion1(Double.valueOf(0));
                         }
-                    }    */
-                   
-                   if (modeloDetalle.getIdLibro().getPosicion().equals("D")) {
-                                totalPercep1 = totalPercep1.add(det.getImporte().multiply(pie.getPorcentaje().divide(new BigDecimal(100))));
-                                //facComprasDetalle.setCPercepcion1(totalPercep1.doubleValue());
-                   }else{
-                       //facComprasDetalle.setCPercepcion1(Double.valueOf(0));
-                       
-                   }
+                    }
                 }
                 facComprasDetalle.setCPercepcion1(totalPercep1.doubleValue());
                 
@@ -2210,41 +2238,53 @@ public class GrabaComprobanteRest {
                     Short.valueOf(Integer.toString(0)),
                     Long.parseLong(factCab.getCuit()),
                     Short.valueOf(Integer.toString(ptoVta)));
-
+            totalPieFactura = new BigDecimal(0);
+                totalDetalleFactura = new BigDecimal(0);
+                totalImpuestos = new BigDecimal(0);
+                totalPrecioUnitario = new BigDecimal(0);
+                totalCantidad = new BigDecimal(0);
+                totalIva21 = new BigDecimal(0);
+                totalIva105 = new BigDecimal(0);
+                totalIva27 = new BigDecimal(0);
+                totalPercep1 = new BigDecimal(0);
+                totalPercep2 = new BigDecimal(0);
+                netoIva21 = new BigDecimal(0);
+                netoIva105 = new BigDecimal(0);
+                netoIva27 = new BigDecimal(0);
+                cotizacionDolar = new BigDecimal(1);
             for (FactPie pie : factPie) {
-                ModeloDetalle modeloDetalle = modeloDetalleFacade.getBuscaModeloDetallePorLibro(pie.getIdLibro());
-
-                if (modeloDetalle == null) {
-                    movCierre.setCPercepcion1(Double.valueOf(0));
-                    totalPercep1 = new BigDecimal(0);
-                    totalPercep2 = new BigDecimal(0);
-                } else {
-                    // Percepciones
-                    if (modeloDetalle.getIdLibro().getPosicion().equals("D")) {
-                        movCierre.setCPercepcion1(pie.getImporte().doubleValue());
-                        totalPercep1 = pie.getImporte();
+                List<ModeloDetalle> modelosDetalle = modeloDetalleFacade.getBuscaModeloDetallePorLibro(pie.getIdLibro());
+                for(ModeloDetalle modeloDetalle : modelosDetalle) {
+                    if (modeloDetalle == null) {
+                        movCierre.setCPercepcion1(Double.valueOf(0));
+                        totalPercep1 = new BigDecimal(0);
                         totalPercep2 = new BigDecimal(0);
                     } else {
-                        movCierre.setCPercepcion1(Double.valueOf(0));
+                        // Percepciones
+                        if (modeloDetalle.getIdLibro().getPosicion().equals("D") && modeloDetalle.getDescripcion().equals(pie.getDetalle())) {
+                            totalPercep1 = totalPercep1.add(pie.getImporte());
+                            totalPercep2 = new BigDecimal(0);
+                        } else {
+                            //movCierre.setCPercepcion1(Double.valueOf(0));
+                        }
+                        // grago los iva en el mov 0
+                        if (pie.getPorcentaje().equals(new BigDecimal(10.5)) || pie.getPorcentaje().equals(new BigDecimal(10.50)) || pie.getPorcentaje().equals(new BigDecimal(1050)) && modeloDetalle.getDescripcion().equals(pie.getDetalle())) {
+                            movCierre.setCIva105(pie.getImporte().doubleValue());
+
+                        } else if (pie.getPorcentaje().equals(new BigDecimal(21)) || pie.getPorcentaje().equals(new BigDecimal(21.00)) && modeloDetalle.getDescripcion().equals(pie.getDetalle())) {
+                            movCierre.setCIvaRi(pie.getImporte().doubleValue());
+
+                        } else if (pie.getPorcentaje().equals(new BigDecimal(27)) && modeloDetalle.getDescripcion().equals(pie.getDetalle())) {
+                            totalIva27 = pie.getImporte();
+                            //si alguna vez te preguntaste porqué el mov de cierre tiene siempre percepcion 0, o porque solo graba el ultimo valor
+                            //aca esta tu respuesta
+                            movCierre.setCPercepcion2(pie.getImporte().doubleValue());
+
+                        }
+
                     }
-                    // grago los iva en el mov 0
-                    if (pie.getPorcentaje().equals(new BigDecimal(10.5)) || pie.getPorcentaje().equals(new BigDecimal(10.50)) || pie.getPorcentaje().equals(new BigDecimal(1050))) {
-                        movCierre.setCIva105(pie.getImporte().doubleValue());
-                        totalIva105 = pie.getImporte();
-
-                    } else if (pie.getPorcentaje().equals(new BigDecimal(21)) || pie.getPorcentaje().equals(new BigDecimal(21.00))) {
-
-                        totalIva21 = pie.getImporte();
-                        movCierre.setCIvaRi(pie.getImporte().doubleValue());
-
-                    } else if (pie.getPorcentaje().equals(new BigDecimal(27))) {
-                        totalIva27 = pie.getImporte();
-                        movCierre.setCPercepcion2(pie.getImporte().doubleValue());
-
-                    }
-
                 }
-
+                
                 totalPieFactura = pie.getBaseImponible().add(totalIva21).add(totalIva27).add(totalIva105).add(totalPercep1).add(totalPercep2);
                 System.out.print("totalPieFactura ----> " +totalPieFactura+" | DETALLE (INCLUYE LA PERCEPCION) -> Base imponible: "+pie.getBaseImponible()+" ,totalIva21: "+totalIva21+" + ,totalIva27: "+totalIva27+" ,totalIva105: "+totalIva105+" + ,TOTAL PERCEPCION 1: "+totalPercep1);
             }
@@ -2254,7 +2294,7 @@ public class GrabaComprobanteRest {
                 totalCantidad = new BigDecimal(0); //totalCantidad.add(det.getCantidad());
                 movCierre.setCDeposito(det.getIdDepositos().getCodigoDep());
             }
-
+            movCierre.setCPercepcion1(totalPercep1.doubleValue());
             // aca van los totalizados del iva
             movCierre.setCPrecioUnitario(totalPrecioUnitario.doubleValue());
             movCierre.setCCantidad(totalCantidad.doubleValue());
