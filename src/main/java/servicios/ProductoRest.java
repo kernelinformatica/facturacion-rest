@@ -168,23 +168,16 @@ public class ProductoRest {
                 }               
             } else if(tipo != null && tipo.equals("reducida") && idListaPrecio == null && idDeposito != null) {
                 //Armo la respuesta
-                System.out.println("------------> TRANSFERENCIAS INTERNAS");
+
                 for(Producto s : productos) {
                     //Filtro por existencia en deposito
-                    
-                       ProductoResponse sr = new ProductoResponse(s.getIdProductos(),s.getDescripcion(),s.getCodProducto());
-                        productosResponse.add(sr);
-                    
-                    if((!s.getProdumoCollection().isEmpty()) || !s.getStock()) {
-                        if(produmoFacade.vigenciaEnDeposito(idDeposito,s) || !s.getStock()) {
-                    
-                        /*
-                                    ProductoResponse sr = new ProductoResponse(s.getIdProductos(),s.getDescripcion(),s.getCodProducto());
+                    //if((!s.getProdumoCollection().isEmpty()) || !s.getStock()) {
+                     //   if(produmoFacade.vigenciaEnDeposito(idDeposito,s) || !s.getStock()) {
+                            ProductoResponse sr = new ProductoResponse(s.getIdProductos(),s.getDescripcion(),s.getCodProducto());
                             productosResponse.add(sr);
-                    
-                            */
-                        }
-                    }
+                       // }
+                   // }
+
                 }               
             } else {
                 for(Producto s : productos) {
