@@ -1338,7 +1338,10 @@ public class GrabaComprobanteRest {
                         Boolean respGrabaMasterSybase = this.grabarMasterSybase(factCab, factDetalle, factFormaPago, factPie, user);
                         if (respGrabaMasterSybase == true) {
 
-                            this.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
+                            Boolean respGrabarFactComprasSybase = this.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
+                            /*if(respGrabarFactComprasSybase) {
+                                this.grabarFactCompras(factCab, factDetalle, factFormaPago, factPie, user);
+                            }*/
                         }
                     }
                 }
@@ -1808,18 +1811,17 @@ public class GrabaComprobanteRest {
                             totalPercep1 = new BigDecimal(0);
                         } else {
                             // Percepciones
-                            if (modeloDetalle.getIdLibro().getPosicion().equals("D")) {
-                                totalPercep1 = det.getImporte().multiply(pie.getPorcentaje().divide(new BigDecimal(100)));
-                                facComprasDetalle.setCPercepcion1(totalPercep1);
+                            if (modeloDetalle.getIdLibro().getPosicion().equals("D") && modeloDetalle.getDescripcion().equals(pie.getDetalle())) {
+                                totalPercep1 = totalPercep1.add(pie.getImporte());
 
                             } else {
-                                facComprasDetalle.setCPercepcion1(BigDecimal.ZERO);
                             }
 
                         }
                     }
                     
                 }
+                facComprasDetalle.setCPercepcion1(totalPercep1);
                 if (det.getIvaPorc().equals(new BigDecimal(10.5)) || det.getIvaPorc().equals(new BigDecimal(10.50)) || det.getIvaPorc().equals(new BigDecimal(1050))) {
                     totalIva105 = det.getImporte().multiply(new BigDecimal(10.5)).divide(new BigDecimal(100));
                     facComprasDetalle.setCIvaRi(BigDecimal.ZERO);
@@ -1913,10 +1915,9 @@ public class GrabaComprobanteRest {
                         totalPercep1 = new BigDecimal(0);
                     } else {
                         // Percepciones
-                        if (modeloDetalle.getIdLibro().getPosicion().equals("D")) {
+                        if (modeloDetalle.getIdLibro().getPosicion().equals("D") && modeloDetalle.getDescripcion().equals(pie.getDetalle())) {
 
-                            movCierre.setCPercepcion1(pie.getImporte());
-                            totalPercep1 = pie.getImporte();
+                            totalPercep1 = totalPercep1.add(pie.getImporte());
 
                         } else {
                             movCierre.setCPercepcion1(BigDecimal.ZERO);
@@ -1966,7 +1967,7 @@ public class GrabaComprobanteRest {
             movCierre.setCFormaPago(Short.valueOf(Integer.toString(0)));
             movCierre.setCNombre(factCab.getNombre());
             movCierre.setCDescripcion(factCab.getObservaciones());
-
+            movCierre.setCPercepcion1(totalPercep1);
             movCierre.setCFechaVencimiento(factCab.getFechaVto());
             movCierre.setCFacturadoSn(facturadoSn.charAt(0));
             movCierre.setCCodigoOperador(user.getUsuario());
@@ -2341,7 +2342,7 @@ public class GrabaComprobanteRest {
             return false;
         }
         System.out.println("::::::::: FIN  ----------------------> FacCompras Sybase() :: Stock pasado exitosamente !!!");
-        return false;
+        return true;
     }
 
     // fin factCompras Sybase
