@@ -1602,7 +1602,7 @@ public class GrabaComprobanteRest {
                     masterFormaPago.setMDetalle(factCab.getIdCteTipo().getDescripcion() + " - U$S" + factCab.getCotDolar());
                     masterFormaPago.setMCtacte("1");
                     // Si es Compras a Cuenta Corriente busco la cuenta contable en la categoria del padron
-                    if (fp.getIdFactFormaPago().equals(2)) {
+                    if (fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(2)) {
                         CtacteCategoria ctacteCatego = ctaCteCategoriaFacade.getCategoriaByCodigo(pad.getPadronCatego());
                         masterFormaPago.setPlanCuentas(Integer.toString(ctacteCatego.getPlanCuentas()));
                     }else{
@@ -2345,6 +2345,8 @@ public class GrabaComprobanteRest {
             movCierre.setCSircrebStafe(Double.valueOf(0));
             movCierre.setCSircrebCdba(Double.valueOf(0));
             movCierre.setCRetencion1(movCierre.getCPercepcion1() + movCierre.getCPercepcion2());
+            movCierre.setCPercepcion1(Double.valueOf(0));
+            movCierre.setCPercepcion2(Double.valueOf(0));
             boolean transaccion0;
             transaccion0 = factComprasSybaseFacade.setFacComprasSybaseNuevo(movCierre);
             //si la trnsaccion fallo devuelvo el mensaje
@@ -2466,7 +2468,7 @@ public class GrabaComprobanteRest {
                     masterFormaPago.setMCtacte("S");
                     masterFormaPago.setMDetalle(factCab.getIdCteTipo().getDescripcion() + " - U$S" + factCab.getCotDolar());
                     // Si es Compras a Cuenta Corriente busco la cuenta contable en la categoria del padron
-                    if (fp.getIdFactFormaPago().equals(2)) {
+                    if (fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(2)) {
                         CtacteCategoria ctacteCatego = ctaCteCategoriaFacade.getCategoriaByCodigo(pad.getPadronCatego());
                         masterFormaPago.setPlanCuentas(Integer.parseInt(Integer.toString(ctacteCatego.getPlanCuentas())));
                     }else{
