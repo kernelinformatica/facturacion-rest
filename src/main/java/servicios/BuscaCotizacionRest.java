@@ -80,7 +80,7 @@ public class BuscaCotizacionRest {
                 respuesta.setControl(AppCodigo.ERROR, "Error, no hay cotizacion disponible");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            
+            System.out.println(cotizacion.getFechaCotizacion().toString());
             SisCotDolarResponse resp = new SisCotDolarResponse(cotizacion);
             
             respuesta.setDatos(resp);

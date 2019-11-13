@@ -212,7 +212,7 @@ public class GrabaComprobanteRest {
             Integer idSisOperacionComprobante = (Integer) Utils.getKeyFromJsonObject("idSisOperacionComprobante", jsonBody, "Integer");
             Integer idContrato = (Integer) Utils.getKeyFromJsonObject("idContrato", jsonBody, "Integer");
             String direccion = (String) Utils.getKeyFromJsonObject("direccion", jsonBody, "String");
-
+            System.out.println(fechaVencimiento.toString());
             //Para canje
             String productoCanje = (String) Utils.getKeyFromJsonObject("productoCanje", jsonBody, "String");
             BigDecimal precioReferenciaCanje = (BigDecimal) Utils.getKeyFromJsonObject("precioReferenciaCanje", jsonBody, "BigDecimal");
@@ -466,7 +466,7 @@ public class GrabaComprobanteRest {
                 factCab.setFechaConta(fechaConta);
                 factCab.setFechaDolar(fechaDolar);
                 factCab.setFechaEmision(fechaEmision);
-                factCab.setFechaVto(caiVto);
+                factCab.setFechaVto(fechaVencimiento);
                 factCab.setIdCteTipo(cteTipo);
                 factCab.setIdListaPrecios(listaPrecio);
                 factCab.setIdPadron(idPadron);
@@ -1199,6 +1199,7 @@ public class GrabaComprobanteRest {
                     fc.setFechaDolar(fechaDolar);
                     fc.setFechaEmision(fechaEmision);
                     fc.setFechaVto(fechaVencimientoFact);
+                    System.out.println("fechaVencimientoFact -> " + fechaVencimientoFact.toString());
                     fc.setIdCteTipo(cteTipoFac);
                     fc.setIdListaPrecios(listaPrecio);
                     fc.setIdPadron(idPadron);
@@ -1541,6 +1542,7 @@ public class GrabaComprobanteRest {
                 masterDetalle.setMImporte(det.getImporte().multiply(signo));
                 masterDetalle.setMIngreso(factCab.getFechaConta());
                 masterDetalle.setMPase(Short.valueOf(Integer.toString(paseDetalle)));
+                System.out.println("ACA DICE LO DE LA FECHA DE VTO1 ---->" + factCab.getFechaVto().toString());
                 masterDetalle.setMVence(factCab.getFechaVto());
                 masterDetalle.setNroComp(factCab.getNumero());
                 masterDetalle.setPadronCodigo(factCab.getIdPadron());
@@ -1587,6 +1589,7 @@ public class GrabaComprobanteRest {
                 masterFormaPago.setMImporte(fp.getImporte().multiply(signo).negate());
                 masterFormaPago.setMIngreso(factCab.getFechaConta());
                 masterFormaPago.setMPase(Short.valueOf(Integer.toString(paseDetalle)));
+                System.out.println("ACA DICE LO DE LA FECHA DE VTO2 ---->" + factCab.getFechaVto().toString());
                 masterFormaPago.setMVence(factCab.getFechaVto());
                 masterFormaPago.setNroComp(factCab.getNumero());
                 masterFormaPago.setPadronCodigo(factCab.getIdPadron());
@@ -1653,6 +1656,7 @@ public class GrabaComprobanteRest {
                 masterImputa.setMImporte(fi.getImporte().multiply(signo));
                 masterImputa.setMIngreso(factCab.getFechaConta());
                 masterImputa.setMPase(Short.valueOf(Integer.toString(paseDetalle)));
+                System.out.println("ACA DICE LO DE LA FECHA DE VTO3 ---->" + factCab.getFechaVto().toString());
                 masterImputa.setMVence(factCab.getFechaVto());
                 masterImputa.setNroComp(factCab.getNumero());
                 masterImputa.setPadronCodigo(factCab.getIdPadron());
@@ -1820,18 +1824,17 @@ public class GrabaComprobanteRest {
                             totalPercep1 = new BigDecimal(0);
                         } else {
                             // Percepciones
-                            if (modeloDetalle.getIdLibro().getPosicion().equals("D")) {
-                                totalPercep1 = det.getImporte().multiply(pie.getPorcentaje().divide(new BigDecimal(100)));
-                                facComprasDetalle.setCPercepcion1(totalPercep1);
+                            if (modeloDetalle.getIdLibro().getPosicion().equals("D") && modeloDetalle.getDescripcion().equals(pie.getDetalle())) {
+                                totalPercep1 = totalPercep1.add(pie.getImporte());
 
                             } else {
-                                facComprasDetalle.setCPercepcion1(BigDecimal.ZERO);
                             }
 
                         }
                     }
 
                 }
+                facComprasDetalle.setCPercepcion1(totalPercep1);
                 if (det.getIvaPorc().equals(new BigDecimal(10.5)) || det.getIvaPorc().equals(new BigDecimal(10.50)) || det.getIvaPorc().equals(new BigDecimal(1050))) {
                     totalIva105 = det.getImporte().multiply(new BigDecimal(10.5)).divide(new BigDecimal(100));
                     facComprasDetalle.setCIvaRi(BigDecimal.ZERO);
@@ -1925,10 +1928,9 @@ public class GrabaComprobanteRest {
                         totalPercep1 = new BigDecimal(0);
                     } else {
                         // Percepciones
-                        if (modeloDetalle.getIdLibro().getPosicion().equals("D")) {
+                        if (modeloDetalle.getIdLibro().getPosicion().equals("D") && modeloDetalle.getDescripcion().equals(pie.getDetalle())) {
 
-                            movCierre.setCPercepcion1(pie.getImporte());
-                            totalPercep1 = pie.getImporte();
+                            totalPercep1 = totalPercep1.add(pie.getImporte());
 
                         } else {
                             movCierre.setCPercepcion1(BigDecimal.ZERO);
@@ -1977,7 +1979,7 @@ public class GrabaComprobanteRest {
             movCierre.setCFormaPago(Short.valueOf(Integer.toString(0)));
             movCierre.setCNombre(factCab.getNombre());
             movCierre.setCDescripcion(factCab.getObservaciones());
-
+            movCierre.setCPercepcion1(totalPercep1);
             movCierre.setCFechaVencimiento(factCab.getFechaVto());
             movCierre.setCFacturadoSn(facturadoSn.charAt(0));
             movCierre.setCCodigoOperador(user.getUsuario());
@@ -2362,7 +2364,7 @@ public class GrabaComprobanteRest {
             return false;
         }
         System.out.println("::::::::: FIN  ----------------------> FacCompras Sybase() :: Stock pasado exitosamente !!!");
-        return false;
+        return true;
     }
 
     // fin factCompras Sybase
