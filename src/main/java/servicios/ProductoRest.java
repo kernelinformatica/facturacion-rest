@@ -168,6 +168,7 @@ public class ProductoRest {
                 }               
             } else if(tipo != null && tipo.equals("reducida") && idListaPrecio == null && idDeposito != null) {
                 //Armo la respuesta
+
                 for(Producto s : productos) {
                     //Filtro por existencia en deposito
                     //if((!s.getProdumoCollection().isEmpty()) || !s.getStock()) {
@@ -176,6 +177,7 @@ public class ProductoRest {
                             productosResponse.add(sr);
                        // }
                    // }
+
                 }               
             } else {
                 for(Producto s : productos) {
