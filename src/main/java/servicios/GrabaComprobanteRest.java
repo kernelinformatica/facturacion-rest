@@ -2289,7 +2289,7 @@ public class GrabaComprobanteRest {
                         } else {
                            totalPercep1 = new BigDecimal(0);
                            totalPercep2 = new BigDecimal(0);
-                            //movCierre.setCPercepcion1(Double.valueOf(0));
+                         
                         }
                         // grago los iva en el mov 0
                         if (pie.getPorcentaje().equals(new BigDecimal(10.5)) || pie.getPorcentaje().equals(new BigDecimal(10.50)) || pie.getPorcentaje().equals(new BigDecimal(1050)) && modeloDetalle.getDescripcion().equals(pie.getDetalle())) {
