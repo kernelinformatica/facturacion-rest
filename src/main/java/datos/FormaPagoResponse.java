@@ -15,6 +15,7 @@ public class FormaPagoResponse implements Payload {
     private int idFormaPago;
     private String descripcion;
     private boolean editar;
+    private Integer codigoSysbase;
     private SisFormaPagoResponse tipo;
     private ListaPreciosResponse listaPrecio;
     private List<FormaPagoDetResponse> formaPagoDet;
@@ -28,11 +29,20 @@ public class FormaPagoResponse implements Payload {
         this.formaPagoDet = new ArrayList<>();
         this.listaPrecios = new ArrayList<>();
     }
-    
+
+    public Integer getCodigoSysbase() {
+        return codigoSysbase;
+    }
+
+    public void setCodigoSysbase(Integer codigoSysbase) {
+        this.codigoSysbase = codigoSysbase;
+    }
+
+   
     public int getIdFormaPago() {
         return idFormaPago;
     }
-
+    
     public void setIdFormaPago(int idFormaPago) {
         this.idFormaPago = idFormaPago;
     }
@@ -61,6 +71,11 @@ public class FormaPagoResponse implements Payload {
         this.tipo = tipo;
     }   
 
+    
+   
+    
+    
+    
     public List<FormaPagoDetResponse> getFormaPagoDet() {
         return formaPagoDet;
     }
