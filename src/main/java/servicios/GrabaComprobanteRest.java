@@ -2283,9 +2283,10 @@ public class GrabaComprobanteRest {
                     } else {
                         // Percepciones
                         if (modeloDetalle.getIdLibro().getPosicion().equals("D") && modeloDetalle.getDescripcion().equals(pie.getDetalle())) {
-                            totalPercep1 = totalPercep1.add(pie.getImporte());
-                            totalPercep2 = new BigDecimal(0);
+                           totalPercep1 = totalPercep1.add(pie.getImporte());
                         } else {
+                           totalPercep1 = new BigDecimal(0);
+                           totalPercep2 = new BigDecimal(0);
                             //movCierre.setCPercepcion1(Double.valueOf(0));
                         }
                         // grago los iva en el mov 0

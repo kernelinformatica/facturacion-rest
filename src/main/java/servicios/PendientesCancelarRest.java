@@ -326,11 +326,9 @@ public class PendientesCancelarRest {
 
                     //Agrego las cuentas contables
                     producto.getModeloCab().agregarModeloDetalleTipo(prod.getIdModeloCab().getModeloDetalleCollection(), 1, factCab.getIdSisTipoOperacion().getIdSisModulos().getIdSisModulos());
-
                     if(!prod.getLoteCollection().isEmpty()) {
                         producto.setEditar(false);
                     }
-
                     //Seteo el iva del producto dependiendo la cuenta contable que tiene asignada
                     for(ModeloDetalle r : prod.getIdModeloCab().getModeloDetalleCollection()) {
                         if(r.getIdSisModulo().getIdSisModulos().equals(factCab.getIdSisTipoOperacion().getIdSisModulos().getIdSisModulos()) && 
