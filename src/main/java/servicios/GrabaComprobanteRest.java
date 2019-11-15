@@ -2074,15 +2074,6 @@ public class GrabaComprobanteRest {
         }
         try {
             // arranco desde el moviemnto 1 
-
-            /* 
-            if (factCab.getIdCteTipo().getcTipoOperacion() < 17){
-               if (factCab.getIdmoneda().getIdMoneda() > 1){
-                        cotizacionDolar = factCab.getCotDolar();
-                    }else{
-                        cotizacionDolar = new BigDecimal(1);
-                    }
-           }*/
             BigDecimal totalPieFactura = new BigDecimal(0);
             BigDecimal totalDetalleFactura = new BigDecimal(0);
             BigDecimal totalImpuestos = new BigDecimal(0);
@@ -2097,7 +2088,7 @@ public class GrabaComprobanteRest {
             BigDecimal netoIva105 = new BigDecimal(0);
             BigDecimal netoIva27 = new BigDecimal(0);
             BigDecimal cotizacionDolar = new BigDecimal(1);
-
+            Integer formaPagoSeleccionada = 0;
             for (FactDetalle det : factDetalle) {
                 totalPieFactura = new BigDecimal(0);
                 totalDetalleFactura = new BigDecimal(0);
@@ -2113,6 +2104,7 @@ public class GrabaComprobanteRest {
                 netoIva105 = new BigDecimal(0);
                 netoIva27 = new BigDecimal(0);
                 cotizacionDolar = new BigDecimal(1);
+                System.out.println("-----------------------------> CIERRE -> " + det.getIdFactCab().getIdCteTipo().getcTipoOperacion());
                 FacComprasSybase facComprasDetalle = new FacComprasSybase(det.getCodProducto(),
                         Short.valueOf(Integer.toString(det.getIdFactCab().getIdCteTipo().getcTipoOperacion())),
                         det.getIdFactCab().getFechaEmision(),
@@ -2149,22 +2141,18 @@ public class GrabaComprobanteRest {
                 facComprasDetalle.setBarra(det.getIdFactCab().getCodBarra());
 
                 for (FactFormaPago fp : factFormaPago) {
-                    facComprasDetalle.setCFormaPago(Short.valueOf(Integer.toString(fp.getIdFormaPago().getCodigoSysbase())));
+                    formaPagoSeleccionada = fp.getIdFormaPago().getCodigoSysbase();
                 }
-
+                facComprasDetalle.setCFormaPago((Short.valueOf(Integer.toString(formaPagoSeleccionada))));
                 // percepciones e impuestos particulares
                 for (FactPie pie : factPie) {
-
-                    List<ModeloDetalle> modelosDetalle = modeloDetalleFacade.getBuscaModeloDetallePorLibro(pie.getIdLibro());
-                    for (ModeloDetalle modeloDetalle : modelosDetalle) {
-                        System.out.println("1) factPie: -----------------------------------------------------------------> " + pie.getIdLibro() + " | ->" + modeloDetalle.getDescripcion());
-                        if (modeloDetalle.getIdLibro().getPosicion().equals("D") && modeloDetalle.getDescripcion().equals(pie.getDetalle())) {
-                            totalPercep1 = totalPercep1.add(pie.getImporte());
-                        } else {
-                            facComprasDetalle.setCPercepcion1(Double.valueOf(0));
-                        }
-                    }
-
+                    if (pie.getIdSisTipoModelo().getIdSisTipoModelo().equals(6)) {
+                        totalPercep1 = totalPercep1.add(pie.getImporte());
+                        totalPercep2 = new BigDecimal(0);
+                    } else {
+                        totalPercep1 = new BigDecimal(0);
+                        totalPercep2 = new BigDecimal(0);
+                    };
                 }
 
                 if (det.getIvaPorc().equals(new BigDecimal(10.5)) || det.getIvaPorc().equals(new BigDecimal(10.50)) || det.getIvaPorc().equals(new BigDecimal(1050))) {
@@ -2272,50 +2260,70 @@ public class GrabaComprobanteRest {
             netoIva105 = new BigDecimal(0);
             netoIva27 = new BigDecimal(0);
             cotizacionDolar = new BigDecimal(1);
+
+            // VALORES QUE VAN EN 0 ////////////////////////////////////////////////////
+            movCierre.setCDescuento(Double.valueOf(0));
+            movCierre.setCImpuestoInterno(Double.valueOf(0));
+            movCierre.setCOtroImpuesto(Double.valueOf(0));
+            movCierre.setCCodigoRelacion(0);
+            movCierre.setCTipoComprobanteAsoc(Short.valueOf(Integer.toString(0)));
+            movCierre.setCNumeroComprobanteAsoc(Long.parseLong("0"));
+            movCierre.setCContabil(contabilSn);
+            movCierre.setCRetencionMiel(Double.valueOf(0));
+            movCierre.setCRetencion2da(Double.valueOf(0));
+             movCierre.setCRetencion2(Double.valueOf(0));
+            movCierre.setCanjeSn("N");
+            movCierre.setCanjeNroCto("N");
+            movCierre.setCSircrebStafe(Double.valueOf(0));
+            movCierre.setCSircrebCdba(Double.valueOf(0));
+            movCierre.setCIvaRni(Double.valueOf(0));
+            movCierre.setCIvaRi(Double.valueOf(0));
+            movCierre.setCIva105(Double.valueOf(0));
+            movCierre.setCDescuento(Double.valueOf(0));
+            // FIN VALORES EN 0 ///////////////////////////////////////////////////////
             for (FactPie pie : factPie) {
-                List<ModeloDetalle> modelosDetalle = modeloDetalleFacade.getBuscaModeloDetallePorLibro(pie.getIdLibro());
-                for (ModeloDetalle modeloDetalle : modelosDetalle) {
-                    if (modeloDetalle == null) {
-                        movCierre.setCPercepcion1(Double.valueOf(0));
+                // Percepciones
+                    if (pie.getIdSisTipoModelo().getIdSisTipoModelo().equals(6)) {
+                        totalPercep1 = totalPercep1.add(pie.getImporte());
+                        totalPercep2 = new BigDecimal(0);
+                    } else {
                         totalPercep1 = new BigDecimal(0);
                         totalPercep2 = new BigDecimal(0);
-                        movCierre.setCRetencion1(Double.valueOf(0));
-                        movCierre.setCRetencion2(Double.valueOf(0));
-                    } else {
-                        // Percepciones
-                        if (modeloDetalle.getIdLibro().getPosicion().equals("D") && modeloDetalle.getDescripcion().equals(pie.getDetalle())) {
-                            totalPercep1 = totalPercep1.add(pie.getImporte());
-                        } else {
-                            totalPercep1 = new BigDecimal(0);
-                            totalPercep2 = new BigDecimal(0);
-
-                        }
-                        // grago los iva en el mov 0
-                        if (pie.getPorcentaje().equals(new BigDecimal(10.5)) || pie.getPorcentaje().equals(new BigDecimal(10.50)) || pie.getPorcentaje().equals(new BigDecimal(1050)) && modeloDetalle.getDescripcion().equals(pie.getDetalle())) {
-                            movCierre.setCIva105(pie.getImporte().doubleValue());
-
-                        } else if (pie.getPorcentaje().equals(new BigDecimal(21)) || pie.getPorcentaje().equals(new BigDecimal(21.00)) && modeloDetalle.getDescripcion().equals(pie.getDetalle())) {
-                            movCierre.setCIvaRi(pie.getImporte().doubleValue());
-                        } else if (pie.getPorcentaje().equals(new BigDecimal(27)) && modeloDetalle.getDescripcion().equals(pie.getDetalle())) {
-                            totalIva27 = pie.getImporte();
-                            //si alguna vez te preguntaste porqué el mov de cierre tiene siempre percepcion 0, o porque solo graba el ultimo valor
-                            //aca esta tu respuesta
-                            movCierre.setCPercepcion2(pie.getImporte().doubleValue());
-                        }
-                    }
-                }
+                    };
+                 // ivas
+                 if (pie.getIdSisTipoModelo().getIdSisTipoModelo().equals(2)) {
+                         System.out.println("-------------> ES IVA() "+(pie.getIdSisTipoModelo().getIdSisTipoModelo()));
+                    if (pie.getPorcentaje().equals(new BigDecimal(10.5))) {
+                          totalIva105 = totalIva105.add(pie.getImporte());
+                          movCierre.setCIva105(totalIva105.doubleValue());
+                          System.out.println("-------------> ES IVA 10.5 "+(totalIva105));
+                       } else if (pie.getPorcentaje().equals(new BigDecimal(21))) {
+                          totalIva21 = totalIva21.add(pie.getImporte());
+                          movCierre.setCIvaRi(totalIva21.doubleValue());
+                          
+                          System.out.println("-------------> ES IVA 21 "+(totalIva21));
+                       } else if (pie.getPorcentaje().equals(new BigDecimal(27))) {
+                          totalIva27 = totalIva27.add(pie.getImporte());
+                          movCierre.setCPercepcion2(totalIva27.doubleValue());
+                          System.out.println("-------------> ES IVA 27 "+(totalIva27));
+                       }
+                   }
+                 
+                 
+                    
 
                 totalPieFactura = pie.getBaseImponible().add(totalIva21).add(totalIva27).add(totalIva105).add(totalPercep1).add(totalPercep2);
             }
             for (FactDetalle det : factDetalle) {
-
                 totalPrecioUnitario = totalPrecioUnitario.add(det.getCantidad().multiply(det.getPrecio()));
                 totalCantidad = new BigDecimal(0); //totalCantidad.add(det.getCantidad());
                 movCierre.setCDeposito(det.getIdDepositos().getCodigoDep());
             }
             for (FactFormaPago fp : factFormaPago) {
-                    movCierre.setCFormaPago(Short.valueOf(Integer.toString(fp.getIdFormaPago().getCodigoSysbase())));
+                formaPagoSeleccionada = fp.getIdFormaPago().getCodigoSysbase();
+
             }
+            movCierre.setCFormaPago((Short.valueOf(Integer.toString(formaPagoSeleccionada))));
 
             movCierre.setCPercepcion1(totalPercep1.doubleValue());
             // aca van los totalizados del iva
@@ -2323,7 +2331,6 @@ public class GrabaComprobanteRest {
             movCierre.setCCantidad(totalCantidad.doubleValue());
             movCierre.setCBonificacion(totalPieFactura.doubleValue());
             ///////////////////////////////////////////////
-
             movCierre.setCNombre(factCab.getNombre());
             movCierre.setCDescripcion(factCab.getObservaciones());
             movCierre.setCFechaVencimiento(factCab.getFechaVto());
@@ -2333,26 +2340,10 @@ public class GrabaComprobanteRest {
             movCierre.setCFechaContabil(factCab.getFechaConta());
             movCierre.setBarra("");
             movCierre.setCCondicionIva(Short.valueOf(Integer.toString(condiIva.getCondIva().getCondiva())));
-            //Valores que van en 0 para que no se graben en null
-            movCierre.setCIvaRni(Double.valueOf(0));
-            movCierre.setCPercepcion2(Double.valueOf(0));
-            movCierre.setCDescuento(Double.valueOf(0));
-            movCierre.setCFormaPago((Short.valueOf(Integer.toString(0))));
-            movCierre.setCImpuestoInterno(Double.valueOf(0));
-            movCierre.setCOtroImpuesto(Double.valueOf(0));
-            movCierre.setCCodigoRelacion(0);
-            movCierre.setCTipoComprobanteAsoc(Short.valueOf(Integer.toString(0)));
-            movCierre.setCNumeroComprobanteAsoc(Long.parseLong("0"));
-            movCierre.setCContabil(contabilSn);
-            movCierre.setCRetencionMiel(Double.valueOf(0));
-            movCierre.setCRetencion2da(Double.valueOf(0));
-            movCierre.setCanjeSn("N");
-            movCierre.setCanjeNroCto("N");
-            movCierre.setCSircrebStafe(Double.valueOf(0));
-            movCierre.setCSircrebCdba(Double.valueOf(0));
-            movCierre.setCRetencion1(movCierre.getCPercepcion1() + movCierre.getCPercepcion2());
+            movCierre.setCRetencion1(totalPercep1.doubleValue() + totalPercep2.doubleValue());
             movCierre.setCPercepcion1(Double.valueOf(0));
             movCierre.setCPercepcion2(Double.valueOf(0));
+
             boolean transaccion0;
             transaccion0 = factComprasSybaseFacade.setFacComprasSybaseNuevo(movCierre);
             //si la trnsaccion fallo devuelvo el mensaje
