@@ -2130,7 +2130,6 @@ public class GrabaComprobanteRest {
                 //
                 facComprasDetalle.setCNombre(det.getIdFactCab().getNombre());
                 facComprasDetalle.setCCantidad(det.getCantidad().doubleValue());
-                facComprasDetalle.setCDescripcion(det.getDetalle());
                 Double precioUnitario = det.getPrecio().doubleValue();
                 facComprasDetalle.setCPrecioUnitario(precioUnitario);
                 facComprasDetalle.setCFechaVencimiento(det.getIdFactCab().getFechaVto());
@@ -2224,6 +2223,7 @@ public class GrabaComprobanteRest {
                 facComprasDetalle.setCanjeNroCto("N");
                 facComprasDetalle.setCSircrebStafe(Double.valueOf(0));
                 facComprasDetalle.setCSircrebCdba(Double.valueOf(0));
+                facComprasDetalle.setCDescripcion("N");
                 // si es factura no se graba detalle en facCompras Sybase y hacemos la persistencia
                 if (det.getIdFactCab().getIdCteTipo().getcTipoOperacion() >= 17) {
                     boolean transaccionFacC;
@@ -2280,6 +2280,7 @@ public class GrabaComprobanteRest {
             movCierre.setCIvaRi(Double.valueOf(0));
             movCierre.setCIva105(Double.valueOf(0));
             movCierre.setCDescuento(Double.valueOf(0));
+            movCierre.setCDescripcion("N");
             // FIN VALORES EN 0 ///////////////////////////////////////////////////////
             for (FactPie pie : factPie) {
                 // Percepciones
@@ -2332,7 +2333,7 @@ public class GrabaComprobanteRest {
             movCierre.setCBonificacion(totalPieFactura.doubleValue());
             ///////////////////////////////////////////////
             movCierre.setCNombre(factCab.getNombre());
-            movCierre.setCDescripcion(factCab.getObservaciones());
+            movCierre.setCDescripcion("N");
             movCierre.setCFechaVencimiento(factCab.getFechaVto());
             movCierre.setCFacturadoSn(facturadoSn.charAt(0));
             movCierre.setCCodigoOperador(user.getUsuarioSybase());

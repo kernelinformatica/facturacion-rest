@@ -106,7 +106,7 @@ public class UsuarioRest {
             // Si está todo ok, genero token y completo el response
             entidades.Acceso acceso = accesoFacade.pedirToken(usuario);
             
-            System.out.println("acceso");
+            System.out.println("::::: Acceso ::::");
             System.out.println(acceso);
             
             // Genero la respuesta
@@ -117,7 +117,6 @@ public class UsuarioRest {
             
             //Ordeno la lista
             Collections.sort(lr.getPerfil().getSucursal().getPermisos(), (o1, o2) -> o1.getMenu().getOrden().compareTo(o2.getMenu().getOrden()));
-            
             respuesta.setDatos(lr);
             respuesta.setControl(AppCodigo.OK, "");
         } else {
