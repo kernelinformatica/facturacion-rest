@@ -2330,7 +2330,7 @@ public class GrabaComprobanteRest {
                 totalPieFactura = (pie.getBaseImponible().add(totalIva21).add(totalIva27).add(totalIva105).add(totalPercep1).add(totalPercep2)).multiply(cotizacionDolar);
             }
             for (FactDetalle det : factDetalle) {
-                totalPrecioUnitario = totalPrecioUnitario.add(det.getCantidad().multiply(det.getPrecio())).multiply(cotizacionDolar);
+                totalPrecioUnitario = totalPrecioUnitario.add(det.getCantidad().multiply(det.getPrecio()).multiply(cotizacionDolar));
                 totalCantidad = new BigDecimal(0); //totalCantidad.add(det.getCantidad());
                 movCierre.setCDeposito(det.getIdDepositos().getCodigoDep());
             }
