@@ -891,8 +891,10 @@ public class GrabaComprobanteRest {
                             respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, Comprobante no encontrado");
                             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                         }
+                            System.out.println("valor importe fact pie ---> "+ importe + " - " + sisOperacionComprobante.getIncluyeIva());
 
                         if (!sisOperacionComprobante.getIncluyeIva()) {
+                            System.out.println("entre");
                             importe = BigDecimal.ZERO;
                         }
                         //Creo el pie 
@@ -2295,6 +2297,8 @@ public class GrabaComprobanteRest {
             movCierre.setCIva105(Double.valueOf(0));
             movCierre.setCDescuento(Double.valueOf(0));
             movCierre.setCDescripcion("N");
+            BigDecimal totalFactDetalle = new BigDecimal(0);
+            BigDecimal totalFactPie = new BigDecimal(0);
             // FIN VALORES EN 0 ///////////////////////////////////////////////////////
             for (FactPie pie : factPie) {
                 // Percepciones
@@ -2323,23 +2327,20 @@ public class GrabaComprobanteRest {
                           System.out.println("-------------> ES IVA 27 "+(totalIva27.multiply(cotizacionDolar).doubleValue()));
                        }
                    }
-                 
-                 
-                    
-
-                totalPieFactura = (pie.getBaseImponible().add(totalIva21).add(totalIva27).add(totalIva105).add(totalPercep1).add(totalPercep2)).multiply(cotizacionDolar);
+                totalFactPie = totalFactPie.add(pie.getImporte());
             }
             for (FactDetalle det : factDetalle) {
-                totalPrecioUnitario = totalPrecioUnitario.add(det.getCantidad().multiply(det.getPrecio()).multiply(cotizacionDolar));
+                totalPrecioUnitario = totalPrecioUnitario.add(det.getImporte().multiply(cotizacionDolar).setScale(2, RoundingMode.HALF_EVEN));
                 totalCantidad = new BigDecimal(0); //totalCantidad.add(det.getCantidad());
                 movCierre.setCDeposito(det.getIdDepositos().getCodigoDep());
+                totalFactDetalle = totalFactDetalle.add(det.getImporte());
             }
             for (FactFormaPago fp : factFormaPago) {
                 formaPagoSeleccionada = fp.getIdFormaPago().getCodigoSysbase();
 
             }
             movCierre.setCFormaPago((Short.valueOf(Integer.toString(formaPagoSeleccionada))));
-
+            totalPieFactura = totalFactDetalle.add(totalFactPie).multiply(cotizacionDolar);
             ///////////////////////////////////////////////
             movCierre.setCNombre(factCab.getNombre());
             movCierre.setCDescripcion("N");
@@ -2353,9 +2354,9 @@ public class GrabaComprobanteRest {
             //
             movCierre.setCPercepcion1(totalPercep1.setScale(2, RoundingMode.HALF_EVEN).doubleValue());
             movCierre.setCBonificacion(totalPieFactura.setScale(2, RoundingMode.HALF_EVEN).doubleValue());
-            movCierre.setCPrecioUnitario(totalPrecioUnitario.setScale(2, RoundingMode.HALF_EVEN).doubleValue());
+            movCierre.setCPrecioUnitario(totalPrecioUnitario.doubleValue());
             movCierre.setCCantidad(totalCantidad.setScale(2, RoundingMode.HALF_EVEN).doubleValue());
-            movCierre.setCRetencion1(totalPercep1.add(totalPercep2).setScale(2, RoundingMode.HALF_EVEN).doubleValue());
+            movCierre.setCRetencion1(totalPercep1.add(totalPercep2).multiply(cotizacionDolar).setScale(2, RoundingMode.HALF_EVEN).doubleValue());
             movCierre.setCPercepcion1(Double.valueOf(0));
             movCierre.setCPercepcion2(Double.valueOf(0));
             
