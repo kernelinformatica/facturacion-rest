@@ -51,7 +51,7 @@ public class CultivoRest {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response getMarcas(  
-        @HeaderParam ("token") String token,  
+        @HeaderParam ("token") String token,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {

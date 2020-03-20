@@ -65,7 +65,7 @@ public class ContratoRest {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response getContratos(  
-        @HeaderParam ("token") String token, 
+        @HeaderParam ("token") String token,
         @QueryParam("idPadron") Integer idPadron,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();

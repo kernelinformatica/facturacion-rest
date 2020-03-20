@@ -50,7 +50,7 @@ public class BuscaLote {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response getLotes(  
-        @HeaderParam ("token") String token,  
+        @HeaderParam ("token") String token,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException, SQLException {
         ServicioResponse respuesta = new ServicioResponse();
         try {  

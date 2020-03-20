@@ -34,10 +34,12 @@ import persistencia.VersionFacade;
 @Stateless
 @Path("version")
 public class VersionRest {
-    @Inject UsuarioFacade usuarioFacade;
-    @Inject AccesoFacade accesoFacade;
-    @Inject TiposOpDepositosFacade tiposOpDepositosFacade;
-    @Inject VersionFacade versionFacade;
+    @Inject 
+    UsuarioFacade usuarioFacade;
+    @Inject
+    AccesoFacade accesoFacade;
+    @Inject
+    VersionFacade versionFacade;
     @GET
     @Produces(MediaType.APPLICATION_JSON) 
     public Response getVersion(@HeaderParam ("token") String token,  
@@ -75,10 +77,12 @@ public class VersionRest {
             }
             
             Version versionActual = versionFacade.getVersionActual();
+            System.out.println(versionActual.getNumero() + " - " + versionActual.getDescripcion());
             VersionResponse resp = new VersionResponse(versionActual);
             respuesta.setDatos(resp);
             respuesta.setControl(AppCodigo.OK, "Version obtenida correctamente");
-            return Response.status(Response.Status.ACCEPTED).entity(respuesta.toJson()).build();
+            Response res = Response.status(Response.Status.OK).entity(respuesta.toJson()).build();
+            return res;
         } catch(Exception ex) {
             ex.printStackTrace();
             respuesta.setControl(AppCodigo.ERROR, "No se pudo obtener la version");

@@ -54,7 +54,7 @@ public class DescargarPdfRest extends HttpServlet {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response getPDF(  
-        @HeaderParam ("token") String token,  
+        @HeaderParam ("token") String token,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {
@@ -133,6 +133,7 @@ public class DescargarPdfRest extends HttpServlet {
             HashMap hm = new HashMap();
             hm.put("idFactCab", idFactCab);
             hm.put("codigoVerificador", codigoVerificador);
+            hm.put("prefijoEmpresa", "05");
             System.out.println(idFactCab + " - " + codigoVerificador);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             byte[] bytes = utils.generateJasperReportPDF(request, nombreReporte, hm, user, outputStream);
@@ -145,3 +146,4 @@ public class DescargarPdfRest extends HttpServlet {
         }
     } 
 }
+

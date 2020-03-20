@@ -83,7 +83,7 @@ public class CteTipoRest {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response getComprobantes(  
-        @HeaderParam ("token") String token,  
+        @HeaderParam ("token") String token,
         @QueryParam("sisModulo") Integer sisModulo,
         @QueryParam("sisComprobante") Integer sisComprobante,
         @QueryParam("idCteTipo") Integer idCteTipo,
