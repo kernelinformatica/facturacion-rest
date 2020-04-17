@@ -231,7 +231,6 @@ public class GrabaComprobanteRest {
             Boolean canjeInsumos = (Boolean) Utils.getKeyFromJsonObject("canjeInsumos", jsonBody, "boolean");
             String tipoCambio = (String) Utils.getKeyFromJsonObject("tipoCambio", jsonBody, "String");
             BigDecimal interesMensualCompra = (BigDecimal) Utils.getKeyFromJsonObject("interesMensualCompra", jsonBody, "BigDecimal");
-            System.out.println("interesMensual ---->" + interesMensualCompra.toString());
             //Deposito de destino para el movimiento de remitos internos
             Integer idDepositoDestino = (Integer) Utils.getKeyFromJsonObject("idDepositoDestino", jsonBody, "Integer");
 
@@ -1162,6 +1161,8 @@ public class GrabaComprobanteRest {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
         } catch (Exception ex) {
+            ex.printStackTrace();
+            System.out.println("Error: " + ex.getMessage());
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
         }
@@ -1304,6 +1305,8 @@ public class GrabaComprobanteRest {
             }
 
         } catch (Exception ex) {
+            ex.printStackTrace();
+            System.out.println("Error: " + ex.getMessage());
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
         }
@@ -1337,6 +1340,8 @@ public class GrabaComprobanteRest {
             respuesta.setControl(AppCodigo.CREADO, "Comprobante creado con exito, con detalles (" + factCab.getIdFactCab() + ")");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception ex) {
+            ex.printStackTrace();
+            System.out.println("Error: " + ex.getMessage());
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
         }
@@ -1450,6 +1455,8 @@ public class GrabaComprobanteRest {
             //Persisto los objetos y devuelvo la respuesta
             return this.persistirObjetos(factCab, contratoDet, listaDetalles, listaImputa, produmo, listaPie, listaLotes, listaFormaPago, cteNumerador, user);
         } catch (Exception ex) {
+            ex.printStackTrace();
+            System.out.println("Error: " + ex.getMessage());
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
         }
@@ -1650,6 +1657,8 @@ public class GrabaComprobanteRest {
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
 
         } catch (Exception ex) {
+            ex.printStackTrace();
+            System.out.println("Error: " + ex.getMessage());
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
         }

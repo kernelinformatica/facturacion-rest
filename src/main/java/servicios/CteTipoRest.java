@@ -489,7 +489,7 @@ public class CteTipoRest {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             String  nombreReporte = "reporteComprobante";
-            Reporte reporte = reporteFacade.findBynombreEmpresa(nombreReporte,user.getIdPerfil().getIdSucursal().getIdEmpresa());
+            Reporte reporte = reporteFacade.findBynombreEmpresa(nombreReporte,user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
              
             if(reporte == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, dar de alta un registro en la tabla reporte con nombre : reporteComprobante");
@@ -558,6 +558,8 @@ public class CteTipoRest {
             respuesta.setControl(AppCodigo.OK, "Tipo de Comprobante creado con exito");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception ex) { 
+            ex.printStackTrace();
+            System.out.println("Error: " + ex.getMessage());
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
         }

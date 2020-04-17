@@ -92,7 +92,6 @@ public class ApplicationConfig extends Application {
         resources.add(servicios.UltimoCodigoProdRest.class);
         resources.add(servicios.UsuarioRest.class);
         resources.add(servicios.VendedorRest.class);
-        resources.add(servicios.VersionRest.class);
         resources.add(utils.CrossRules.class);
     }
     
