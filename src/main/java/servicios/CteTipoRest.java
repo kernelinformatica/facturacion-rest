@@ -649,7 +649,7 @@ public class CteTipoRest {
             newCte.setSurenu(surenu);
             newCte.setIdSisComprobante(sisComprobante);
             newCte.setRequiereFormaPago(requiereFormaPago);
-            newCte.getCteTipoSisLetraCollection().clear();
+            //newCte.getCteTipoSisLetraCollection().clear();
             transaccion = cteTipoFacade.editCteTipo(newCte);
             if(!transaccion) {
                 respuesta.setControl(AppCodigo.ERROR, "No se pudo editar el Tipo de Comprobante");

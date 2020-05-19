@@ -2038,9 +2038,10 @@ public class GrabaComprobanteRest {
             contabilSn = "S";
             facturadoSn = "S";
         }
-        if (factCab.getIdCteTipo().getSurenu().equals("D")) {
+        //cuantas veces me vas a negar el signo papá
+        /*if (factCab.getIdCteTipo().getSurenu().equals("D")) {
             signo = signo.negate();
-        }
+        }*/
         try {
             // arranco desde el moviemnto 1 
             BigDecimal totalPieFactura = new BigDecimal(0);

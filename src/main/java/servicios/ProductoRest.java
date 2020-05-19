@@ -150,7 +150,7 @@ public class ProductoRest {
                 //Armo la respuesta
                 for(ListaPrecioDet d : lista.getListaPrecioDetCollection()) {
                     //Filtro por aptoCanje
-                    if(aptoCanje && d.getIdProductos().getAptoCanje()) {
+                    /*if(aptoCanje && d.getIdProductos().getAptoCanje()) {
                         if((!d.getIdProductos().getProdumoCollection().isEmpty()  && idDeposito != null) || !d.getIdProductos().getStock()) {
                             if(produmoFacade.vigenciaEnDeposito(idDeposito,d.getIdProductos()) || !d.getIdProductos().getStock()) {
                                 ProductoResponse sr = new ProductoResponse(d.getIdProductos().getIdProductos(),d.getIdProductos().getDescripcion(),d.getIdProductos().getCodProducto());
@@ -164,7 +164,9 @@ public class ProductoRest {
                                 productosResponse.add(sr);
                             }
                         }
-                    }
+                    }*/
+                    ProductoResponse sr = new ProductoResponse(d.getIdProductos().getIdProductos(),d.getIdProductos().getDescripcion(),d.getIdProductos().getCodProducto());
+                    productosResponse.add(sr);
                 }               
             } else if(tipo != null && tipo.equals("reducida") && idListaPrecio == null && idDeposito != null) {
                 //Armo la respuesta
