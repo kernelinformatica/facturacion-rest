@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.3.0.final using JasperReports Library version 6.3.0  -->
-<!-- 2019-05-16T11:05:26 -->
+<!-- Created with Jaspersoft Studio version 6.12.2.final using JasperReports Library version 6.12.2-75c5e90a222ab406e416cbf590a5397028a52de3  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="subTotales" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="0" bottomMargin="0" uuid="a6360234-fe13-4840-8453-12da960ad7de">
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
@@ -16,6 +15,7 @@
 		<parameterDescription><![CDATA[]]></parameterDescription>
 	</parameter>
 	<parameter name="moneda" class="java.lang.String"/>
+	<parameter name="cotDolar" class="java.math.BigDecimal"/>
 	<queryString>
 		<![CDATA[select 
 FactPie.detalle as detallePie,
@@ -41,16 +41,16 @@ where FactPie.idFactCab = $P{idFactCab}]]>
 		<band splitType="Stretch"/>
 	</background>
 	<columnHeader>
-		<band height="13">
+		<band height="16">
 			<staticText>
-				<reportElement x="180" y="0" width="240" height="13" uuid="7d799362-b208-41a9-9aa4-caffae519f2f"/>
+				<reportElement x="190" y="0" width="130" height="13" uuid="7d799362-b208-41a9-9aa4-caffae519f2f"/>
 				<textElement verticalAlignment="Top">
 					<font size="10" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Neto:]]></text>
 			</staticText>
 			<textField>
-				<reportElement x="420" y="-1" width="30" height="13" uuid="f5db9e54-d875-4cdf-a85a-ad65c0bed726">
+				<reportElement x="420" y="0" width="30" height="13" uuid="f5db9e54-d875-4cdf-a85a-ad65c0bed726">
 					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 				</reportElement>
 				<textElement verticalAlignment="Top">
@@ -65,12 +65,21 @@ where FactPie.idFactCab = $P{idFactCab}]]>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{bruto}]]></textFieldExpression>
 			</textField>
+			<textField>
+				<reportElement x="350" y="0" width="60" height="13" uuid="2959e8ee-0520-4ccd-ac8e-8dfd024cdfad"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[($P{moneda}.equals("u$s") ? $P{bruto}.multiply($P{cotDolar}).setScale(2, java.math.RoundingMode.HALF_UP) : $P{bruto}.divide($P{cotDolar}, 2, RoundingMode.HALF_UP).setScale(2, java.math.RoundingMode.HALF_UP))]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="320" y="0" width="30" height="13" uuid="77dba029-e737-4f3a-a1de-4f1cd99f64c5"/>
+				<textFieldExpression><![CDATA[($P{moneda}.equals("u$s") ? "$AR" : "u$s")]]></textFieldExpression>
+			</textField>
 		</band>
 	</columnHeader>
 	<detail>
-		<band height="13" splitType="Stretch">
-			<textField>
-				<reportElement x="180" y="0" width="240" height="13" uuid="3928a440-1470-486c-8a42-3cf3500681c3"/>
+		<band height="18" splitType="Stretch">
+			<textField textAdjust="ScaleFont">
+				<reportElement x="190" y="0" width="130" height="13" uuid="3928a440-1470-486c-8a42-3cf3500681c3"/>
 				<textElement>
 					<font size="9" isBold="true"/>
 				</textElement>
@@ -94,19 +103,28 @@ where FactPie.idFactCab = $P{idFactCab}]]>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{moneda}]]></textFieldExpression>
 			</textField>
+			<textField>
+				<reportElement x="320" y="0" width="30" height="13" uuid="b0e4b4ac-c6b9-44b4-9475-476f892886c5"/>
+				<textFieldExpression><![CDATA[($P{moneda}.equals("u$s") ? "$AR" : "u$s")]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="350" y="0" width="60" height="13" uuid="bb3a6089-d4d1-4ab2-827a-3d547de2bf19"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[($P{moneda}.equals("u$s") ? $F{importePie}.multiply($P{cotDolar}).setScale(2, java.math.RoundingMode.HALF_UP) : $F{importePie}.divide($P{cotDolar}, 2, RoundingMode.HALF_UP).setScale(2, java.math.RoundingMode.HALF_UP))]]></textFieldExpression>
+			</textField>
 		</band>
 	</detail>
 	<summary>
-		<band height="13">
+		<band height="15">
 			<staticText>
-				<reportElement x="180" y="0" width="240" height="13" uuid="651d7992-c412-4ce9-8bb5-558259eaa4e1"/>
+				<reportElement x="190" y="1" width="130" height="13" uuid="651d7992-c412-4ce9-8bb5-558259eaa4e1"/>
 				<textElement verticalAlignment="Top">
 					<font size="10" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Total:]]></text>
 			</staticText>
 			<textField>
-				<reportElement x="420" y="0" width="30" height="13" uuid="291bf5ee-a8a5-4d2d-b2d5-5ad1f1990064"/>
+				<reportElement x="420" y="1" width="30" height="13" uuid="291bf5ee-a8a5-4d2d-b2d5-5ad1f1990064"/>
 				<textElement verticalAlignment="Top">
 					<font size="10"/>
 				</textElement>
@@ -119,6 +137,15 @@ where FactPie.idFactCab = $P{idFactCab}]]>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$V{subTotal}.add($P{bruto}).setScale(2, java.math.RoundingMode.HALF_UP)]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="320" y="1" width="30" height="13" uuid="9dfe8871-2c06-4652-a4fb-df0aa0016a41"/>
+				<textFieldExpression><![CDATA[($P{moneda}.equals("u$s") ? "$AR" : "u$s")]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="350" y="1" width="60" height="13" uuid="eaecb02b-d6dc-4212-b0a4-576f48409acb"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[($P{moneda}.equals("u$s") ? $V{subTotal}.multiply($P{cotDolar}).setScale(2, java.math.RoundingMode.HALF_UP).add($P{bruto}.multiply($P{cotDolar}).setScale(2, java.math.RoundingMode.HALF_UP)) : $V{subTotal}.divide($P{cotDolar}, 2, RoundingMode.HALF_UP).add($P{bruto}.divide($P{cotDolar}, 2, RoundingMode.HALF_UP)))]]></textFieldExpression>
 			</textField>
 		</band>
 	</summary>
