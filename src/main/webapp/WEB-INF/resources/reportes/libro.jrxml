@@ -177,15 +177,18 @@ m_ingreso Fecha,
 CteTipo.descCorta TipoComprobante,
 FactCab.letra Letra, 
 if(FactCab.numeroAfip<> null,FactCab.numeroAfip,FactCab.numero) Numero, 
-FactCab.nombre Nombre, 
+FactCab.nombre Nombre,
 FactCab.cuit Cuit,
+FactCab.cotDolar cotDolar,
 IFNULL(m_importe, 0.00) Importe,
 SisModulos.descripcion Modulo,
+SisMonedas.descripcion moneda,
 Libros.columnaNombre columnaNombre,
  Libros.columnaNumero columnaNumero
 from Libros
 left join Master on Libros.idLibros = Master.m_colum_iva
 left join FactCab on FactCab.idFactCab = Master.idFactCab
+left join SisMonedas on SisMonedas.idMoneda = FactCab.idmoneda
 left join CteTipo on FactCab.idCteTipo = CteTipo.idCteTipo
 left join SisModulos on SisModulos.idSisModulos = Libros.idSisModulos
 where Libros.idEmpresa =   $P{empresa}  AND Libros.idSisModulos =   $P{modulo}  AND 
@@ -202,6 +205,8 @@ order by Libros.columnaNumero asc;]]>
 		<field name="Letra" class="java.lang.String"/>
 		<field name="Importe" class="java.math.BigDecimal"/>
 		<field name="Modulo" class="java.lang.String"/>
+		<field name="moneda" class="java.lang.String"/>
+		<field name="cotDolar" class="java.math.BigDecimal"/>
 	</subDataset>
 	<parameter name="modulo" class="java.lang.Integer"/>
 	<parameter name="fechaDesde" class="java.util.Date"/>
@@ -220,11 +225,14 @@ IFNULL(FactCab.nombre, ' ') Nombre,
 IFNULL(FactCab.cuit, ' ') Cuit,
 concat(Libros.posicion,"-",Libros.columnaNombre) Columna,
 IFNULL(m_importe, 0.00) Importe,
+FactCab.cotDolar cotDolar,
+SisMonedas.descripcion moneda,
 IFNULL(SisModulos.descripcion, ' ') Modulo
 from Libros
 left join Master on Libros.idLibros = Master.m_colum_iva
 left join FactCab on FactCab.idFactCab = Master.idFactCab
 left join CteTipo on FactCab.idCteTipo = CteTipo.idCteTipo
+left join SisMonedas on SisMonedas.idMoneda = FactCab.idmoneda
 left join SisModulos on SisModulos.idSisModulos = Libros.idSisModulos
 where Libros.idEmpresa =   $P{empresa}  AND Libros.idSisModulos =   $P{modulo}  AND 
 Master.m_ingreso between   $P{fechaDesde}  and   $P{fechaHasta};]]>
@@ -241,6 +249,8 @@ Master.m_ingreso between   $P{fechaDesde}  and   $P{fechaHasta};]]>
 	<field name="numeroComprobante" class="java.lang.String"/>
 	<field name="prefijoComprobanteAfip" class="java.lang.String"/>
 	<field name="numeroComprobanteAfip" class="java.lang.String"/>
+	<field name="moneda" class="java.lang.String"/>
+	<field name="cotDolar" class="java.math.BigDecimal"/>
 	<variable name="datosPrimarios" class="java.lang.String">
 		<variableExpression><![CDATA[$F{Fecha} +"  " + $F{TipoComprobante}+"  " + $F{Letra} +"  " 
 +($F{prefijoComprobanteAfip} != null? $F{prefijoComprobanteAfip}+" - ":$F{prefijoComprobante}+" - ")
@@ -272,7 +282,7 @@ Master.m_ingreso between   $P{fechaDesde}  and   $P{fechaHasta};]]>
 	<summary>
 		<band height="60">
 			<crosstab columnBreakOffset="13" horizontalPosition="Center">
-				<reportElement x="0" y="0" width="1150" height="60" uuid="1aeb8c31-d0cd-41bc-9ea8-082fffc6d832">
+				<reportElement style="Crosstab 2_CH" x="0" y="0" width="1150" height="60" uuid="1aeb8c31-d0cd-41bc-9ea8-082fffc6d832">
 					<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.VerticalRowLayout"/>
 				</reportElement>
 				<box>
@@ -401,7 +411,7 @@ Master.m_ingreso between   $P{fechaDesde}  and   $P{fechaHasta};]]>
 					</crosstabTotalColumnHeader>
 				</columnGroup>
 				<measure name="Importe_MEASURE" class="java.math.BigDecimal" calculation="Sum">
-					<measureExpression><![CDATA[$F{Importe}]]></measureExpression>
+					<measureExpression><![CDATA[$F{moneda}.equals("u$s") ? $F{Importe}.multiply($F{cotDolar}).setScale(2, java.math.RoundingMode.HALF_UP) : $F{Importe}]]></measureExpression>
 				</measure>
 				<crosstabCell width="60" height="20">
 					<cellContents mode="Opaque" style="Crosstab 6_CD">
