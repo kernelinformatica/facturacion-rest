@@ -41,6 +41,7 @@ import entidades.FacVentasDolarSybase;
 import entidades.FacVentasDolarSybasePK;
 import entidades.ModeloDetalle;
 import entidades.CtacteCategoria;
+import entidades.ParametrosFacSybase;
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
@@ -72,6 +73,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
+import persistencia.CerealSisaSybaseFacade;
 import persistencia.ContratoDetFacade;
 import persistencia.ContratoFacade;
 import persistencia.CteNumeradorFacade;
@@ -107,6 +109,7 @@ import persistencia.FacVentasDolarSybaseFacade;
 import persistencia.FacComprasFacade;
 import persistencia.FacComprasSybaseFacade;
 import persistencia.CtacteCategoriaFacade;
+import persistencia.ParametrosFacSybaseFacade;
 import utils.Utils;
 
 /**
@@ -185,6 +188,12 @@ public class GrabaComprobanteRest {
     MasterSybaseFacade masterSybaseFacade;
     @Inject
     FacComprasSybaseFacade factComprasSybaseFacade;
+    @Inject
+    ParametrosFacSybaseFacade parametrosFacSybaseFacade;
+    @Inject
+    CerealSisaSybaseFacade cerealSisaSybaseFacade;
+    @Inject
+    FacVentasSybaseFacade facVentasSybaseFacade;
     
 
     @POST
@@ -2725,6 +2734,8 @@ public class GrabaComprobanteRest {
         // categoria sybase de iva
         List<ModeloDetalle> modeloDetalleArray = new ArrayList<>();
         Padron condiIva = padronFacade.find(factCab.getIdPadron());
+        ParametrosFacSybase param = parametrosFacSybaseFacade.getParams();
+        CerealSisaSybase cerealSisa = cerealSisaSybaseFacade.getByCodPadron(factCab.getIdPadron());
         //Contadores para los pases
         Integer paseDetalle = 1;
         //Me fijo si es debe o haber
@@ -2807,6 +2818,22 @@ public class GrabaComprobanteRest {
                         det.getIdFactCab().getIdPadron(),
                         Short.valueOf(Integer.toString(paseDetalle)),
                         Short.valueOf(Integer.toString(ptoVta)));
+                if(cerealSisa.getEstado() == Short.valueOf("0")) {
+                    facVentasDetalle.setVCuotas(param.getPSisaCeroPorc().shortValueExact());
+                    facVentasDetalle.setVPerce24591(det.getImporte().multiply(param.getPSisaCeroPorc()));
+                }
+                if(cerealSisa.getEstado() == Short.valueOf("1")) {
+                    facVentasDetalle.setVCuotas(param.getPSisaUnoPorc().shortValueExact());
+                    facVentasDetalle.setVPerce24591(det.getImporte().multiply(param.getPSisaUnoPorc()));
+                }
+                if(cerealSisa.getEstado() == Short.valueOf("2")) {
+                    facVentasDetalle.setVCuotas(param.getPSisaDosPorc().shortValueExact());
+                    facVentasDetalle.setVPerce24591(det.getImporte().multiply(param.getPSisaDosPorc()));
+                }
+                if(cerealSisa.getEstado() == Short.valueOf("3")) {
+                    facVentasDetalle.setVCuotas(param.getPSisaTresPorc().shortValueExact());
+                    facVentasDetalle.setVPerce24591(det.getImporte().multiply(param.getPSisaTresPorc()));
+                }
                 // valores 0 por defecto para que no se graben en nulo
                 facVentasDetalle.setVRetencion1(BigDecimal.ZERO);
                 facVentasDetalle.setVRetencion2(BigDecimal.ZERO);
@@ -2917,14 +2944,13 @@ public class GrabaComprobanteRest {
             }
             /* Movimiento 0 cierre */
             System.out.println("-------------> Movimiento 0 CIERRE L50 "+(cotizacionDolar));
-            FacComprasSybase movCierre = new FacComprasSybase("CIERRE L50",
+            FacVentasSybase movCierre = new FacVentasSybase("CIERRE L50",
                     Short.valueOf(Integer.toString(factCab.getIdCteTipo().getcTipoOperacion())),
                     factCab.getFechaEmision(),
                     Short.valueOf(Integer.toString(factCab.getIdCteTipo().getcTipoOperacion())),
                     Long.valueOf(nroComp),
                     factCab.getIdPadron(),
                     Short.valueOf(Integer.toString(0)),
-                    Long.parseLong(factCab.getCuit()),
                     Short.valueOf(Integer.toString(ptoVta)));
             totalPieFactura = new BigDecimal(0);
             totalDetalleFactura = new BigDecimal(0);
@@ -2941,25 +2967,19 @@ public class GrabaComprobanteRest {
             netoIva27 = new BigDecimal(0);
           
             // VALORES QUE VAN EN 0 ////////////////////////////////////////////////////
-            movCierre.setCDescuento(Double.valueOf(0));
-            movCierre.setCImpuestoInterno(Double.valueOf(0));
-            movCierre.setCOtroImpuesto(Double.valueOf(0));
-            movCierre.setCCodigoRelacion(0);
-            movCierre.setCTipoComprobanteAsoc(Short.valueOf(Integer.toString(0)));
-            movCierre.setCNumeroComprobanteAsoc(Long.parseLong("0"));
-            movCierre.setCContabil(contabilSn);
-            movCierre.setCRetencionMiel(Double.valueOf(0));
-            movCierre.setCRetencion2da(Double.valueOf(0));
-             movCierre.setCRetencion2(Double.valueOf(0));
+            movCierre.setVDescuento(BigDecimal.ZERO);
+            movCierre.setVImpuestoInterno(BigDecimal.ZERO);
+            movCierre.setVOtroImpuesto(BigDecimal.ZERO);
+            movCierre.setVCodigoRelacion(0);
+            movCierre.setVTipoComprobanteAsoc(Short.valueOf(Integer.toString(0)));
+            movCierre.setVNumeroComprobanteAsoc(Long.parseLong("0"));
+            //movCierre.setVContabil(contabilSn);
             movCierre.setCanjeSn("N");
             movCierre.setCanjeNroCto("N");
-            movCierre.setCSircrebStafe(Double.valueOf(0));
-            movCierre.setCSircrebCdba(Double.valueOf(0));
-            movCierre.setCIvaRni(Double.valueOf(0));
-            movCierre.setCIvaRi(Double.valueOf(0));
-            movCierre.setCIva105(Double.valueOf(0));
-            movCierre.setCDescuento(Double.valueOf(0));
-            movCierre.setCDescripcion("N");
+            movCierre.setVIvaRni(BigDecimal.ZERO);
+            movCierre.setVIvaRi(BigDecimal.ZERO);
+            movCierre.setVDescuento(BigDecimal.ZERO);
+            movCierre.setVDescripcion("N");
             // FIN VALORES EN 0 ///////////////////////////////////////////////////////
             for (FactPie pie : factPie) {
                 // Percepciones
@@ -2975,16 +2995,15 @@ public class GrabaComprobanteRest {
                          System.out.println("-------------> ES IVA() "+(pie.getIdSisTipoModelo().getIdSisTipoModelo()));
                     if (pie.getPorcentaje().equals(new BigDecimal(10.5))) {
                           totalIva105 = totalIva105.add(pie.getImporte());
-                          movCierre.setCIva105(totalIva105.multiply(cotizacionDolar).doubleValue());
                           System.out.println("-------------> ES IVA 10.5 "+(totalIva105.multiply(cotizacionDolar).doubleValue()));
                        } else if (pie.getPorcentaje().equals(new BigDecimal(21))) {
                           totalIva21 = totalIva21.add(pie.getImporte());
-                          movCierre.setCIvaRi(totalIva21.multiply(cotizacionDolar).doubleValue());
+                          movCierre.setVIvaRi(totalIva21.multiply(cotizacionDolar));
                           
                           System.out.println("-------------> ES IVA 21 "+(totalIva21.multiply(cotizacionDolar).doubleValue()));
                        } else if (pie.getPorcentaje().equals(new BigDecimal(27))) {
                           totalIva27 = totalIva27.add(pie.getImporte());
-                          movCierre.setCPercepcion2(totalIva27.multiply(cotizacionDolar).doubleValue());
+                          movCierre.setVPercepcion2(totalIva27.multiply(cotizacionDolar));
                           System.out.println("-------------> ES IVA 27 "+(totalIva27.multiply(cotizacionDolar).doubleValue()));
                        }
                    }
@@ -2993,35 +3012,52 @@ public class GrabaComprobanteRest {
             for (FactDetalle det : factDetalle) {
                 totalPrecioUnitario = totalPrecioUnitario.add(det.getCantidad().multiply(det.getPrecio())).multiply(cotizacionDolar);
                 totalCantidad = new BigDecimal(0); //totalCantidad.add(det.getCantidad());
-                movCierre.setCDeposito(det.getIdDepositos().getCodigoDep());
+                movCierre.setVDeposito(det.getIdDepositos().getCodigoDep());
             }
             for (FactFormaPago fp : factFormaPago) {
                 formaPagoSeleccionada = fp.getIdFormaPago().getCodigoSysbase();
 
             }
-            movCierre.setCFormaPago((Short.valueOf(Integer.toString(formaPagoSeleccionada))));
+            
+            if(cerealSisa.getEstado() == Short.valueOf("0")) {
+                    movCierre.setVCuotas(param.getPSisaCeroPorc().shortValueExact());
+                    movCierre.setVPerce24591(totalPrecioUnitario.multiply(param.getPSisaCeroPorc()));
+                }
+                if(cerealSisa.getEstado() == Short.valueOf("1")) {
+                    movCierre.setVCuotas(param.getPSisaUnoPorc().shortValueExact());
+                    movCierre.setVPerce24591(totalPrecioUnitario.multiply(param.getPSisaUnoPorc()));
+                }
+                if(cerealSisa.getEstado() == Short.valueOf("2")) {
+                    movCierre.setVCuotas(param.getPSisaDosPorc().shortValueExact());
+                    movCierre.setVPerce24591(totalPrecioUnitario.multiply(param.getPSisaDosPorc()));
+                }
+                if(cerealSisa.getEstado() == Short.valueOf("3")) {
+                    movCierre.setVCuotas(param.getPSisaTresPorc().shortValueExact());
+                    movCierre.setVPerce24591(totalPrecioUnitario.multiply(param.getPSisaTresPorc()));
+                }
+            movCierre.setVFormaPago((Short.valueOf(Integer.toString(formaPagoSeleccionada))));
 
             ///////////////////////////////////////////////
-            movCierre.setCNombre(factCab.getNombre());
-            movCierre.setCDescripcion("N");
-            movCierre.setCFechaVencimiento(factCab.getFechaVto());
-            movCierre.setCFacturadoSn(facturadoSn.charAt(0));
-            movCierre.setCCodigoOperador(user.getUsuarioSybase());
-            movCierre.setCHora(fechaHoy);
-            movCierre.setCFechaContabil(factCab.getFechaConta());
-            movCierre.setBarra("");
-            movCierre.setCCondicionIva(Short.valueOf(Integer.toString(condiIva.getCondIva().getCondiva())));
+            movCierre.setVNombre(factCab.getNombre());
+            movCierre.setVDescripcion("N");
+            movCierre.setVFechaVencimiento(factCab.getFechaVto());
+            movCierre.setVFacturadoSn(facturadoSn.charAt(0));
+            movCierre.setVCodigoOperador(user.getUsuarioSybase());
+            movCierre.setVHora(fechaHoy);
+            //movCierre.setVFechaContabil(factCab.getFechaConta());
+            //movCierre.setBarra("");
+            movCierre.setVCondicionIva(Short.valueOf(Integer.toString(condiIva.getCondIva().getCondiva())));
             //
-            movCierre.setCPercepcion1(totalPercep1.doubleValue());
-            movCierre.setCBonificacion(totalPieFactura.doubleValue());
-            movCierre.setCPrecioUnitario(totalPrecioUnitario.doubleValue());
-            movCierre.setCCantidad(totalCantidad.doubleValue());
-            movCierre.setCRetencion1(totalPercep1.doubleValue() + totalPercep2.doubleValue());
-            movCierre.setCPercepcion1(Double.valueOf(0));
-            movCierre.setCPercepcion2(Double.valueOf(0));
+            movCierre.setVPercepcion1(totalPercep1);
+            movCierre.setVBonificacion(totalPieFactura);
+            movCierre.setVPrecioUnitario(totalPrecioUnitario);
+            movCierre.setVCantidad(totalCantidad);
+            movCierre.setVRetencion1(totalPercep1.add(totalPercep2));
+            movCierre.setVPercepcion1(BigDecimal.ZERO);
+            movCierre.setVPercepcion2(BigDecimal.ZERO);
 
             boolean transaccion0;
-            transaccion0 = factComprasSybaseFacade.setFacComprasSybaseNuevo(movCierre);
+            transaccion0 = facVentasSybaseFacade.setFacVentasSybaseNuevo(movCierre);
             //si la trnsaccion fallo devuelvo el mensaje
             if (!transaccion0) {
                 respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta la master con la imputacion: ");
