@@ -171,7 +171,6 @@ public class PendientesCancelarRest {
                 respuesta.setControl(AppCodigo.ERROR, "Error, no existe el procedimiento");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            
             callableStatement.setInt(1,user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
             callableStatement.setInt(2,cteTipo);
             callableStatement.setBigDecimal(3, facNumero);

@@ -8,7 +8,8 @@ import datos.ModeloDetalleResponse;
 import datos.Payload;
 import datos.ServicioResponse;
 import entidades.Acceso;
-import entidades.CerealSisa;
+import entidades.CerealSisaSybase;
+import entidades.CerealSisaAlicuotasSybase;
 import entidades.ModeloDetalle;
 import entidades.PadronGral;
 import entidades.PadronProveedor;
@@ -39,7 +40,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
-import persistencia.CerealSisaFacade;
+import persistencia.CerealSisaSybaseFacade;
 import persistencia.ModeloDetalleFacade;
 import persistencia.PadronGralFacade;
 import persistencia.ProductoFacade;
@@ -68,7 +69,7 @@ public class BuscaModeloRest {
     @Inject SisMonedasFacade sisMonedasFacade;
     @Inject SisCotDolarFacade sisCotDolarFacade;
     @Inject PadronGralFacade padronGralFacade;
-    @Inject CerealSisaFacade cerealSisaFacade;
+    @Inject CerealSisaSybaseFacade cerealSisaFacade;
     @Inject SisaPorcentajeFacade sisaPorcentajeFacade;
     
     @POST

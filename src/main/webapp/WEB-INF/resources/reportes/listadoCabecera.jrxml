@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.3.0.final using JasperReports Library version 6.3.0  -->
-<!-- 2019-04-12T11:57:28 -->
+<!-- Created with Jaspersoft Studio version 6.12.2.final using JasperReports Library version 6.12.2-75c5e90a222ab406e416cbf590a5397028a52de3  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="listadoCabecera" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="0" bottomMargin="20" isFloatColumnFooter="true" whenResourceMissingType="Error" uuid="4806e2f6-ab00-41d0-b74f-73434a7c5917">
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
 	<parameter name="pathImagen" class="java.lang.String"/>
@@ -19,8 +18,7 @@
 	<parameter name="idSisTipoOperacion" class="java.lang.Integer"/>
 	<parameter name="autorizada" class="java.lang.String"/>
 	<queryString language="plsql">
-		<![CDATA[call s_buscaComprobantesCabecera($P{empresa},$P{modulo},$P{tipo},$P{numero},$P{fechaDesde},$P{fechaHasta},$P{producto},$P{padCodigo}, $P{deposito},$P{estado},$P{idVendedor},$P{idSisTipoOperacion},$P{autorizada}, 0);
-]]>
+		<![CDATA[call s_buscaComprobantesCabecera($P{empresa},$P{modulo},$P{tipo},$P{numero},$P{fechaDesde},$P{fechaHasta},$P{producto},$P{padCodigo}, $P{deposito},$P{estado},$P{idVendedor},$P{idSisTipoOperacion},$P{autorizada}, '0');]]>
 	</queryString>
 	<field name="idFactCab" class="java.lang.Integer"/>
 	<field name="comprobante" class="java.lang.String"/>

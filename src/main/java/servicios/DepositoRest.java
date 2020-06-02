@@ -197,7 +197,7 @@ public class DepositoRest {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response setDepositos(  
-        @HeaderParam ("token") String token,  
+        @HeaderParam ("token") String token,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {
@@ -269,7 +269,7 @@ public class DepositoRest {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response editDepositos(  
-        @HeaderParam ("token") String token,  
+        @HeaderParam ("token") String token,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {
@@ -418,11 +418,13 @@ public class DepositoRest {
     @GET
     @Path("/tiposop")
     @Produces(MediaType.APPLICATION_JSON) 
-    public Response getTiposOpDepositos() {
+    public Response getTiposOpDepositos(
+            @HeaderParam ("token") String token,
+            @Context HttpServletRequest request) {
         ServicioResponse respuesta = new ServicioResponse();
         try {
             //valido que token y el id no sea null
-            /*if(token == null || token.trim().isEmpty()) {
+            if(token == null || token.trim().isEmpty()) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, token vacio");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
@@ -449,7 +451,7 @@ public class DepositoRest {
             if(!accesoFacade.validarToken(userToken, user)) {
                 respuesta.setControl(AppCodigo.ERROR, "Credenciales incorrectas");
                 return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
-            }*/
+            }
             List<TiposOpDepositos> depositosList = tiposOpDepositosFacade.getTiposOpDepositos();
             List<Payload> depositos = new ArrayList<>();
             for(TiposOpDepositos dep : depositosList) {
@@ -458,7 +460,7 @@ public class DepositoRest {
             }
             respuesta.setArraydatos(depositos);
             respuesta.setControl(AppCodigo.OK, "Lista de Depositos");
-            return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
+            return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();
         } catch (Exception e) {
             respuesta.setControl(AppCodigo.ERROR, e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();

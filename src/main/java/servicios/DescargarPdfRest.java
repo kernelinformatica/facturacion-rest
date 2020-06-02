@@ -54,7 +54,7 @@ public class DescargarPdfRest extends HttpServlet {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response getPDF(  
-        @HeaderParam ("token") String token,  
+        @HeaderParam ("token") String token,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {
@@ -117,7 +117,7 @@ public class DescargarPdfRest extends HttpServlet {
             
             //Codigo verificador
             String codigoVerificador = "";
-            if(factCab.getNumeroAfip() != null && factCab.getIdCteTipo().getCursoLegal() && !" ".equals(factCab.getCai())) {
+            if(factCab.getNumeroAfip() != null && factCab.getIdCteTipo().getCursoLegal() && factCab.getCai() != null && !" ".equals(factCab.getCai()) && !("".equals(factCab.getCai()))) {
                 SimpleDateFormat formatoFecha = new SimpleDateFormat("yyyyMMdd");
                 Formatter obj = new Formatter();
                 String txtCuit = factCab.getCuit();
@@ -129,10 +129,11 @@ public class DescargarPdfRest extends HttpServlet {
                 String txtVtoCae = formatoFecha.format(factCab.getFechaVto());
                 codigoVerificador = utils.calculoDigitoVerificador(txtCuit, txtCodComp, txtPtoVta, txtCae, txtVtoCae);
             } 
-             
+            System.out.println("codigoVerificador: " + codigoVerificador);
             HashMap hm = new HashMap();
             hm.put("idFactCab", idFactCab);
             hm.put("codigoVerificador", codigoVerificador);
+            hm.put("prefijoEmpresa", "05");
             System.out.println(idFactCab + " - " + codigoVerificador);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             byte[] bytes = utils.generateJasperReportPDF(request, nombreReporte, hm, user, outputStream);
@@ -140,8 +141,11 @@ public class DescargarPdfRest extends HttpServlet {
             String nomeRelatorio= nombreReporte + ".pdf";
             return Response.ok(bytes).type("application/pdf").header("Content-Disposition", "filename=\"" + nomeRelatorio + "\"").build();
         } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error: " + e.getMessage());
             respuesta.setControl(AppCodigo.ERROR, e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
         }
     } 
 }
+

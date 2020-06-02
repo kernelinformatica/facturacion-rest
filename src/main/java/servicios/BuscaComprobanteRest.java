@@ -43,7 +43,6 @@ public class BuscaComprobanteRest {
     @Inject UsuarioFacade usuarioFacade;
     @Inject AccesoFacade accesoFacade;
     @Inject Utils utils; 
-    
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -193,7 +192,12 @@ public class BuscaComprobanteRest {
                         rs.getString("tipoOperacion"),
                         rs.getString("autorizada"),
                         rs.getString("permiteBorrado"),
-                        rs.getInt("kilosCanje"));
+                        rs.getInt("kilosCanje"),
+                        rs.getBoolean("pesificado"),
+                        rs.getBoolean("dolarizadoAlVto"),
+                        rs.getBigDecimal("interesMensualCompra"),
+                        rs.getBoolean("canjeInsumos"),
+                        rs.getString("tipoCambio"));
                 factCabResponses.add(factCab);
             }
             

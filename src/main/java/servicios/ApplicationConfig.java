@@ -57,6 +57,7 @@ public class ApplicationConfig extends Application {
         resources.add(servicios.ImputacionesRest.class);
         resources.add(servicios.LibroRest.class);
         resources.add(servicios.ListaPrecioRest.class);
+        resources.add(servicios.MandaMailPdfRest.class);
         resources.add(servicios.MarcaRest.class);
         resources.add(servicios.ModeloCabRest.class);
         resources.add(servicios.ModeloImputacionRest.class);

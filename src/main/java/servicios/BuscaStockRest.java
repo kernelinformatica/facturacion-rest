@@ -50,7 +50,7 @@ public class BuscaStockRest {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getStock(
         @PathParam ("tipo") String tipo,
-        @HeaderParam ("token") String token,  
+        @HeaderParam ("token") String token,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
         try {  

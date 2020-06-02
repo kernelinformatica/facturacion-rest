@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.3.0.final using JasperReports Library version 6.3.0  -->
-<!-- 2019-04-22T10:15:28 -->
+<!-- Created with Jaspersoft Studio version 6.12.2.final using JasperReports Library version 6.12.2-75c5e90a222ab406e416cbf590a5397028a52de3  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="libro" printOrder="Horizontal" pageWidth="1190" pageHeight="842" orientation="Landscape" columnWidth="1150" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" whenResourceMissingType="Empty" uuid="7597f5ce-8dd5-40c7-89af-9479afc161ab">
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
@@ -178,22 +177,23 @@ m_ingreso Fecha,
 CteTipo.descCorta TipoComprobante,
 FactCab.letra Letra, 
 if(FactCab.numeroAfip<> null,FactCab.numeroAfip,FactCab.numero) Numero, 
-FactCab.nombre Nombre, 
+FactCab.nombre Nombre,
 FactCab.cuit Cuit,
+FactCab.cotDolar cotDolar,
 IFNULL(m_importe, 0.00) Importe,
 SisModulos.descripcion Modulo,
+SisMonedas.descripcion moneda,
 Libros.columnaNombre columnaNombre,
  Libros.columnaNumero columnaNumero
 from Libros
 left join Master on Libros.idLibros = Master.m_colum_iva
 left join FactCab on FactCab.idFactCab = Master.idFactCab
+left join SisMonedas on SisMonedas.idMoneda = FactCab.idmoneda
 left join CteTipo on FactCab.idCteTipo = CteTipo.idCteTipo
 left join SisModulos on SisModulos.idSisModulos = Libros.idSisModulos
 where Libros.idEmpresa =   $P{empresa}  AND Libros.idSisModulos =   $P{modulo}  AND 
-(Select Master.m_ingreso 
-	From Master 
-    where  Master.m_ingreso between   $P{fechaDesde}  and   $P{fechaHasta} Limit 1
-)  order by Libros.columnaNumero asc;]]>
+Master.m_ingreso between   $P{fechaDesde}  and   $P{fechaHasta}
+order by Libros.columnaNumero asc;]]>
 		</queryString>
 		<field name="columnaNombre" class="java.lang.String"/>
 		<field name="columnaNumero" class="java.lang.Integer"/>
@@ -205,6 +205,8 @@ where Libros.idEmpresa =   $P{empresa}  AND Libros.idSisModulos =   $P{modulo}  
 		<field name="Letra" class="java.lang.String"/>
 		<field name="Importe" class="java.math.BigDecimal"/>
 		<field name="Modulo" class="java.lang.String"/>
+		<field name="moneda" class="java.lang.String"/>
+		<field name="cotDolar" class="java.math.BigDecimal"/>
 	</subDataset>
 	<parameter name="modulo" class="java.lang.Integer"/>
 	<parameter name="fechaDesde" class="java.util.Date"/>
@@ -223,16 +225,17 @@ IFNULL(FactCab.nombre, ' ') Nombre,
 IFNULL(FactCab.cuit, ' ') Cuit,
 concat(Libros.posicion,"-",Libros.columnaNombre) Columna,
 IFNULL(m_importe, 0.00) Importe,
+FactCab.cotDolar cotDolar,
+SisMonedas.descripcion moneda,
 IFNULL(SisModulos.descripcion, ' ') Modulo
 from Libros
 left join Master on Libros.idLibros = Master.m_colum_iva
 left join FactCab on FactCab.idFactCab = Master.idFactCab
 left join CteTipo on FactCab.idCteTipo = CteTipo.idCteTipo
+left join SisMonedas on SisMonedas.idMoneda = FactCab.idmoneda
 left join SisModulos on SisModulos.idSisModulos = Libros.idSisModulos
 where Libros.idEmpresa =   $P{empresa}  AND Libros.idSisModulos =   $P{modulo}  AND 
-(Select Master.m_ingreso 
-	From Master 
-    where  Master.m_ingreso between   $P{fechaDesde}  and   $P{fechaHasta} Limit 1);]]>
+Master.m_ingreso between   $P{fechaDesde}  and   $P{fechaHasta};]]>
 	</queryString>
 	<field name="Fecha" class="java.lang.String"/>
 	<field name="TipoComprobante" class="java.lang.String"/>
@@ -246,6 +249,8 @@ where Libros.idEmpresa =   $P{empresa}  AND Libros.idSisModulos =   $P{modulo}  
 	<field name="numeroComprobante" class="java.lang.String"/>
 	<field name="prefijoComprobanteAfip" class="java.lang.String"/>
 	<field name="numeroComprobanteAfip" class="java.lang.String"/>
+	<field name="moneda" class="java.lang.String"/>
+	<field name="cotDolar" class="java.math.BigDecimal"/>
 	<variable name="datosPrimarios" class="java.lang.String">
 		<variableExpression><![CDATA[$F{Fecha} +"  " + $F{TipoComprobante}+"  " + $F{Letra} +"  " 
 +($F{prefijoComprobanteAfip} != null? $F{prefijoComprobanteAfip}+" - ":$F{prefijoComprobante}+" - ")
@@ -270,14 +275,14 @@ where Libros.idEmpresa =   $P{empresa}  AND Libros.idSisModulos =   $P{modulo}  
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="14"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Fecha Desde: " + $P{fechaDesde} + "         FechaHasta: " +$P{fechaHasta} ]]></textFieldExpression>
+				<textFieldExpression><![CDATA["Fecha Desde: " + $P{fechaDesde} + "         FechaHasta: " +$P{fechaHasta}]]></textFieldExpression>
 			</textField>
 		</band>
 	</title>
 	<summary>
 		<band height="60">
 			<crosstab columnBreakOffset="13" horizontalPosition="Center">
-				<reportElement x="0" y="0" width="1150" height="60" uuid="1aeb8c31-d0cd-41bc-9ea8-082fffc6d832">
+				<reportElement style="Crosstab 2_CH" x="0" y="0" width="1150" height="60" uuid="1aeb8c31-d0cd-41bc-9ea8-082fffc6d832">
 					<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.VerticalRowLayout"/>
 				</reportElement>
 				<box>
@@ -286,6 +291,9 @@ where Libros.idEmpresa =   $P{empresa}  AND Libros.idSisModulos =   $P{modulo}  
 					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
+				<crosstabDataset>
+					<dataset resetType="Report"/>
+				</crosstabDataset>
 				<crosstabHeaderCell>
 					<cellContents mode="Opaque" style="Crosstab 6_CD">
 						<box>
@@ -403,7 +411,7 @@ where Libros.idEmpresa =   $P{empresa}  AND Libros.idSisModulos =   $P{modulo}  
 					</crosstabTotalColumnHeader>
 				</columnGroup>
 				<measure name="Importe_MEASURE" class="java.math.BigDecimal" calculation="Sum">
-					<measureExpression><![CDATA[$F{Importe}]]></measureExpression>
+					<measureExpression><![CDATA[$F{moneda}.equals("u$s") ? $F{Importe}.multiply($F{cotDolar}).setScale(2, java.math.RoundingMode.HALF_UP) : $F{Importe}]]></measureExpression>
 				</measure>
 				<crosstabCell width="60" height="20">
 					<cellContents mode="Opaque" style="Crosstab 6_CD">

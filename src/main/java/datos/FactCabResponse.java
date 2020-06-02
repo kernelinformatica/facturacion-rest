@@ -45,7 +45,12 @@ public class FactCabResponse implements Payload{
     private String tipoOperacion;
     private String autorizada;
     private String permiteBorrado;
-    private Integer kilosCanje;    
+    private Integer kilosCanje;
+    private Boolean pesificado;
+    private Boolean dolarizadoAlVto;
+    private BigDecimal interesMensualCompra;
+    private Boolean canjeInsumos;
+    private String tipoCambio;
     private List<FactDetalleResponse> detalle;
     private List<FactImputaResponse> imputa;
     
@@ -66,11 +71,16 @@ public class FactCabResponse implements Payload{
         this.importeTotal = BigDecimal.ZERO;
         this.tipoOperacion = f.getIdSisTipoOperacion().getDescripcion();
         this.autorizada = " ";
+        this.pesificado = f.getPesificado();
+        this.dolarizadoAlVto = f.getDolarizadoAlVto();
+        this.interesMensualCompra = f.getInteresMensualCompra();
+        this.canjeInsumos = f.getCanjeInsumos();
+        this.tipoCambio = f.getTipoCambio();
         this.detalle = new ArrayList<>();
         this.imputa = new ArrayList<>();
     }
 
-    public FactCabResponse(Integer idFactCab, String comprobante,long numero, Date fechaEmision, Integer idPadron, String nombre, String cuit, BigDecimal cotDolar, String moneda, String imputada, String modulo, String vendedor, Integer idCteTipo, BigDecimal importeNeto, BigDecimal importeTotal, String tipoOperacion, String autorizada, String permiteBorrado, Integer kilosCanje) {
+    public FactCabResponse(Integer idFactCab, String comprobante,long numero, Date fechaEmision, Integer idPadron, String nombre, String cuit, BigDecimal cotDolar, String moneda, String imputada, String modulo, String vendedor, Integer idCteTipo, BigDecimal importeNeto, BigDecimal importeTotal, String tipoOperacion, String autorizada, String permiteBorrado, Integer kilosCanje, Boolean pesificado, Boolean dolarizadoAlVto, BigDecimal interesMensualCompra, Boolean canjeInsumos, String tipoCambio) {
         this.idFactCab = idFactCab;
         this.comprobante = comprobante;
         this.numero = numero;
@@ -92,6 +102,11 @@ public class FactCabResponse implements Payload{
         this.autorizada = autorizada;
         this.permiteBorrado = permiteBorrado;
         this.kilosCanje = kilosCanje;
+        this.pesificado = pesificado;
+        this.dolarizadoAlVto = dolarizadoAlVto;
+        this.interesMensualCompra = interesMensualCompra;
+        this.canjeInsumos = canjeInsumos;
+        this.tipoCambio = tipoCambio;
     }
 
     public FactCabResponse(Integer idFactCab) {
@@ -113,6 +128,27 @@ public class FactCabResponse implements Payload{
     public void setNumero(long numero) {
         this.numero = numero;
     }
+    
+    public void setPesificado(Boolean pesificado) {
+        this.pesificado = pesificado;
+    }
+    
+    public void setDolarizadoAlVto(Boolean dolarizadoAlVto) {
+        this.dolarizadoAlVto = dolarizadoAlVto;
+    }
+    
+    public void setInteresMensualCompra(BigDecimal interesMensualCompra) {
+        this.interesMensualCompra = interesMensualCompra;
+    }
+    
+    public void setCanjeInsumos(Boolean canjeInsumos) {
+        this.canjeInsumos = canjeInsumos;
+    }
+    
+    public void setTipoCambio(String tipoCambio) {
+        this.tipoCambio = tipoCambio;
+    }
+    
 
 //    public Date getFechaEmision() {
 //        return fechaEmision;
