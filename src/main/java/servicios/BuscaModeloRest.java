@@ -337,7 +337,7 @@ public class BuscaModeloRest {
                         //Busco percepciones de iva para el cliente de acuerdo a la tabla del sisa en venas solamente si es canje
                         } else if(p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(8).getTipo()) && idCliente != null && idSisTipoOperacion == 5) {
                             //Busco en la base Sybasse el CerealSisa
-                            /*CerealSisa cerealSisa = cerealSisaFacade.getByCodPadron(idCliente);
+                            CerealSisaSybase cerealSisa = cerealSisaFacade.getByCodPadron(idCliente);
                             if(cerealSisa == null) {
                                 continue;
                             }
@@ -356,10 +356,10 @@ public class BuscaModeloRest {
                             } else {
                                 porcentaje = p.getValor();
                                 total = total.multiply(porcentaje.divide(cien));
-                            } */
-                             total = total.add(precio.multiply(cantidad));
+                            } 
+                             /*total = total.add(precio.multiply(cantidad));
                             porcentaje = p.getValor();
-                                total = total.multiply(porcentaje.divide(cien));
+                                total = total.multiply(porcentaje.divide(cien));*/
                         
                         }
                         ModeloDetalleResponse modeloResponse = new ModeloDetalleResponse(p, total, porcentaje, baseImponible);
@@ -428,7 +428,8 @@ public class BuscaModeloRest {
             respuesta.setArraydatos(lista);
             respuesta.setControl(AppCodigo.OK, "Lista de Modelos");
             return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();
-        } catch (Exception ex) { 
+        } catch (Exception ex) {
+            ex.printStackTrace();
             respuesta.setControl(AppCodigo.ERROR, ex.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
         }

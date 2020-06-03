@@ -1316,7 +1316,11 @@ public class GrabaComprobanteRest {
                     if (respGrabarMaster.getStatusInfo().equals(Response.Status.CREATED) || respGrabarMaster.getStatusInfo().equals(Response.Status.BAD_REQUEST)) {
                         Boolean respGrabaMasterSybase = this.grabarMasterSybase(factCab, factDetalle, factFormaPago, factPie, user);
                         if (respGrabaMasterSybase == true) {
-                            this.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
+                            if(factCab.getIdCteTipo().getIdSisComprobante().getIdSisModulos().getIdSisModulos() == 1) {
+                                this.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
+                            } else if(factCab.getIdCteTipo().getIdSisComprobante().getIdSisModulos().getIdSisModulos() == 2) {
+                                this.grabarFactVentasSybase(factCab, factDetalle, factFormaPago, factPie, user);
+                            }
                         }
                     }
                 }
@@ -1517,7 +1521,11 @@ public class GrabaComprobanteRest {
                 masterDetalle.setFechayhora(fechaHoy);
                 masterDetalle.setIdEmpresa(factCab.getIdCteTipo().getIdEmpresa().getIdEmpresa());
                 masterDetalle.setMAsiento(masAsiento);
-                masterDetalle.setMDetalle(pad.getPadronApelli() + " " + pad.getPadronNombre());
+                if((pad.getPadronApelli() + " " + pad.getPadronNombre()).length() > 30) {
+                    masterDetalle.setMDetalle((pad.getPadronApelli() + " " + pad.getPadronNombre()).substring(0, 30));
+                } else {
+                    masterDetalle.setMDetalle(pad.getPadronApelli() + " " + pad.getPadronNombre());
+                }
                 masterDetalle.setMFechaEmi(factCab.getFechaEmision());
                 masterDetalle.setMImporte(det.getImporte().multiply(signo));
                 masterDetalle.setMIngreso(factCab.getFechaConta());
@@ -1577,7 +1585,11 @@ public class GrabaComprobanteRest {
                 masterFormaPago.setTipoComp(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdCteTipo())));
 
                 if (fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(1) || fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(6)) {
-                    masterFormaPago.setMDetalle(pad.getPadronApelli() + " " + pad.getPadronNombre());
+                    if((pad.getPadronApelli() + " " + pad.getPadronNombre()).length() > 30) {
+                        masterFormaPago.setMDetalle((pad.getPadronApelli() + " " + pad.getPadronNombre()).substring(0, 30));
+                    } else {
+                        masterFormaPago.setMDetalle(pad.getPadronApelli() + " " + pad.getPadronNombre());
+                    }
                     masterFormaPago.setMCtacte("0");
                     masterFormaPago.setPlanCuentas(fp.getCtaContable());
 
@@ -1631,7 +1643,11 @@ public class GrabaComprobanteRest {
                 masterImputa.setFechayhora(fechaHoy);
                 masterImputa.setIdEmpresa(factCab.getIdCteTipo().getIdEmpresa().getIdEmpresa());
                 masterImputa.setMAsiento(masAsiento);
-                masterImputa.setMDetalle(pad.getPadronApelli() + " " + pad.getPadronNombre());
+                if((pad.getPadronApelli() + " " + pad.getPadronNombre()).length() > 30) {
+                    masterImputa.setMDetalle((pad.getPadronApelli() + " " + pad.getPadronNombre()).substring(0, 30));
+                } else {
+                    masterImputa.setMDetalle(pad.getPadronApelli() + " " + pad.getPadronNombre());
+                }
                 masterImputa.setMFechaEmi(factCab.getFechaEmision());
                 masterImputa.setMImporte(fi.getImporte().multiply(signo));
                 masterImputa.setMIngreso(factCab.getFechaConta());
@@ -2463,7 +2479,11 @@ public class GrabaComprobanteRest {
                 if (fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(1)
                         || fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(6)) {
                     masterFormaPago.setMCtacte("N");
-                    masterFormaPago.setMDetalle(pad.getPadronApelli() + " - " + pad.getPadronNombre());
+                    if((pad.getPadronApelli() + " " + pad.getPadronNombre()).length() > 30) {
+                        masterFormaPago.setMDetalle((pad.getPadronApelli() + " " + pad.getPadronNombre()).substring(0, 30));
+                    } else {
+                        masterFormaPago.setMDetalle(pad.getPadronApelli() + " " + pad.getPadronNombre());
+                    }
                     masterFormaPago.setPlanCuentas(Integer.parseInt(fp.getCtaContable()));
                     masterFormaPago.setMImporte((fp.getImporte().multiply(signo)).multiply(cotizacionDolar).setScale(2, RoundingMode.HALF_EVEN).doubleValue());
                     
@@ -2515,7 +2535,11 @@ public class GrabaComprobanteRest {
                 MasterSybase masterImputa = new MasterSybase(factCab.getFechaConta(), masAsiento, Short.valueOf(Integer.toString(paseDetalle)), Short.valueOf(Integer.toString(libroCodigo)));
                 masterImputa.setCotizacion(factCab.getCotDolar().setScale(2, RoundingMode.HALF_EVEN).doubleValue());
                 masterImputa.setFechayhora(factCab.getFechaConta());
-                masterImputa.setMDetalle(pad.getPadronApelli() + " " + pad.getPadronNombre());
+                if((pad.getPadronApelli() + " " + pad.getPadronNombre()).length() > 30) {
+                    masterImputa.setMDetalle((pad.getPadronApelli() + " " + pad.getPadronNombre()).substring(0, 30));
+                } else {
+                    masterImputa.setMDetalle(pad.getPadronApelli() + " " + pad.getPadronNombre());
+                }
                 masterImputa.setMFechaEmi(factCab.getFechaEmision());
                 
                 masterImputa.setMImporte((fi.getImporte().multiply(signo)).multiply(cotizacionDolar).setScale(2, RoundingMode.HALF_EVEN).doubleValue());
