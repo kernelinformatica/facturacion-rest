@@ -2845,19 +2845,19 @@ public class GrabaComprobanteRest {
                         Short.valueOf(Integer.toString(ptoVta)));
                 if(cerealSisa.getEstado() == Short.valueOf("0")) {
                     facVentasDetalle.setVCuotas(param.getPSisaCeroPorc().shortValue());
-                    facVentasDetalle.setVPerce24591(det.getImporte().multiply(param.getPSisaCeroPorc()).doubleValue());
+                    facVentasDetalle.setVPerce24591(det.getImporte().multiply(param.getPSisaCeroPorc()).divide(new BigDecimal(100)).doubleValue());
                 }
                 if(cerealSisa.getEstado() == Short.valueOf("1")) {
                     facVentasDetalle.setVCuotas(param.getPSisaUnoPorc().shortValue());
-                    facVentasDetalle.setVPerce24591(det.getImporte().multiply(param.getPSisaUnoPorc()).doubleValue());
+                    facVentasDetalle.setVPerce24591(det.getImporte().multiply(param.getPSisaUnoPorc()).divide(new BigDecimal(100)).doubleValue());
                 }
                 if(cerealSisa.getEstado() == Short.valueOf("2")) {
                     facVentasDetalle.setVCuotas(param.getPSisaDosPorc().shortValue());
-                    facVentasDetalle.setVPerce24591(det.getImporte().multiply(param.getPSisaDosPorc()).doubleValue());
+                    facVentasDetalle.setVPerce24591(det.getImporte().multiply(param.getPSisaDosPorc()).divide(new BigDecimal(100)).doubleValue());
                 }
                 if(cerealSisa.getEstado() == Short.valueOf("3")) {
                     facVentasDetalle.setVCuotas(param.getPSisaTresPorc().shortValue());
-                    facVentasDetalle.setVPerce24591(det.getImporte().multiply(param.getPSisaTresPorc()).doubleValue());
+                    facVentasDetalle.setVPerce24591(det.getImporte().multiply(param.getPSisaTresPorc()).divide(new BigDecimal(100)).doubleValue());
                 }
                 // valores 0 por defecto para que no se graben en nulo
                 facVentasDetalle.setVRetencion1(BigDecimal.ZERO.doubleValue());
@@ -2943,7 +2943,11 @@ public class GrabaComprobanteRest {
                 totalDetalleFactura = new BigDecimal(0);
                 facVentasDetalle.setVCondicionIva(Short.valueOf(Integer.toString(condiIva.getCondIva().getCondiva())));
                 facVentasDetalle.setVDeposito(det.getIdDepositos().getCodigoDep());
-
+                if(det.getIdFactCab().getIdSisTipoOperacion().getIdSisTipoOperacion() == 5) {
+                    facVentasDetalle.setCanjeSn("S");
+                } else {
+                    facVentasDetalle.setCanjeSn("N");
+                }
                 //Valores que van en 0
                 facVentasDetalle.setVDescuento(BigDecimal.ZERO.doubleValue());
                 facVentasDetalle.setVFormaPago((Short.valueOf(Integer.toString(0))));
@@ -3053,22 +3057,28 @@ public class GrabaComprobanteRest {
             
             if(cerealSisa.getEstado() == Short.valueOf("0")) {
                     movCierre.setVCuotasInteres(param.getPSisaCeroPorc().doubleValue());
-                    movCierre.setVPerce24591(totalPrecioUnitario.multiply(param.getPSisaCeroPorc()).doubleValue());
+                    movCierre.setVPerce24591(totalPrecioUnitario.multiply(param.getPSisaCeroPorc()).divide(new BigDecimal(100)).doubleValue());
                 }
                 if(cerealSisa.getEstado() == Short.valueOf("1")) {
                     movCierre.setVCuotasInteres(param.getPSisaUnoPorc().doubleValue());
-                    movCierre.setVPerce24591(totalPrecioUnitario.multiply(param.getPSisaUnoPorc()).doubleValue());
+                    movCierre.setVPerce24591(totalPrecioUnitario.multiply(param.getPSisaUnoPorc()).divide(new BigDecimal(100)).doubleValue());
                 }
                 if(cerealSisa.getEstado() == Short.valueOf("2")) {
                     movCierre.setVCuotasInteres(param.getPSisaDosPorc().doubleValue());
-                    movCierre.setVPerce24591(totalPrecioUnitario.multiply(param.getPSisaDosPorc()).doubleValue());
+                    movCierre.setVPerce24591(totalPrecioUnitario.multiply(param.getPSisaDosPorc()).divide(new BigDecimal(100)).doubleValue());
                 }
                 if(cerealSisa.getEstado() == Short.valueOf("3")) {
                     movCierre.setVCuotasInteres(param.getPSisaTresPorc().doubleValue());
-                    movCierre.setVPerce24591(totalPrecioUnitario.multiply(param.getPSisaTresPorc()).doubleValue());
+                    movCierre.setVPerce24591(totalPrecioUnitario.multiply(param.getPSisaTresPorc()).divide(new BigDecimal(100)).doubleValue());
                 }
             movCierre.setVFormaPago((Short.valueOf(Integer.toString(formaPagoSeleccionada))));
 
+            
+            if(factCab.getIdSisTipoOperacion().getIdSisTipoOperacion() == 5) {
+                movCierre.setCanjeSn("S");
+            } else {
+                movCierre.setCanjeSn("N");
+            }
             ///////////////////////////////////////////////
             movCierre.setVNombre(factCab.getNombre());
             movCierre.setVDescripcion(factDetalle.get(0).getDetalle());
