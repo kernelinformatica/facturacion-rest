@@ -91,6 +91,7 @@ public class BuscaModeloRest {
             Integer idCliente = (Integer) Utils.getKeyFromJsonObject("idCliente", jsonBody, "Integer");
             Integer idSisTipoOperacion = (Integer) Utils.getKeyFromJsonObject("idSisTipoOperacion", jsonBody, "Integer");
             List<JsonElement> productos = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("productos", jsonBody, "ArrayList");
+            Integer tipoComprobante = (Integer) Utils.getKeyFromJsonObject("tipoComprobante", jsonBody, "Integer");
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -339,6 +340,10 @@ public class BuscaModeloRest {
                             //Busco en la base Sybasse el CerealSisa
                             CerealSisaSybase cerealSisa = cerealSisaFacade.getByCodPadron(idCliente);
                             if(cerealSisa == null) {
+                                continue;
+                            }
+                            
+                            if(tipoComprobante == null || tipoComprobante != 75) {
                                 continue;
                             }
                             
