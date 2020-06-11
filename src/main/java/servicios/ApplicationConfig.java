@@ -53,7 +53,6 @@ public class ApplicationConfig extends Application {
         resources.add(servicios.DescargarStockRest.class);
         resources.add(servicios.FiltroListaPrecioRest.class);
         resources.add(servicios.FormaPagoRest.class);
-        resources.add(servicios.GrabaComprobanteRest.class);
         resources.add(servicios.ImputacionesRest.class);
         resources.add(servicios.LibroRest.class);
         resources.add(servicios.ListaPrecioRest.class);
