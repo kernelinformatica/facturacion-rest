@@ -16,6 +16,7 @@ import entidades.ListaPrecio;
 import entidades.ListaPrecioDet;
 import entidades.ModeloDetalle;
 import entidades.Parametro;
+import entidades.ParametrosCanjes;
 import entidades.Producto;
 import entidades.SisCotDolar;
 import entidades.SisModulo;
@@ -29,7 +30,12 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -50,6 +56,7 @@ import persistencia.CteTipoFacade;
 import persistencia.FactCabFacade;
 import persistencia.ListaPrecioFacade;
 import persistencia.ParametroFacade;
+import persistencia.ParametrosCanjesFacade;
 import persistencia.ProductoFacade;
 import persistencia.SisCotDolarFacade;
 import persistencia.SisModuloFacade;
@@ -78,6 +85,7 @@ public class PendientesCancelarRest {
     @Inject FactCabFacade factCabFacade;
     @Inject CteTipoFacade cteTipoFacade;
     @Inject ParametroFacade parametroFacade;
+    @Inject ParametrosCanjesFacade parametrosCanjesFacade;
     
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -363,6 +371,9 @@ public class PendientesCancelarRest {
         @QueryParam ("modulo") Integer idModulo,
         @QueryParam ("listaPrecio") Integer idListaPrecios,
         @QueryParam ("idMoneda") Integer idMoneda,
+        @QueryParam ("idCteTipo") Integer idCteTipo,
+        @QueryParam ("idSisTipoOperacion") Integer idSisTipoOperacion,
+        @QueryParam ("diferenciaFechas") String diferenciaFechas,
         @PathParam ("idProducto") Integer idProducto,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
@@ -464,6 +475,112 @@ public class PendientesCancelarRest {
                 pr.setPrecio(sr.getCostoReposicion());
                 
                 productosResponse.add(pr);               
+            } else if(idListaPrecios != null && idModulo != null && idSisTipoModelo != null && idProducto != null && idMoneda != null && idSisTipoOperacion != null && idSisTipoOperacion == 5 && idCteTipo != null && diferenciaFechas != null) { 
+            
+                ListaPrecio listaPrecio = listaPrecioFacade.find(idListaPrecios);
+                if(listaPrecio == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "No hay lista de precios disponibles");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                
+                //Busco el modulo. (Por lo general en este if va a ser el de ventas)
+                SisModulo modulo = sisModuloFacade.find(idModulo);
+                if(modulo == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no existe el modulo");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                
+                SisMonedas moneda = sisMonedasFacade.find(idMoneda);
+                if(moneda == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Error, no la moneda");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                
+                //Busco el producto
+                Producto prod = productoFacade.find(idProducto);
+                if(prod == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "No existe el producto seleccionado");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                
+                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                LocalDate vencimientoDate = LocalDate.parse(diferenciaFechas, dtf);
+                LocalDate currentDate = LocalDate.now();
+                long daysBetween = Duration.between(currentDate.atStartOfDay(), vencimientoDate.atStartOfDay()).toDays();
+                Integer diasPorMedio = new Long(daysBetween).intValue();
+                System.out.println("Dias de por medio ->" + diasPorMedio);
+                
+                for(ListaPrecioDet l : listaPrecio.getListaPrecioDetCollection()) {
+                    //Si no es el producto que continue
+                    if(!l.getIdProductos().equals(prod)) {
+                        continue;
+                    }                    
+                    //Armo el producto response
+                    ProductoResponse sr = new ProductoResponse(l.getIdProductos());
+                    //Seteo el costo en costo de repocicion el de la lista de precio
+                    sr.setCostoReposicion(l.getPrecio());
+                    //Agrego los detalles de cuentas contables
+                    sr.getModeloCab().agregarModeloDetalleTipo(l.getIdProductos().getIdModeloCab().getModeloDetalleCollection(), idSisTipoModelo, idModulo);
+                    //Seteo el iva del producto dependiendo del detalle si es != de 0 seteo el del detalle sino el del producto
+                    for(ModeloDetalle r : prod.getIdModeloCab().getModeloDetalleCollection()) {
+                        if(r.getIdSisModulo().getIdSisModulos().equals(modulo.getIdSisModulos()) && 
+                           r.getValor().compareTo(BigDecimal.ZERO) != 0 &&
+                           r.getIdSisTipoModelo().getIdSisTipoModelo().equals(2)) {
+                            sr.getIVA().setPorcIVA(r.getValor());
+                            break;
+                        }
+                    }
+                    //Armo la respuesta de pendientes de cancelar asi es igual a la del store procedure
+                    PendientesCancelarResponse pr = new PendientesCancelarResponse(sr);
+                    //seteo el precio de la lista de precios seleccionada
+                    if(moneda.getDescripcion().equals("u$s") && l.getIdListaPrecios().getIdMoneda().getDescripcion().equals("$AR")) {
+                        SisCotDolar cotDolar = sisCotDolarFacade.getLastCotizacion();
+                        ParametrosCanjes params = parametrosCanjesFacade.findParametrosCanjes(2, 1);
+                        Integer diasTotales = 0;
+                        BigDecimal recargo = BigDecimal.ZERO;
+                        Integer diasLibres = new Short(params.getDiasLIbres()).intValue();
+                        if(diasPorMedio > diasLibres) {
+                            diasTotales = diasPorMedio - diasLibres;
+                            recargo = params.getInteresDiario().multiply(new BigDecimal(diasTotales));
+                            pr.setPrecio(sr.getCostoReposicion().divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP).add(sr.getCostoReposicion().divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP).multiply(recargo).divide(new BigDecimal(100))));
+                        } else {
+                            pr.setPrecio(sr.getCostoReposicion().divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP));
+                        }
+                    } else if(moneda.getDescripcion().equals("$AR") && l.getIdListaPrecios().getIdMoneda().getDescripcion().equals("u$s")){
+                       SisCotDolar cotDolar = sisCotDolarFacade.getLastCotizacion();
+                       ParametrosCanjes params = parametrosCanjesFacade.findParametrosCanjes(2, 1);
+                       Integer diasTotales = 0;
+                       BigDecimal recargo = BigDecimal.ZERO;
+                       Integer diasLibres = new Short(params.getDiasLIbres()).intValue();
+                       if(diasPorMedio > diasLibres) {
+                           diasTotales = diasPorMedio - diasLibres;
+                           recargo = params.getInteresDiario().multiply(new BigDecimal(diasTotales));
+                           pr.setPrecio(sr.getCostoReposicion().add(sr.getCostoReposicion().multiply(recargo).divide(new BigDecimal(100))).multiply(cotDolar.getCotizacion()));
+                        } else {
+                           pr.setPrecio(sr.getCostoReposicion().multiply(cotDolar.getCotizacion()));
+                       }
+                    } else {
+                        SisCotDolar cotDolar = sisCotDolarFacade.getLastCotizacion();
+                        ParametrosCanjes params = parametrosCanjesFacade.findParametrosCanjes(2, 1);
+                        Integer diasTotales = 0;
+                        BigDecimal recargo = BigDecimal.ZERO;
+                        System.out.println("dias libres ---->" + params.getDiasLIbres());
+                        Integer diasLibres = new Short(params.getDiasLIbres()).intValue();
+                        if(diasPorMedio > diasLibres) {
+                            diasTotales = diasPorMedio - diasLibres;
+                            recargo = params.getInteresDiario().multiply(new BigDecimal(diasTotales));
+                            if(moneda.getDescripcion().equals("$AR")) {
+                                pr.setPrecio(sr.getCostoReposicion().divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP).add(sr.getCostoReposicion().divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP).multiply(recargo).divide(new BigDecimal(100))).multiply(cotDolar.getCotizacion()));
+                            } else {
+                                pr.setPrecio(sr.getCostoReposicion().add(sr.getCostoReposicion().multiply(recargo).divide(new BigDecimal(100))));
+                            }
+                         } else {
+                            pr.setPrecio(sr.getCostoReposicion());
+                        }
+                    }
+                    productosResponse.add(pr);
+                }
+                
             } else if(idListaPrecios != null && idModulo != null && idSisTipoModelo != null && idProducto != null && idMoneda != null) {
                 //Busco la lista de precios seleccionada
                 ListaPrecio listaPrecio = listaPrecioFacade.find(idListaPrecios);
@@ -539,6 +656,8 @@ public class PendientesCancelarRest {
             respuesta.setControl(AppCodigo.OK, "Lista de Productos");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error al buscar el producto: " + e.getMessage());
             respuesta.setControl(AppCodigo.ERROR, e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
         }

@@ -248,7 +248,8 @@ CanjesContratosCerealesFacade canjesContratosCereales;
             Integer idSisOperacionComprobante = (Integer) Utils.getKeyFromJsonObject("idSisOperacionComprobante", jsonBody, "Integer");
             Integer idContrato = (Integer) Utils.getKeyFromJsonObject("idContrato", jsonBody, "Integer");
             String direccion = (String) Utils.getKeyFromJsonObject("direccion", jsonBody, "String");
-          
+            String codigoCereal = (String) Utils.getKeyFromJsonObject("cereal", jsonBody, "String");
+            Boolean diferidoVto = (Boolean) Utils.getKeyFromJsonObject("diferidoVto", jsonBody, "boolean");
             //Para canje
             String productoCanje = (String) Utils.getKeyFromJsonObject("productoCanje", jsonBody, "String");
             BigDecimal precioReferenciaCanje = (BigDecimal) Utils.getKeyFromJsonObject("precioReferenciaCanje", jsonBody, "BigDecimal");
@@ -447,7 +448,7 @@ CanjesContratosCerealesFacade canjesContratosCereales;
                     respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el numero de comprobante");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
-                String ptoVenta = cteNumerador.getIdPtoVenta().getPtoVenta().toString();
+                String ptoVenta = String.valueOf(cteNumerador.getIdPtoVenta().getPtoVenta());
 
                 //Valido que la fecha de emision no sea menor a la de un comprobante con el mismo tipo dado de alta.
                 List<FactCab> posteriores = factCabFacade.getByFechaEmpresaCompLetra(fechaEmision, cteTipo, user.getIdPerfil().getIdSucursal().getIdEmpresa(), letra);
@@ -493,10 +494,16 @@ CanjesContratosCerealesFacade canjesContratosCereales;
                     codPostal = padron.getCodigoPostal().toString();
                 }
             }
+            Cereales cereal = null;
+            if(codigoCereal != null) {
+               cereal = cerealesFacade.findCerealPorCodigo(codigoCereal);
+            }
 
             FactCab factCab = new FactCab();
             //Pregunto si se guarda una cabecera
             if (factCabecera) {
+                factCab.setCerealCanje(cereal);
+                factCab.setDiferidoVto(diferidoVto);
                 factCab.setCai(cai);
                 factCab.setCaiVto(caiVto);
                 factCab.setCodBarra(codBarra);
@@ -788,7 +795,7 @@ CanjesContratosCerealesFacade canjesContratosCereales;
                                 respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el numero de comprobante");
                                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                             }
-                            String ptoVenta = cteNumerador.getIdPtoVenta().getPtoVenta().toString();
+                            String ptoVenta = String.valueOf(cteNumerador.getIdPtoVenta().getPtoVenta());
                             String numeroVentaFormat = String.format("%08d", cteNumerador.getNumerador());
                             String concatenado = ptoVenta.concat(numeroVentaFormat);
                             prod.setNumero(Long.parseLong(concatenado, 10));
@@ -1080,7 +1087,7 @@ CanjesContratosCerealesFacade canjesContratosCereales;
                             respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el numero de comprobante");
                             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                         }
-                        String ptoVenta = cteNumerador.getIdPtoVenta().getPtoVenta().toString();
+                        String ptoVenta = String.valueOf(cteNumerador.getIdPtoVenta().getPtoVenta());
                         String numeroVentaFormat = String.format("%08d", cteNumerador.getNumerador());
                         String concatenado = ptoVenta.concat(numeroVentaFormat);
                         factCab.setNumero(Long.parseLong(concatenado, 10));
@@ -1104,7 +1111,7 @@ CanjesContratosCerealesFacade canjesContratosCereales;
                             respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el numero de comprobante");
                             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                         }
-                        String ptoVenta = cteNumerador.getIdPtoVenta().getPtoVenta().toString();
+                        String ptoVenta = String.valueOf(cteNumerador.getIdPtoVenta().getPtoVenta());
                         String numeroVentaFormat = String.format("%08d", cteNumerador.getNumerador());
                         String concatenado = ptoVenta.concat(numeroVentaFormat);
                         factCab.setNumero(Long.parseLong(concatenado, 10));
@@ -1139,7 +1146,7 @@ CanjesContratosCerealesFacade canjesContratosCereales;
                             respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el numero de comprobante");
                             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                         }
-                        String ptoVenta = cteNumeradorRel.getIdPtoVenta().getPtoVenta().toString();
+                        String ptoVenta = String.valueOf(cteNumeradorRel.getIdPtoVenta().getPtoVenta());
                         String numeroVentaFormat = String.format("%08d", cteNumeradorRel.getNumerador());
                         String concatenado = ptoVenta.concat(numeroVentaFormat);
                         fc.setNumero(Long.parseLong(concatenado, 10));
@@ -1744,10 +1751,10 @@ CanjesContratosCerealesFacade canjesContratosCereales;
                     //va a venir la cuenta cuentable y tengo que buscar el cereal relacionado
                     CanjesContratosCereales canjeCereales;
                     canjeCereales = canjesContratosCereales.findCerealkPorCuenta(factCab.getIdCteTipo().getIdEmpresa(), cuentaContableCanje);
-                    documentoCanje.setCereal(Short.parseShort(canjeCereales.getCerealCodigo()));
+                    documentoCanje.setCereal(Short.parseShort(canjeCereales.getCerealCodigo().getCerealCodigo()));
                     documentoCanje.setCantidad(new BigDecimal(0));
                     documentoCanje.setDolar(new BigDecimal(factCab.getTipoCambio()));
-                    Cereales cereal = cerealesFacade.findCerealPorCodigo(canjeCereales.getCerealCodigo());
+                    Cereales cereal = cerealesFacade.findCerealPorCodigo(canjeCereales.getCerealCodigo().getCerealCodigo());
                     documentoCanje.setCosecha(cereal.getNombre());
                     // El numero de factura es el nro de comprobante con el que se da 
                     // vuelta en el otro proceso, se instancia en 0
@@ -2744,7 +2751,7 @@ CanjesContratosCerealesFacade canjesContratosCereales;
                     respuesta.setControl(AppCodigo.ERROR, "Error al cargar la factura, no existe el numero de comprobante");
                 }
 
-                String ptoVenta = cteNumerador.getIdPtoVenta().getPtoVenta().toString();
+                String ptoVenta = String.valueOf(cteNumerador.getIdPtoVenta().getPtoVenta());
                 String numeroVentaFormat = String.format("%08d", cteNumerador.getNumerador());
                 String concatenado = ptoVenta.concat(numeroVentaFormat);
                 nroComp.setNumero(Long.parseLong(concatenado, 10));
