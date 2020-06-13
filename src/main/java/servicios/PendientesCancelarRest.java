@@ -113,6 +113,7 @@ public class PendientesCancelarRest {
             String letra = (String) Utils.getKeyFromJsonObject("letra", jsonBody, "String");
             Integer idListaPrecio = (Integer) Utils.getKeyFromJsonObject("idListaPrecio", jsonBody, "Integer");
             Integer modulo = (Integer) Utils.getKeyFromJsonObject("modulo", jsonBody, "Integer");
+            String diferenciaFechas = (String) Utils.getKeyFromJsonObject("diferenciaFechas", jsonBody, "String");
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -236,6 +237,26 @@ public class PendientesCancelarRest {
                             rs.getString("letra"),
                             rs.getInt("idFactDetalle"),
                             producto);
+                    if(idSisTipoOperacion != null && idSisTipoOperacion == 5 && cteTipo != null && diferenciaFechas != null) {
+                        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                        LocalDate vencimientoDate = LocalDate.parse(diferenciaFechas, dtf);
+                        LocalDate currentDate = LocalDate.now();
+                        long daysBetween = Duration.between(currentDate.atStartOfDay(), vencimientoDate.atStartOfDay()).toDays();
+                        Integer diasPorMedio = new Long(daysBetween).intValue();
+                        ParametrosCanjes params = parametrosCanjesFacade.findParametrosCanjes(2, 1);
+                        Integer diasTotales = 0;
+                        BigDecimal recargo = BigDecimal.ZERO;
+                        Integer diasLibres = new Short(params.getDiasLIbres()).intValue();
+                        if(diasPorMedio > diasLibres) {
+                            diasTotales = diasPorMedio - diasLibres;
+                            recargo = params.getInteresDiario().multiply(new BigDecimal(diasTotales));
+                            if(rs.getString("moneda").equals("u$s")) {
+                                pendientesCancelar.setPrecio(pendientesCancelar.getPrecio().add(pendientesCancelar.getPrecio().multiply(recargo).divide(new BigDecimal(100))));
+                            } else {
+                                pendientesCancelar.setPrecio(pendientesCancelar.getPrecio().divide(rs.getBigDecimal("dolar"),2, RoundingMode.HALF_UP).add(pendientesCancelar.getPrecio().divide(rs.getBigDecimal("dolar"),2, RoundingMode.HALF_UP).multiply(recargo).divide(new BigDecimal(100))).multiply(rs.getBigDecimal("dolar")));
+                            }
+                        }
+                    }
                     if(moneda.getDescripcion().equals("$AR") && rs.getString("moneda").equals("u$s")) {
                         pendientesCancelar.setPrecio(pendientesCancelar.getPrecio().multiply(rs.getBigDecimal("dolar")));
                         pendientesCancelar.setImporte(pendientesCancelar.getPrecio().multiply(pendientesCancelar.getPendiente()));
@@ -356,6 +377,8 @@ public class PendientesCancelarRest {
             respuesta.setControl(AppCodigo.OK, "Lista de Comprobantes Pendientes");
             return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
         } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error al buscar los pendientes: " + e.getMessage());
             respuesta.setControl(AppCodigo.ERROR, e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
         }
@@ -475,7 +498,7 @@ public class PendientesCancelarRest {
                 pr.setPrecio(sr.getCostoReposicion());
                 
                 productosResponse.add(pr);               
-            } else if(idListaPrecios != null && idModulo != null && idSisTipoModelo != null && idProducto != null && idMoneda != null && idSisTipoOperacion != null && idSisTipoOperacion == 5 && idCteTipo != null && diferenciaFechas != null) { 
+            } /*else if(idListaPrecios != null && idModulo != null && idSisTipoModelo != null && idProducto != null && idMoneda != null && idSisTipoOperacion != null && idSisTipoOperacion == 5 && idCteTipo != null && diferenciaFechas != null) { 
             
                 ListaPrecio listaPrecio = listaPrecioFacade.find(idListaPrecios);
                 if(listaPrecio == null) {
@@ -581,7 +604,7 @@ public class PendientesCancelarRest {
                     productosResponse.add(pr);
                 }
                 
-            } else if(idListaPrecios != null && idModulo != null && idSisTipoModelo != null && idProducto != null && idMoneda != null) {
+            }*/ else if(idListaPrecios != null && idModulo != null && idSisTipoModelo != null && idProducto != null && idMoneda != null) {
                 //Busco la lista de precios seleccionada
                 ListaPrecio listaPrecio = listaPrecioFacade.find(idListaPrecios);
                 if(listaPrecio == null) {
