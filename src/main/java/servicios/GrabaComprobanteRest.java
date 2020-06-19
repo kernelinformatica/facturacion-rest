@@ -644,9 +644,9 @@ public class GrabaComprobanteRest {
                     Integer idFactDetalleImputa = (Integer) Utils.getKeyFromJsonObject("idFactDetalleImputa", j.getAsJsonObject(), "Integer");
                     BigDecimal importe = (BigDecimal) Utils.getKeyFromJsonObject("importe", j.getAsJsonObject(), "BigDecimal");
                     if (importe.intValue() == 0) {
-                        System.out.println("da 0 esto" + importe.intValue());
+                        System.out.println("da 0 esto " + importe.intValue());
                     } else {
-                        System.out.println("no da 0 esto" + importe.intValue());
+                        System.out.println("no da 0 esto " + importe.intValue());
                     }
                     BigDecimal precioDesc = (BigDecimal) Utils.getKeyFromJsonObject("precioDesc", j.getAsJsonObject(), "BigDecimal");
                     String unidadDescuento = (String) Utils.getKeyFromJsonObject("unidadDescuento", j.getAsJsonObject(), "String");
