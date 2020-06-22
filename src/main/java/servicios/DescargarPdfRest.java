@@ -181,7 +181,7 @@ public class DescargarPdfRest extends HttpServlet {
                     month = localDate.getMonthValue();
                     day   = localDate.getDayOfMonth();
                     String fechaVto = String.valueOf(day) + " de " + meses[month] + " del " + String.valueOf(year);
-                    String importeString = this.Convertir(importeTotalFact.toString(), true);
+                    String importeString = this.Convertir(importeTotalFact.setScale(2).toString(), true);
                     HashMap hm = new HashMap();
                     hm.put("idFactCab", idFactCab);
                     hm.put("vtoString", fechaVto);
@@ -228,7 +228,7 @@ public class DescargarPdfRest extends HttpServlet {
             //se divide el numero 0000000,00 -> entero y decimal
             String Num[] = numero.split(",");
             //de da formato al numero decimal
-            parte_decimal = "y " + Num[1] + "/100 Soles.";
+            parte_decimal = "C/" + Num[1] + " CENTAVOS";
             //se convierte el numero a literal
             if (Integer.parseInt(Num[0]) == 0) {//si el valor es cero
                 literal = "cero ";
@@ -268,9 +268,9 @@ public class DescargarPdfRest extends HttpServlet {
         } else if (n > 29) {//para 20...99
             String u = getUnidades(num);
             if (u.equals("")) { //para 20,30,40,50,60,70,80,90
-                return DECENAS[Integer.parseInt(num.substring(0, 1)) + 8];
+                return DECENAS[Integer.parseInt(num.substring(0, 1)) + 17];
             } else {
-                return DECENAS[Integer.parseInt(num.substring(0, 1)) + 8] + "y " + u;
+                return DECENAS[Integer.parseInt(num.substring(0, 1)) + 17] + " y " + u;
             }
         } else {//numeros entre 11 y 19
             return DECENAS[n - 10];

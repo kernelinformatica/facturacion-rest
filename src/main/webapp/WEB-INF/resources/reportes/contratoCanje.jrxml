@@ -27,8 +27,9 @@ ZTgxYTs=]]>
 	`dbFacturacion`.`FactCab`.`fechaEmision` AS fechaEmision,
 	`dbFacturacion`.`FactCab`.`idPadron` AS padronNro,
 	`dbFacturacion`.`FactCab`.`numeroAfip` AS numeroAfip,
-	`dbFacturacion`.`Cereal`.`nombre` AS nombreCereal
-FROM `dbFacturacion`.`FactCab`
+	`dbFacturacion`.`Cereal`.`nombre` AS nombreCereal,
+	`dbFacturacion`.`FactFormaPago`.importe AS importeFacFP
+	FROM `dbFacturacion`.`FactCab`
 	LEFT OUTER JOIN `dbFacturacion`.`PadronGral` ON 
 	 `dbFacturacion`.`FactCab`.`idPadron` = `dbFacturacion`.`PadronGral`.`idPadronGral`
 	INNER JOIN `dbFacturacion`.`FactDetalle` ON 
@@ -37,11 +38,17 @@ FROM `dbFacturacion`.`FactCab`
 	 `dbFacturacion`.`FactCab`.`idFactCab` = `dbFacturacion`.`FactPie`.`idFactCab`
 	 LEFT OUTER JOIN `dbFacturacion`.`Cereal` ON 
 	 `dbFacturacion`.`FactCab`.`cerealCanje` = `dbFacturacion`.`Cereal`.`cerealCodigo`
+	 INNER JOIN `dbFacturacion`.`FactFormaPago` ON 
+	 `dbFacturacion`.`FactFormaPago`.`idFactCab` = `dbFacturacion`.`FactCab`.`idFactCab`
 	 WHERE `dbFacturacion`.`FactCab`.`idFactCab` = $P{idFactCab}]]>
 	</queryString>
 	<field name="importePie" class="java.math.BigDecimal">
 		<property name="com.jaspersoft.studio.field.label" value="importePie"/>
 		<property name="com.jaspersoft.studio.field.tree.path" value="FactPie"/>
+	</field>
+	<field name="importeFacFP" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="importeFacFP"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="FactFormaPago"/>
 	</field>
 	<field name="importeProd" class="java.math.BigDecimal">
 		<property name="com.jaspersoft.studio.field.label" value="importeProd"/>
@@ -109,6 +116,10 @@ FROM `dbFacturacion`.`FactCab`
 	<variable name="importeDetalleTotal" class="java.math.BigDecimal" calculation="Sum">
 		<variableExpression><![CDATA[$F{importeProd}]]></variableExpression>
 	</variable>
+	<variable name="importeTotalFP" class="java.math.BigDecimal" resetType="Page" incrementType="Page" calculation="Sum">
+		<variableExpression><![CDATA[$F{importeFacFP}]]></variableExpression>
+		<initialValueExpression><![CDATA[0]]></initialValueExpression>
+	</variable>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -127,7 +138,8 @@ FROM `dbFacturacion`.`FactCab`
 				<textElement textAlignment="Justified">
 					<font size="9"/>
 				</textElement>
-				<textFieldExpression><![CDATA["En la localidad de Máximo Paz, Departamento Constitucion, Provincia de Santa Fe, a los " + $F{fechaEmision} + " entre la COOP.AGROP.LTDA DE MAXIMO PAZ, con domicilio en Falucho 820 de la localidad de Máximo Paz, representada en éste acto por Debiase Angel A., DNI 13.672.630, en su caracter de Gerente, en adelante 'LA COOPERATIVA', por una parte y por la otra el/los Sr./es " + $F{apellido} + " " + $F{nombre} + "Tipo/Nro doc (cuit) DNI " + $F{cuit} + " con domicilio en " + $F{domicilio} + " localidad " + $F{localidad} + " en adelante 'EL PRODUCTOR', convienen de comun acuerdo, en celebrar el presente CONTRATO, a regirse por las siguientes cláusulas:"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["En la localidad de Máximo Paz, Departamento Constitucion, Provincia de Santa Fe, a los " + new SimpleDateFormat("dd/MM/yyyy").format($F{fechaEmision}) + " entre la COOP.AGROP.LTDA DE MAXIMO PAZ, con domicilio en Falucho 820 de la localidad de Máximo Paz, representada en éste acto por Debiase Angel A., DNI 13.672.630, en su caracter de Gerente, en adelante 'LA COOPERATIVA', por una parte y por la otra el/los Sr./es " + $F{apellido} + " " + $F{nombre} + "Tipo/Nro doc (cuit) DNI " + $F{cuit} + " con domicilio en " + $F{domicilio} + " localidad " + $F{localidad} + " en adelante 'EL PRODUCTOR', convienen de comun acuerdo, en celebrar el presente CONTRATO, a regirse por las siguientes cláusulas:"]]></textFieldExpression>
+				<patternExpression><![CDATA["dd/mm/yyyy"]]></patternExpression>
 			</textField>
 			<staticText>
 				<reportElement x="-10" y="110" width="571" height="20" uuid="3696539a-fcc8-42de-8b4b-db929893fd8e"/>
@@ -201,12 +213,13 @@ Aclaración de Firma]]></text>
 				</textElement>
 				<text><![CDATA[CUARTA: A los efectos legales derivados del presente, las partes fijan sus domicilios en los denunciados y se someten a la competencia de los Tribunales Ordinarios de la Cuidad de Rosario, con renuncia expresa a todo otro fuero o jurisdiccion que pudiera corresponderle.]]></text>
 			</staticText>
-			<textField>
+			<textField evaluationTime="Report">
 				<reportElement x="-9" y="320" width="573" height="58" uuid="ff125caf-e658-46f3-a789-60f5d83196eb"/>
 				<textElement textAlignment="Justified">
 					<font size="9"/>
 				</textElement>
-				<textFieldExpression><![CDATA["TERCERA: En garantía de las obligaciones contraídas por 'EL PRODUCTOR' en virtud del presente, en este acto suscribe un Pagaré, de u$s " + $V{importePieTotal}.add($V{importeDetalleTotal}).divide($F{cotDolar}, 2, RoundingMode.HALF_UP) + " con vencimiento el " + $F{fechaVto} + ". En caso de incumplimiento total o parcial, de cualquiera de las claúsulas, rescisión o resolución del presente, por cualquier causa, 'EL PRODUCTOR' sin perjuicio de las demás acciones que pudieran corresponder, autoriza expresamente a 'LA COOPERATIVA', a proceder al cobro judicial del mismo."]]></textFieldExpression>
+				<textFieldExpression><![CDATA["TERCERA: En garantía de las obligaciones contraídas por 'EL PRODUCTOR' en virtud del presente, en este acto suscribe un Pagaré, de u$s " + $V{importeTotalFP}.divide($F{cotDolar}, 2, RoundingMode.HALF_UP) + " con vencimiento el " + new SimpleDateFormat("dd/MM/yyyy").format($F{fechaVto}) + ". En caso de incumplimiento total o parcial, de cualquiera de las claúsulas, rescisión o resolución del presente, por cualquier causa, 'EL PRODUCTOR' sin perjuicio de las demás acciones que pudieran corresponder, autoriza expresamente a 'LA COOPERATIVA', a proceder al cobro judicial del mismo."]]></textFieldExpression>
+				<patternExpression><![CDATA["dd/mm/yyyy"]]></patternExpression>
 			</textField>
 			<staticText>
 				<reportElement x="-8" y="230" width="571" height="78" uuid="a653d2af-8a1b-4640-b4a5-c797f5337bee"/>
@@ -220,14 +233,16 @@ Aclaración de Firma]]></text>
 				<textElement>
 					<font size="9"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Fecha máxima de fijación de precio: " + $F{fechaVto}]]></textFieldExpression>
+				<textFieldExpression><![CDATA["Fecha máxima de fijación de precio: " + new SimpleDateFormat("dd/MM/yyyy").format($F{fechaVto})]]></textFieldExpression>
+				<patternExpression><![CDATA["dd/mm/yyyy"]]></patternExpression>
 			</textField>
 			<textField>
 				<reportElement x="-8" y="190" width="571" height="18" uuid="455ee80e-5109-40d6-81dc-b4687bf0ff9b"/>
 				<textElement>
 					<font size="9"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Fecha máxima de entrega: " + $F{fechaVto}]]></textFieldExpression>
+				<textFieldExpression><![CDATA["Fecha máxima de entrega: " + new SimpleDateFormat("dd/MM/yyyy").format($F{fechaVto})]]></textFieldExpression>
+				<patternExpression><![CDATA["dd/mm/yyyy"]]></patternExpression>
 			</textField>
 			<textField>
 				<reportElement x="-8" y="170" width="571" height="21" uuid="2320b047-150b-4c10-96fc-caa1a1b2cb52"/>
@@ -243,12 +258,12 @@ Aclaración de Firma]]></text>
 				</textElement>
 				<text><![CDATA[SEGUNDA: Por su parte, 'EL PRODUCTOR' se compromete a los fines de perfeccionar el presente contrato, a entregar a 'LA COOPERATIVA' en sus instalaciones de acopio, los siguientes granos con las condiciones detalladas:]]></text>
 			</staticText>
-			<textField>
+			<textField evaluationTime="Report">
 				<reportElement x="-7" y="50" width="569" height="88" uuid="e65ab4bc-ae34-4c7e-ab6e-1335e44eeebb"/>
 				<textElement textAlignment="Justified">
 					<font size="9"/>
 				</textElement>
-				<textFieldExpression><![CDATA["La entrega de los mismos se efectiviza en este acto, sirviendo el presente enunciado de nota de recepcion conforme, amplia y suficiente. 'LA COOPERATIVA' entrega las mercaderias en perfecto estado de conservacion y debidamente acondicionadas, con las especificaciones quimicas, fisicas, fitosanitarias, y demas, garantizadas por el fabricante, siendo el producto destinado a su utilizacion en terrenos agricolas que 'EL PRODUCTOR' explota. La operación financiada al día " + $F{fechaVto} + ", es de pesos " + $V{importePieTotal}.add($V{importeDetalleTotal}) + ", ajustada a valor dolar a la fecha de entrega de los granos especificados en la cláusula segunda. A los fines de la valuación de la factura antes mencionadas el valor del dolar considerado es de (u$s) " + $F{cotDolar}.toString() + " por unidad."]]></textFieldExpression>
+				<textFieldExpression><![CDATA["La entrega de los mismos se efectiviza en este acto, sirviendo el presente enunciado de nota de recepcion conforme, amplia y suficiente. 'LA COOPERATIVA' entrega las mercaderias en perfecto estado de conservacion y debidamente acondicionadas, con las especificaciones quimicas, fisicas, fitosanitarias, y demas, garantizadas por el fabricante, siendo el producto destinado a su utilizacion en terrenos agricolas que 'EL PRODUCTOR' explota. La operación financiada al día " + $F{fechaVto} + ", es de pesos " + $V{importeTotalFP} + ", ajustada a valor dolar a la fecha de entrega de los granos especificados en la cláusula segunda. A los fines de la valuación de la factura antes mencionadas el valor del dolar considerado es de (u$s) " + $F{cotDolar}.toString() + " por unidad."]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="-8" y="17" width="571" height="21" uuid="e2656229-45e4-49bb-a3cf-1e1fc3e3596b"/>
