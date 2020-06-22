@@ -1776,7 +1776,7 @@ public class GrabaComprobanteRest {
                     masterFormaPago.setPadronCodigo(factCab.getIdPadron());
                     masterFormaPago.setTipoComp(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdCteTipo())));
                     masterFormaPago.setMDetalle("CREDITO CTA CEREAL");
-                    masterFormaPago.setMCtacte("N");
+                    masterFormaPago.setMCtacte("S");
                     if (fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(2)) {
 
                         if (!objContratosCereales.getCerealCodigo().getCerealCodigo().isEmpty()) {
@@ -1837,7 +1837,7 @@ public class GrabaComprobanteRest {
                     masterFormaPago.setPadronCodigo(factCab.getIdPadron());
                     masterFormaPago.setTipoComp(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdCteTipo())));
                     masterFormaPago.setMDetalle("CREDITO CTACTE");
-                    masterFormaPago.setMCtacte("S");
+                    masterFormaPago.setMCtacte("N");
                     // Si es Compras a Cuenta Corriente busco la cuenta contable en la categoria del padron
                     if (fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(2)) {
                         CtacteCategoria ctacteCatego = ctaCteCategoriaFacade.getCategoriaByCodigo(pad.getPadronCatego());
@@ -2790,7 +2790,7 @@ public class GrabaComprobanteRest {
                     masterFormaPago.setPadronCodigo(factCab.getIdPadron());
 
                     masterFormaPago.setTipoComp(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getcTipoOperacion())));
-                    masterFormaPago.setMCtacte("N");
+                    masterFormaPago.setMCtacte("S");
                     // debe ir el signo negativo
                    
                      if (factCab.getDiferidoVto().equals(true)){
@@ -2852,7 +2852,7 @@ public class GrabaComprobanteRest {
                     masterFormaPago.setPadronCodigo(factCab.getIdPadron());
 
                     masterFormaPago.setTipoComp(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getcTipoOperacion())));
-                    masterFormaPago.setMCtacte("S");
+                    masterFormaPago.setMCtacte("N");
                     // debe ir el signo negativo
                     if (factCab.getDiferidoVto().equals(true)){
                          masterFormaPago.setMImporte((fp.getImporte().multiply(signo)).multiply(cotizacionDolar).setScale(2, RoundingMode.HALF_EVEN).doubleValue());
@@ -2903,14 +2903,14 @@ public class GrabaComprobanteRest {
                     
                     String numeroCompTemp = String.valueOf(factCab.getNumero());
                     String numeroComp = numeroCompTemp.substring(numeroCompTemp.length()- 8, numeroCompTemp.length());
-                    CanjesDocumentoSybase documentoCanje = new CanjesDocumentoSybase(factCab.getIdPadron(),factCab.getIdCteNumerador().getIdPtoVenta().getIdPtoVenta().shortValue(), Integer.parseInt(numeroComp));
+                   
+                    CanjesDocumentoSybase documentoCanje = new CanjesDocumentoSybase(factCab.getIdPadron(), (short) factCab.getIdCteNumerador().getIdPtoVenta().getPtoVenta(), Integer.parseInt(numeroComp));
                     System.out.println("Covierto a dolares: "+fp.getImporte()+" / "+factCab.getCotDolar()); 
                     documentoCanje.setImporte(fp.getImporte().divide(factCab.getCotDolar(), 2, RoundingMode.HALF_UP).doubleValue());
                    
                     // Non-terminating decimal expansion; no exact representable decimal result.
                     documentoCanje.setVencimiento(factCab.getFechaVto());
                     documentoCanje.setEmision(factCab.getFechaEmision());
-                    
                     documentoCanje.setCanje("S");
                     documentoCanje.setCereal(Short.parseShort(factCab.getCerealCanje().getCerealCodigo()));
                     documentoCanje.setCantidad(new BigDecimal(0));
