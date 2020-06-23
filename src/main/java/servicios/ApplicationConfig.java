@@ -64,6 +64,7 @@ public class ApplicationConfig extends Application {
         resources.add(servicios.ModeloImputacionRest.class);
         resources.add(servicios.NumeradorRest.class);
         resources.add(servicios.PadronRest.class);
+        resources.add(servicios.ParametrosCanjeRest.class);
         resources.add(servicios.PendientesCancelarRest.class);
         resources.add(servicios.PerfilRest.class);
         resources.add(servicios.ProductoRest.class);

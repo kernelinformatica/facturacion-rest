@@ -31,6 +31,8 @@ public class PendientesCancelarResponse implements Payload{
     private String codigoListaPrecio;
     private String letra;
     private Integer idFactDetalle;
+    private BigDecimal diferenciaPrecio;
+    private BigDecimal recargo;
 
     public PendientesCancelarResponse(String comprobante, String numero, BigDecimal original, BigDecimal pendiente, BigDecimal precio, BigDecimal dolar, String moneda, BigDecimal porCalc, BigDecimal ivaPorc, Integer deposito, Integer idFactDetalleImputa, Integer idFactCabImputada, BigDecimal descuento, String tipoDescuento, BigDecimal cantBultos, String despacho, String observaciones, Integer itemImputada,BigDecimal importe,Integer idListaPrecio, String codigoListaPrecio, String letra,Integer idFactDetalle, ProductoResponse p) {
         this.comprobante = comprobante;
@@ -57,6 +59,8 @@ public class PendientesCancelarResponse implements Payload{
         this.codigoListaPrecio = codigoListaPrecio;
         this.letra = letra;
         this.idFactDetalle = idFactDetalle;
+        this.diferenciaPrecio = BigDecimal.ZERO;
+        this.recargo = BigDecimal.ZERO;
     }
     public PendientesCancelarResponse(ProductoResponse p) {
         this.comprobante = "";
@@ -78,6 +82,7 @@ public class PendientesCancelarResponse implements Payload{
         this.observaciones = "";
         this.itemImputada = 0;
         this.producto = p;
+        this.diferenciaPrecio = BigDecimal.ZERO;
     }
 
 
@@ -275,6 +280,21 @@ public class PendientesCancelarResponse implements Payload{
     }
     
     
+    public BigDecimal getDiferenciaPrecio() {
+        return diferenciaPrecio;
+    }
+    
+    public void setDiferenciaPrecio(BigDecimal diferenciaPrecio) {
+        this.diferenciaPrecio = diferenciaPrecio;
+    }
+    
+    public BigDecimal getRecargo() {
+        return recargo;
+    }
+    
+    public void setRecargo(BigDecimal recargo) {
+        this.recargo = recargo;
+    }
     
 
     @Override
