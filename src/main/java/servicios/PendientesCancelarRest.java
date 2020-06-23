@@ -114,6 +114,7 @@ public class PendientesCancelarRest {
             Integer idListaPrecio = (Integer) Utils.getKeyFromJsonObject("idListaPrecio", jsonBody, "Integer");
             Integer modulo = (Integer) Utils.getKeyFromJsonObject("modulo", jsonBody, "Integer");
             String diferenciaFechas = (String) Utils.getKeyFromJsonObject("diferenciaFechas", jsonBody, "String");
+            String codigoCereal = (String) Utils.getKeyFromJsonObject("codigoCereal", jsonBody, "String");
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -243,17 +244,29 @@ public class PendientesCancelarRest {
                         LocalDate currentDate = LocalDate.now();
                         long daysBetween = Duration.between(currentDate.atStartOfDay(), vencimientoDate.atStartOfDay()).toDays();
                         Integer diasPorMedio = new Long(daysBetween).intValue();
-                        ParametrosCanjes params = parametrosCanjesFacade.findParametrosCanjes(2, 1);
+                        ParametrosCanjes params = parametrosCanjesFacade.findParametrosCanjes(2, codigoCereal);
                         Integer diasTotales = 0;
                         BigDecimal recargo = BigDecimal.ZERO;
-                        Integer diasLibres = new Short(params.getDiasLIbres()).intValue();
+                        Integer diasLibres = 0;
+                        if(params != null) {
+                            diasLibres = new Short(params.getDiasLIbres()).intValue();
+                        }
                         if(diasPorMedio > diasLibres) {
                             diasTotales = diasPorMedio - diasLibres;
-                            recargo = params.getInteresDiario().multiply(new BigDecimal(diasTotales));
+                            if(params != null) {
+                                recargo = params.getInteresDiario().multiply(new BigDecimal(diasTotales));
+                            }
+                            BigDecimal nuevoPrecio = BigDecimal.ZERO;
                             if(rs.getString("moneda").equals("u$s")) {
-                                pendientesCancelar.setPrecio(pendientesCancelar.getPrecio().add(pendientesCancelar.getPrecio().multiply(recargo).divide(new BigDecimal(100))));
+                                nuevoPrecio = pendientesCancelar.getPrecio().add(pendientesCancelar.getPrecio().multiply(recargo).divide(new BigDecimal(100)));
+                                pendientesCancelar.setDiferenciaPrecio(pendientesCancelar.getPrecio());
+                                pendientesCancelar.setPrecio(nuevoPrecio);
+                                pendientesCancelar.setRecargo(recargo);
                             } else {
-                                pendientesCancelar.setPrecio(pendientesCancelar.getPrecio().divide(rs.getBigDecimal("dolar"),2, RoundingMode.HALF_UP).add(pendientesCancelar.getPrecio().divide(rs.getBigDecimal("dolar"),2, RoundingMode.HALF_UP).multiply(recargo).divide(new BigDecimal(100))).multiply(rs.getBigDecimal("dolar")));
+                                nuevoPrecio = pendientesCancelar.getPrecio().divide(rs.getBigDecimal("dolar"),2, RoundingMode.HALF_UP).add(pendientesCancelar.getPrecio().divide(rs.getBigDecimal("dolar"),2, RoundingMode.HALF_UP).multiply(recargo).divide(new BigDecimal(100))).multiply(rs.getBigDecimal("dolar"));
+                                pendientesCancelar.setDiferenciaPrecio(pendientesCancelar.getPrecio());
+                                pendientesCancelar.setPrecio(nuevoPrecio);
+                                pendientesCancelar.setRecargo(recargo);
                             }
                         }
                     }
