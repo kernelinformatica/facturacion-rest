@@ -50,7 +50,7 @@ public class ParametrosCanjeRest {
     @Inject UsuarioFacade usuarioFacade;
     @Inject EmpresaFacade empresaFacade;
     
-    /*@GET
+    @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response getParametrosCanje(
@@ -125,7 +125,7 @@ public class ParametrosCanjeRest {
             Integer idEmpresa = (Integer) Utils.getKeyFromJsonObject("idEmpresa", jsonBody, "Integer");
             BigDecimal interesDiario = (BigDecimal) Utils.getKeyFromJsonObject("interesDiario", jsonBody, "BigDecimal");
             Integer diasLibres = (Integer) Utils.getKeyFromJsonObject("diasLibres", jsonBody, "Integer");
-            String ctaContableSisa = (String) Utils.getKeyFromJsonObject("idEmpresa", jsonBody, "String");
+            String ctaContableSisa = (String) Utils.getKeyFromJsonObject("ctaContableSisa", jsonBody, "String");
             String cerealCodigo = (String) Utils.getKeyFromJsonObject("cerealCodigo", jsonBody, "String");
             Integer idParametrosCanje = (Integer) Utils.getKeyFromJsonObject("idParametrosCanje", jsonBody, "Integer");
             
@@ -166,6 +166,11 @@ public class ParametrosCanjeRest {
             if(codigoFuncion == 1) {
                 Empresa empresa = empresaFacade.getEmpresaById(idEmpresa);
                 CanjesContratosCereales ccc = canjesContratosCerealesFacade.findCuentaPorCereal(empresa, cerealCodigo);
+                ParametrosCanjes checkExistente = parametrosCanjesFacade.findParametrosCanjes(idEmpresa, cerealCodigo);
+                if(checkExistente != null) {
+                    respuesta.setControl(AppCodigo.OK, "Un parámetro de canje para ese cereal ya existía previamente");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
                 ParametrosCanjes parametroCanje = new ParametrosCanjes();
                 parametroCanje.setCanjeCereal(ccc);
                 parametroCanje.setCtaContableSisa(ccc.getCtaContable());
@@ -183,7 +188,7 @@ public class ParametrosCanjeRest {
                 }
             } else if(codigoFuncion == 2) {
                 Empresa empresa = empresaFacade.getEmpresaById(idEmpresa);
-                ParametrosCanjes parametroCanje = parametrosCanjesFacade.findParametrosCanjes(empresa.getIdEmpresa(), idParametrosCanje);
+                ParametrosCanjes parametroCanje = parametrosCanjesFacade.findParametrosCanjesById(idParametrosCanje, empresa.getIdEmpresa());
                 if(parametroCanje == null) {
                     respuesta.setControl(AppCodigo.ERROR, "El parámetro de canje no existe");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
@@ -198,7 +203,7 @@ public class ParametrosCanjeRest {
                 }
             } else if(codigoFuncion == 3) {
                 Empresa empresa = empresaFacade.getEmpresaById(idEmpresa);
-                ParametrosCanjes parametroCanje = parametrosCanjesFacade.findParametrosCanjes(empresa.getIdEmpresa(), idParametrosCanje);
+                ParametrosCanjes parametroCanje = parametrosCanjesFacade.findParametrosCanjesById(idParametrosCanje, empresa.getIdEmpresa());
                 if(parametroCanje == null) {
                     respuesta.setControl(AppCodigo.ERROR, "El parámetro de canje no existe");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
@@ -227,5 +232,5 @@ public class ParametrosCanjeRest {
             respuesta.setControl(AppCodigo.ERROR, "Error al ejecutar la función");
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
         }
-    }*/
+    }
 }

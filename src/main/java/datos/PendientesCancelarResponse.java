@@ -33,6 +33,9 @@ public class PendientesCancelarResponse implements Payload{
     private Integer idFactDetalle;
     private BigDecimal diferenciaPrecio;
     private BigDecimal recargo;
+    private BigDecimal recargoTotal;
+    private Integer diasLibres;
+    private Integer diasResultantes;
 
     public PendientesCancelarResponse(String comprobante, String numero, BigDecimal original, BigDecimal pendiente, BigDecimal precio, BigDecimal dolar, String moneda, BigDecimal porCalc, BigDecimal ivaPorc, Integer deposito, Integer idFactDetalleImputa, Integer idFactCabImputada, BigDecimal descuento, String tipoDescuento, BigDecimal cantBultos, String despacho, String observaciones, Integer itemImputada,BigDecimal importe,Integer idListaPrecio, String codigoListaPrecio, String letra,Integer idFactDetalle, ProductoResponse p) {
         this.comprobante = comprobante;
@@ -61,6 +64,9 @@ public class PendientesCancelarResponse implements Payload{
         this.idFactDetalle = idFactDetalle;
         this.diferenciaPrecio = BigDecimal.ZERO;
         this.recargo = BigDecimal.ZERO;
+        this.recargoTotal = BigDecimal.ZERO;
+        this.diasLibres = 0;
+        this.diasResultantes = 0;
     }
     public PendientesCancelarResponse(ProductoResponse p) {
         this.comprobante = "";
@@ -83,6 +89,10 @@ public class PendientesCancelarResponse implements Payload{
         this.itemImputada = 0;
         this.producto = p;
         this.diferenciaPrecio = BigDecimal.ZERO;
+        this.recargo = BigDecimal.ZERO;
+        this.recargoTotal = BigDecimal.ZERO;
+        this.diasLibres = 0;
+        this.diasResultantes = 0;
     }
 
 
@@ -294,6 +304,30 @@ public class PendientesCancelarResponse implements Payload{
     
     public void setRecargo(BigDecimal recargo) {
         this.recargo = recargo;
+    }
+    
+    public BigDecimal getRecargoTotal() {
+        return recargoTotal;
+    }
+    
+    public void setRecargoTotal(BigDecimal recargoTotal) {
+        this.recargoTotal = recargoTotal;
+    }
+    
+    public Integer getDiasLibres() {
+        return diasLibres;
+    }
+    
+    public void setDiasLibres(Integer diasLibres) {
+        this.diasLibres = diasLibres;
+    }
+    
+    public Integer getDiasResultantes() {
+        return diasResultantes;
+    }
+    
+    public void setDiasResultantes(Integer diasResultantes) {
+        this.diasResultantes = diasResultantes;
     }
     
 

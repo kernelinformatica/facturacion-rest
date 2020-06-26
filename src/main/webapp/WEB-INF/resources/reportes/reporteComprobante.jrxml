@@ -38,6 +38,7 @@ FactCab.dolarizadoAlVto as dolarizadoAlVto,
 FactCab.interesMensualCompra as interesMensualCompra,
 FactCab.canjeInsumos as canjeInsumos,
 FactCab.tipoCambio as tipoCambio,
+FactCab.idCteTipo as idCteTipo,
 LPAD(SUBSTRING(FactCab.numeroAfip,1,length(FactCab.numeroAfip)-8),4,'0') as prefijoComprobanteAfip,
 SUBSTRING(FactCab.numeroAfip,-8) as numeroComprobanteAfip,
 FactDetalle.detalle as detalleProducto,
@@ -92,6 +93,7 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 	<field name="caiComprobante" class="java.lang.String"/>
 	<field name="fechaVencimientoComprobante" class="java.sql.Date"/>
 	<field name="codigoAfip" class="java.lang.Integer"/>
+	<field name="idCteTipo" class="java.lang.Integer"/>
 	<field name="descripcionCortaCteTipo" class="java.lang.String"/>
 	<field name="descripcionCteTipo" class="java.lang.String"/>
 	<field name="nombreEmpresa" class="java.lang.String"/>
@@ -634,6 +636,9 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 				</subreportParameter>
 				<subreportParameter name="cotDolar">
 					<subreportParameterExpression><![CDATA[$F{cotDolar}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="idCteTipo">
+					<subreportParameterExpression><![CDATA[$F{idCteTipo}]]></subreportParameterExpression>
 				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<returnValue subreportVariable="subTotal" toVariable="subTotal"/>
