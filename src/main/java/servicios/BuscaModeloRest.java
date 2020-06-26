@@ -92,6 +92,7 @@ public class BuscaModeloRest {
             Integer idSisTipoOperacion = (Integer) Utils.getKeyFromJsonObject("idSisTipoOperacion", jsonBody, "Integer");
             List<JsonElement> productos = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("productos", jsonBody, "ArrayList");
             Integer tipoComprobante = (Integer) Utils.getKeyFromJsonObject("tipoComprobante", jsonBody, "Integer");
+            BigDecimal porcentajeSisa = (BigDecimal) Utils.getKeyFromJsonObject("porcentajeSisa", jsonBody, "BigDecimal");
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -338,30 +339,45 @@ public class BuscaModeloRest {
                         //Busco percepciones de iva para el cliente de acuerdo a la tabla del sisa en venas solamente si es canje
                         } else if(p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(8).getTipo()) && idCliente != null && idSisTipoOperacion == 5) {
                             //Busco en la base Sybasse el CerealSisa
-                            CerealSisaSybase cerealSisa = cerealSisaFacade.getByCodPadron(idCliente);
-                            if(cerealSisa == null) {
-                                continue;
-                            }
-                            
                             if(tipoComprobante == null || tipoComprobante != 75) {
                                 continue;
                             }
-                            
-                            //Busco en la base Mysql el porcentaje de acuerdo al estado
-                            SisaPorcentaje sisaPorcentaje = sisaPorcentajeFacade.getByEstadoEmpresa(Integer.parseInt(cerealSisa.getEstado().toString()), user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
-                            if(sisaPorcentaje == null) {
-                                continue;
+                            if(porcentajeSisa == null) {
+                                CerealSisaSybase cerealSisa = cerealSisaFacade.getByCodPadron(idCliente);
+                                if(cerealSisa == null) {
+                                    continue;
+                                }
+
+
+
+                                //Busco en la base Mysql el porcentaje de acuerdo al estado
+                                SisaPorcentaje sisaPorcentaje = sisaPorcentajeFacade.getByEstadoEmpresa(Integer.parseInt(cerealSisa.getEstado().toString()), user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
+                                if(sisaPorcentaje == null) {
+                                    continue;
+                                }
+                                
+                                total = total.add(precio.multiply(cantidad));
+                                if(p.getValor().compareTo(BigDecimal.ZERO) == 0) {
+                                    porcentaje = sisaPorcentaje.getPercepIva();
+                                    total = total.multiply(porcentaje.divide(new BigDecimal(100)));
+                                } else {
+                                    porcentaje = p.getValor();
+                                    total = total.multiply(porcentaje.divide(cien));
+                                } 
+                            } else {
+                                total = total.add(precio.multiply(cantidad));
+                                if(p.getValor().compareTo(BigDecimal.ZERO) == 0) {
+                                    porcentaje = porcentajeSisa;
+                                    total = total.multiply(porcentaje.divide(new BigDecimal(100)));
+                                } else {
+                                    porcentaje = p.getValor();
+                                    total = total.multiply(porcentaje.divide(cien));
+                                } 
                             }
                             
+                            
                             //si el valor de modelodetalle es igual a 0 busco el valor del sisaPorcentaje
-                            total = total.add(precio.multiply(cantidad));
-                            if(p.getValor().compareTo(BigDecimal.ZERO) == 0) {
-                                porcentaje = sisaPorcentaje.getPercepIva();
-                                total = total.multiply(porcentaje.divide(new BigDecimal(100)));
-                            } else {
-                                porcentaje = p.getValor();
-                                total = total.multiply(porcentaje.divide(cien));
-                            } 
+                            
                              /*total = total.add(precio.multiply(cantidad));
                             porcentaje = p.getValor();
                                 total = total.multiply(porcentaje.divide(cien));*/

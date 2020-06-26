@@ -11,6 +11,7 @@
 	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
 	<parameter name="idFactCab" class="java.lang.Integer"/>
+	<parameter name="idCteTipo" class="java.lang.Integer"/>
 	<parameter name="bruto" class="java.math.BigDecimal">
 		<parameterDescription><![CDATA[]]></parameterDescription>
 	</parameter>
@@ -115,7 +116,7 @@ where FactPie.idFactCab = $P{idFactCab}]]>
 		</band>
 	</detail>
 	<summary>
-		<band height="15">
+		<band height="49">
 			<staticText>
 				<reportElement x="190" y="1" width="130" height="13" uuid="651d7992-c412-4ce9-8bb5-558259eaa4e1"/>
 				<textElement verticalAlignment="Top">
@@ -147,6 +148,13 @@ where FactPie.idFactCab = $P{idFactCab}]]>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[($P{moneda}.equals("u$s") ? $V{subTotal}.multiply($P{cotDolar}).setScale(2, java.math.RoundingMode.HALF_UP).add($P{bruto}.multiply($P{cotDolar}).setScale(2, java.math.RoundingMode.HALF_UP)) : $V{subTotal}.divide($P{cotDolar}, 2, RoundingMode.HALF_UP).add($P{bruto}.divide($P{cotDolar}, 2, RoundingMode.HALF_UP)))]]></textFieldExpression>
 			</textField>
+			<staticText>
+				<reportElement x="190" y="14" width="338" height="35" uuid="c92cc201-1fe1-4ac7-9283-8c41395f6da2">
+					<printWhenExpression><![CDATA[$P{idCteTipo} == 72]]></printWhenExpression>
+				</reportElement>
+				<text><![CDATA[Recibí conforme
+Firma:_______________________________________]]></text>
+			</staticText>
 		</band>
 	</summary>
 </jasperReport>

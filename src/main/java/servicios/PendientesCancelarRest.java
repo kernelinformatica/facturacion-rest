@@ -247,6 +247,7 @@ public class PendientesCancelarRest {
                         ParametrosCanjes params = parametrosCanjesFacade.findParametrosCanjes(2, codigoCereal);
                         Integer diasTotales = 0;
                         BigDecimal recargo = BigDecimal.ZERO;
+                        BigDecimal interesDiario = BigDecimal.ZERO;
                         Integer diasLibres = 0;
                         if(params != null) {
                             diasLibres = new Short(params.getDiasLIbres()).intValue();
@@ -254,27 +255,40 @@ public class PendientesCancelarRest {
                         if(diasPorMedio > diasLibres) {
                             diasTotales = diasPorMedio - diasLibres;
                             if(params != null) {
-                                recargo = params.getInteresDiario().multiply(new BigDecimal(diasTotales));
+                                interesDiario = params.getInteresDiario();
+                                recargo = interesDiario.multiply(new BigDecimal(diasTotales));
                             }
                             BigDecimal nuevoPrecio = BigDecimal.ZERO;
                             if(rs.getString("moneda").equals("u$s")) {
                                 nuevoPrecio = pendientesCancelar.getPrecio().add(pendientesCancelar.getPrecio().multiply(recargo).divide(new BigDecimal(100)));
                                 pendientesCancelar.setDiferenciaPrecio(pendientesCancelar.getPrecio());
+                                pendientesCancelar.setDiasLibres(diasLibres);
+                                pendientesCancelar.setDiasResultantes(diasTotales);
+                                pendientesCancelar.setRecargoTotal(recargo);
                                 pendientesCancelar.setPrecio(nuevoPrecio);
-                                pendientesCancelar.setRecargo(recargo);
+                                pendientesCancelar.setRecargo(interesDiario);
                             } else {
                                 nuevoPrecio = pendientesCancelar.getPrecio().divide(rs.getBigDecimal("dolar"),2, RoundingMode.HALF_UP).add(pendientesCancelar.getPrecio().divide(rs.getBigDecimal("dolar"),2, RoundingMode.HALF_UP).multiply(recargo).divide(new BigDecimal(100))).multiply(rs.getBigDecimal("dolar"));
                                 pendientesCancelar.setDiferenciaPrecio(pendientesCancelar.getPrecio());
+                                pendientesCancelar.setDiasLibres(diasLibres);
+                                pendientesCancelar.setDiasResultantes(diasTotales);
+                                pendientesCancelar.setRecargoTotal(recargo);
                                 pendientesCancelar.setPrecio(nuevoPrecio);
-                                pendientesCancelar.setRecargo(recargo);
+                                pendientesCancelar.setRecargo(interesDiario);
                             }
                         }
                     }
                     if(moneda.getDescripcion().equals("$AR") && rs.getString("moneda").equals("u$s")) {
                         pendientesCancelar.setPrecio(pendientesCancelar.getPrecio().multiply(rs.getBigDecimal("dolar")));
+                        if(pendientesCancelar.getDiferenciaPrecio() != null) {
+                            pendientesCancelar.setDiferenciaPrecio(pendientesCancelar.getDiferenciaPrecio().multiply(rs.getBigDecimal("dolar")));
+                        }
                         pendientesCancelar.setImporte(pendientesCancelar.getPrecio().multiply(pendientesCancelar.getPendiente()));
                     } else if((moneda.getDescripcion().equals("u$s") && rs.getString("moneda").equals("$AR"))) {
                         pendientesCancelar.setPrecio(pendientesCancelar.getPrecio().divide(rs.getBigDecimal("dolar"),2, RoundingMode.HALF_UP));
+                        if(pendientesCancelar.getDiferenciaPrecio() != null) {
+                            pendientesCancelar.setDiferenciaPrecio(pendientesCancelar.getDiferenciaPrecio().divide(rs.getBigDecimal("dolar"),2, RoundingMode.HALF_UP));
+                        }
                         pendientesCancelar.setImporte(pendientesCancelar.getPrecio().multiply(pendientesCancelar.getPendiente()));
                     }
                     pendientes.add(pendientesCancelar);
