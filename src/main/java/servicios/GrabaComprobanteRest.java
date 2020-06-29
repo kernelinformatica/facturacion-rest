@@ -1518,6 +1518,7 @@ public class GrabaComprobanteRest {
         //Seteo la fecha de hoy
         Calendar calendario = new GregorianCalendar();
         Date fechaHoy = calendario.getTime();
+        BigDecimal cotizacionDolar = new BigDecimal(1);
         //Busco el proximo numero del asiento
         Integer masAsiento = 0;
         Integer idMaster = masterFacade.findProximoByEmpresa(factCab.getIdCteTipo().getIdEmpresa());
@@ -1527,6 +1528,17 @@ public class GrabaComprobanteRest {
                 masAsiento = master.getMAsiento();
             }
         }
+        if (factCab.getIdCteTipo().getcTipoOperacion() < 17) {
+                // factura
+                if (factCab.getIdmoneda().getIdMoneda() > 1) {
+                    cotizacionDolar = factCab.getCotDolar();
+                    // System.out.println("ES EN DOLARES LA DEBO DE PESIFICAR (cotizacion: " + cotizacionDolar + ") ");
+                } else {
+                    cotizacionDolar = new BigDecimal(1);
+                }
+                System.out.println("COTIZACION DOLAR: " + cotizacionDolar);
+
+            }
         masAsiento = masAsiento + 1;
         //Contadores para los pases
         Integer paseDetalle = 1;
@@ -1552,13 +1564,23 @@ public class GrabaComprobanteRest {
                 if ((pad.getPadronApelli() + " " + pad.getPadronNombre()).length() > 30) {
                     masterDetalle.setMDetalle((pad.getPadronApelli() + " <>" + pad.getPadronNombre()).substring(0, 30));
                 } else {
-                    masterDetalle.setMDetalle(pad.getPadronApelli() + " > " + pad.getPadronNombre());
+                    masterDetalle.setMDetalle(pad.getPadronApelli() + " " + pad.getPadronNombre());
                 }
                 masterDetalle.setMFechaEmi(factCab.getFechaEmision());
-                masterDetalle.setMImporte(det.getImporte().multiply(signo));
+                
+                masterDetalle.setMImporte((det.getImporte().multiply(signo)).multiply(cotizacionDolar).setScale(2, RoundingMode.HALF_EVEN));
+                subTotal = subTotal.add((det.getImporte().multiply(signo)).multiply(cotizacionDolar).setScale(2, RoundingMode.HALF_EVEN));         
+                
                 masterDetalle.setMIngreso(factCab.getFechaConta());
                 masterDetalle.setMPase(Short.valueOf(Integer.toString(paseDetalle)));
-                masterDetalle.setMVence(factCab.getFechaVto());
+                
+                 //si es canje
+                if (factCab.getIdSisTipoOperacion().getIdSisTipoOperacion().equals(5) || factCab.getIdSisTipoOperacion().getIdSisModulos().getIdSisModulos().equals(2)) {
+                 masterDetalle.setMVence(factCab.getFechaEmision());
+                }else{
+                 masterDetalle.setMVence(factCab.getFechaVto());
+                }
+               
                 masterDetalle.setNroComp(factCab.getNumero());
                 masterDetalle.setPadronCodigo(factCab.getIdPadron());
                 masterDetalle.setPlanCuentas(det.getImputacion());
@@ -1579,7 +1601,7 @@ public class GrabaComprobanteRest {
                 masterDetalle.setMCtacte("N");
                 masterDetalle.setOperadorCodigo(user.getUsuario());
                 masterDetalle.setMAsientoRub(0);
-                subTotal = subTotal.add(det.getImporte().multiply(signo));
+             
                 boolean transaccionMasterDetalle;
                 transaccionMasterDetalle = masterFacade.setMasterNuevo(masterDetalle);
                 //si la trnsaccion fallo devuelvo el mensaje
@@ -1601,11 +1623,17 @@ public class GrabaComprobanteRest {
                 masterFormaPago.setIdEmpresa(factCab.getIdCteTipo().getIdEmpresa().getIdEmpresa());
                 masterFormaPago.setMAsiento(masAsiento);
                 masterFormaPago.setMFechaEmi(factCab.getFechaEmision());
-                masterFormaPago.setMImporte(fp.getImporte().multiply(signo).negate());
+                masterFormaPago.setMImporte((fp.getImporte().multiply(signo)).multiply(cotizacionDolar).setScale(2, RoundingMode.HALF_EVEN).negate());
+
                 masterFormaPago.setMIngreso(factCab.getFechaConta());
                 masterFormaPago.setMPase(Short.valueOf(Integer.toString(paseDetalle)));
                 
-                masterFormaPago.setMVence(factCab.getFechaVto());
+                 //si es canje
+                if (factCab.getIdSisTipoOperacion().getIdSisTipoOperacion().equals(5) || factCab.getIdSisTipoOperacion().getIdSisModulos().getIdSisModulos().equals(2)) {
+                 masterFormaPago.setMVence(factCab.getFechaEmision());
+                }else{
+                 masterFormaPago.setMVence(factCab.getFechaVto());
+                }
                 masterFormaPago.setNroComp(factCab.getNumero());
                 masterFormaPago.setPadronCodigo(factCab.getIdPadron());
 
@@ -1621,7 +1649,12 @@ public class GrabaComprobanteRest {
                     masterFormaPago.setPlanCuentas(fp.getCtaContable());
 
                 } else {
-                    masterFormaPago.setMDetalle(factCab.getIdCteTipo().getDescripcion() + " - U$S" + factCab.getCotDolar());
+                    if (factCab.getIdmoneda().getIdMoneda() > 1) {
+                        masterFormaPago.setMDetalle(factCab.getIdCteTipo().getDescripcion() + " | U$S" + factCab.getCotDolar());
+                    }else{
+                        masterFormaPago.setMDetalle(factCab.getIdCteTipo().getDescripcion() + " | Pesos");
+                    }
+                    
                     masterFormaPago.setMCtacte("S");
                     // Si es Compras a Cuenta Corriente busco la cuenta contable en la categoria del padron
                     if (fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(2)) {
@@ -1677,9 +1710,16 @@ public class GrabaComprobanteRest {
                 }
                 masterImputa.setMFechaEmi(factCab.getFechaEmision());
                 masterImputa.setMImporte(fi.getImporte().multiply(signo));
+                masterImputa.setMImporte((fi.getImporte().multiply(signo)).multiply(cotizacionDolar).setScale(2, RoundingMode.HALF_EVEN));
                 masterImputa.setMIngreso(factCab.getFechaConta());
                 masterImputa.setMPase(Short.valueOf(Integer.toString(paseDetalle)));
-                masterImputa.setMVence(factCab.getFechaVto());
+                 //si es canje
+                if (factCab.getIdSisTipoOperacion().getIdSisTipoOperacion().equals(5) || factCab.getIdSisTipoOperacion().getIdSisModulos().getIdSisModulos().equals(2)) {
+                 masterImputa.setMVence(factCab.getFechaEmision());
+                }else{
+                 masterImputa.setMVence(factCab.getFechaVto());
+                }
+                
                 masterImputa.setNroComp(factCab.getNumero());
                 masterImputa.setPadronCodigo(factCab.getIdPadron());
                 masterImputa.setPlanCuentas(fi.getCtaContable());
@@ -1721,32 +1761,7 @@ public class GrabaComprobanteRest {
             
              */
             if (factCab.getIdSisTipoOperacion().getIdSisTipoOperacion().equals(5) || factCab.getIdSisTipoOperacion().getIdSisModulos().getIdSisModulos().equals(2)) {
-                /* 
-                
-                 Master masterCanje_1 = new Master();
-                 ver donde me manda el cereal seleccionado en la pantalla de facturacion.
-                 buscar en CanjeContratosCereal la cuenta contable segunel cereal
-                
-                 se agregan 2 pases para revertir el valor de cuenta corriente y pasarlo a la cuenta contable del cereal correspondiente.
-                 La reversión total, acredita el importe total del comprobante en la cuenta corriente del cliente 
-                 y debita el importe en la cuenta contable cereal.
-                
-                 La reversión parcial, hace lo mismo pero utilizando el importe neto gravado de la factura, es decir no incluye impuestos.
-                
-                 En el ejemplo corresponde a los pases 1 al 7 de una factura de canje
-                 El sistema ademas de grabar el asiento convencional del comprobante debitando el total de la fac a CC
-                 genera 2 movimientos adicionales en pases 2 y 3 especificados en m_detalle como 'CREDITO'
-                 Acredita cuenta corriente y debita a la cuenta contable 111228 (según cereal) por el importe total debitado en CC en el pase 1
-                 Todo con la misma fecha m_ingreso y m_vence
-                
-                 Tambien Registrar el canje en Tabla: Documento
-
-                 ejemplo
-                 padron	punto	numero	importe	emision	vencimiento	canje	cereal	cosecha	cantidad	factura	dolar
-                 10378	37	21328	2927,79	20/12/2019	30/05/2020	S	23	-SOJA		99	59,81
-
-                 */
-
+               
                 // CANJE CREDITO PASE 1  MASTER
                 
                 for (FactFormaPago fp : factFormaPago) {
@@ -1762,16 +1777,22 @@ public class GrabaComprobanteRest {
                     masterFormaPago.setIdEmpresa(factCab.getIdCteTipo().getIdEmpresa().getIdEmpresa());
                     masterFormaPago.setMAsiento(masAsiento);
                     masterFormaPago.setMFechaEmi(factCab.getFechaEmision());
-                      
+                    
                    if(factCab.getDiferidoVto().equals(true)){
-                         masterFormaPago.setMImporte(fp.getImporte().multiply(signo).negate());
+                         masterFormaPago.setMImporte((fp.getImporte().multiply(signo).multiply(cotizacionDolar)).setScale(2, RoundingMode.HALF_EVEN));
+                         
                     }else{
-                        masterFormaPago.setMImporte(subTotal.multiply(signo).negate());
+                        masterFormaPago.setMImporte((subTotal.multiply(signo)).setScale(2, RoundingMode.HALF_EVEN));
                     }
                     // si la marca diferiere al vencimiento sn = TRUE informo el TOTAL, caso contrario el SUBTOTAL
                     masterFormaPago.setMIngreso(factCab.getFechaConta());
                     masterFormaPago.setMPase(Short.valueOf(Integer.toString(paseDetalle)));
-                    masterFormaPago.setMVence(factCab.getFechaVto());
+                     //si es canje
+                if (factCab.getIdSisTipoOperacion().getIdSisTipoOperacion().equals(5) || factCab.getIdSisTipoOperacion().getIdSisModulos().getIdSisModulos().equals(2)) {
+                 masterFormaPago.setMVence(factCab.getFechaEmision());
+                }else{
+                 masterFormaPago.setMVence(factCab.getFechaVto());
+                }
                     masterFormaPago.setNroComp(factCab.getNumero());
                     masterFormaPago.setPadronCodigo(factCab.getIdPadron());
                     masterFormaPago.setTipoComp(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdCteTipo())));
@@ -1825,14 +1846,20 @@ public class GrabaComprobanteRest {
                     masterFormaPago.setIdEmpresa(factCab.getIdCteTipo().getIdEmpresa().getIdEmpresa());
                     masterFormaPago.setMAsiento(masAsiento);
                     masterFormaPago.setMFechaEmi(factCab.getFechaEmision());
-                    if(factCab.getDiferidoVto().equals(true)){
-                      masterFormaPago.setMImporte(fp.getImporte().multiply(signo));
+                   if(factCab.getDiferidoVto().equals(true)){
+                         masterFormaPago.setMImporte((fp.getImporte().multiply(signo).multiply(cotizacionDolar)).setScale(2, RoundingMode.HALF_EVEN).negate());
+                         
                     }else{
-                        masterFormaPago.setMImporte(subTotal.multiply(signo));
+                        masterFormaPago.setMImporte((subTotal.multiply(signo)).setScale(2, RoundingMode.HALF_EVEN).negate());
                     }
                     masterFormaPago.setMIngreso(factCab.getFechaConta());
                     masterFormaPago.setMPase(Short.valueOf(Integer.toString(paseDetalle)));
-                    masterFormaPago.setMVence(factCab.getFechaVto());
+                     //si es canje
+                    if (factCab.getIdSisTipoOperacion().getIdSisTipoOperacion().equals(5) || factCab.getIdSisTipoOperacion().getIdSisModulos().getIdSisModulos().equals(2)) {
+                     masterFormaPago.setMVence(factCab.getFechaEmision());
+                    }else{
+                     masterFormaPago.setMVence(factCab.getFechaVto());
+                    }
                     masterFormaPago.setNroComp(factCab.getNumero());
                     masterFormaPago.setPadronCodigo(factCab.getIdPadron());
                     masterFormaPago.setTipoComp(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdCteTipo())));
@@ -1892,33 +1919,7 @@ public class GrabaComprobanteRest {
      Fin graba a Master
      A Continuacion ... Grabo  en fac_compras !!! STOCK
     
-     */
-    /* public Response contabilizaSybase(FactCab factCab, List<FactDetalle> factDetalle, List<FactFormaPago> factFormaPago, List<FactPie> factPie, Usuario user) {
-     ServicioResponse respuesta = new ServicioResponse();
-     Response respGrabarMasterSybase = this.grabarMasterSybase(factCab, factDetalle, factFormaPago, factPie, user);
-     if (respGrabarMasterSybase.getStatusInfo().equals(Response.Status.CREATED) || respGrabarMasterSybase.getStatusInfo().equals(Response.Status.BAD_REQUEST)) {
-     Response respGrabarFactComprasSybase =  grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
-                        
-     if (respGrabarFactComprasSybase.getStatusInfo().equals(Response.Status.CREATED) || respGrabarMasterSybase.getStatusInfo().equals(Response.Status.BAD_REQUEST)) {
-     Response respGrabarFactCompras = this.grabarFactCompras(factCab, factDetalle, factFormaPago, factPie, user);
-                           
-     }else{
-     respuesta.setControl(AppCodigo.ERROR, "Facturación Master Sybase: No se ha podido pasar la información a la contabilidad central, contacte con el administrador del Sistema. "+respGrabarFactComprasSybase.getStatusInfo());
-     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-     }
-                        
-     }else{
-     respuesta.setControl(AppCodigo.ERROR, "Facturación Compras Sybase: No se ha podido pasar la información a la administración central, contacte con el administrador del Sistema."+respGrabarMasterSybase.getStatusInfo());
-     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-     }
-     System.out.println("::::::::: FIN  ----------------------> contabilizaSybase() "  + factCab.getNumero()+" | Respuesta Sybase: ");
-        
-     
-     respuesta.setControl(AppCodigo.CREADO, "Comprobante contabilizado con exito en Sybase");
-     return Response.status(Response.Status.CREATED).entity(respuesta.toJson()).build();
-        
-             
-     }*/
+    */
     public Boolean grabarFactCompras(FactCab factCab, List<FactDetalle> factDetalle, List<FactFormaPago> factFormaPago, List<FactPie> factPie, Usuario user) {
         System.out.println("::::::::: Ejecuta ----------------------> FacCompras() ");
         ServicioResponse respuesta = new ServicioResponse();
@@ -2623,10 +2624,18 @@ public class GrabaComprobanteRest {
                 masterDetalle.setFechayhora(fechaHoy);
                 masterDetalle.setMDetalle(detalleCorto);
                 masterDetalle.setMFechaEmi(factCab.getFechaEmision());
+                
+                 //si es canje
+                if (factCab.getIdSisTipoOperacion().getIdSisTipoOperacion().equals(5) || factCab.getIdSisTipoOperacion().getIdSisModulos().getIdSisModulos().equals(2)) {
+                 masterDetalle.setMVence(factCab.getFechaEmision());
+                }else{
+                 masterDetalle.setMVence(factCab.getFechaVto());
+                }
+                
                 masterDetalle.setMImporte((det.getImporte().multiply(signo)).multiply(cotizacionDolar).setScale(2, RoundingMode.HALF_EVEN).doubleValue());
                 subTotal = subTotal.add((det.getImporte().multiply(signo)).multiply(cotizacionDolar).setScale(2, RoundingMode.HALF_EVEN));    
                
-                masterDetalle.setMVence(factCab.getFechaVto());
+               
                 masterDetalle.setNroComp(factCab.getNumero());
                 masterDetalle.setPadronCodigo(factCab.getIdPadron());
                 masterDetalle.setPlanCuentas(Integer.parseInt(det.getImputacion()));
@@ -2662,8 +2671,12 @@ public class GrabaComprobanteRest {
                 masterFormaPago.setFechayhora(fechaHoy);
 
                 masterFormaPago.setMFechaEmi(factCab.getFechaEmision());
-
-                masterFormaPago.setMVence(factCab.getFechaVto());
+                //si es canje
+                if (factCab.getIdSisTipoOperacion().getIdSisTipoOperacion().equals(5) || factCab.getIdSisTipoOperacion().getIdSisModulos().getIdSisModulos().equals(2)) {
+                 masterFormaPago.setMVence(factCab.getFechaEmision());
+                }else{
+                 masterFormaPago.setMVence(factCab.getFechaVto());
+                }
                 masterFormaPago.setNroComp(factCab.getNumero());
                 masterFormaPago.setPadronCodigo(factCab.getIdPadron());
 
@@ -2683,7 +2696,13 @@ public class GrabaComprobanteRest {
                     masterFormaPago.setMCtacte("S");
                     // debe ir el signo negativo
                     masterFormaPago.setMImporte((fp.getImporte().multiply(signo)).multiply(cotizacionDolar).setScale(2, RoundingMode.HALF_EVEN).doubleValue() * -1);
-                    masterFormaPago.setMDetalle(factCab.getIdCteTipo().getDescripcion() + " - U$S" + factCab.getCotDolar());
+                   
+                      if (factCab.getIdmoneda().getIdMoneda() > 1) {
+                             masterFormaPago.setMDetalle(factCab.getIdCteTipo().getDescripcion() + " | U$S " + factCab.getCotDolar());
+                        } else {
+                            masterFormaPago.setMDetalle(factCab.getIdCteTipo().getDescripcion() + " | Pesos "); 
+                        }
+                   
                     // Si es Compras a Cuenta Corriente busco la cuenta contable en la categoria del padron
                     if (fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(2)) {
                         CtacteCategoria ctacteCatego = ctaCteCategoriaFacade.getCategoriaByCodigo(pad.getPadronCatego());
@@ -2733,9 +2752,14 @@ public class GrabaComprobanteRest {
                     masterImputa.setMDetalle(pad.getPadronApelli() + " " + pad.getPadronNombre());
                 }
                 masterImputa.setMFechaEmi(factCab.getFechaEmision());
-
+                //si es canje
+                if (factCab.getIdSisTipoOperacion().getIdSisTipoOperacion().equals(5) || factCab.getIdSisTipoOperacion().getIdSisModulos().getIdSisModulos().equals(2)) {
+                    masterImputa.setMVence(factCab.getFechaEmision());
+                }else{
+                     masterImputa.setMVence(factCab.getFechaVto());
+                 }
                 masterImputa.setMImporte((fi.getImporte().multiply(signo)).multiply(cotizacionDolar).setScale(2, RoundingMode.HALF_EVEN).doubleValue());
-                masterImputa.setMVence(factCab.getFechaVto());
+                
                 masterImputa.setNroComp(factCab.getNumero());
                 masterImputa.setPadronCodigo(factCab.getIdPadron());
                 masterImputa.setPlanCuentas(Integer.parseInt(fi.getCtaContable()));
@@ -2784,8 +2808,7 @@ public class GrabaComprobanteRest {
                     masterFormaPago.setFechayhora(fechaHoy);
 
                     masterFormaPago.setMFechaEmi(factCab.getFechaEmision());
-
-                    masterFormaPago.setMVence(factCab.getFechaVto());
+                    masterFormaPago.setMVence(factCab.getFechaEmision());
                     masterFormaPago.setNroComp(factCab.getNumero());
                     masterFormaPago.setPadronCodigo(factCab.getIdPadron());
 
@@ -2794,9 +2817,9 @@ public class GrabaComprobanteRest {
                     // debe ir el signo negativo
                    
                      if (factCab.getDiferidoVto().equals(true)){
-                         masterFormaPago.setMImporte((fp.getImporte().multiply(signo)).multiply(cotizacionDolar).setScale(2, RoundingMode.HALF_EVEN).doubleValue() * -1 );
+                         masterFormaPago.setMImporte((fp.getImporte().multiply(signo).multiply(cotizacionDolar)).setScale(2, RoundingMode.HALF_EVEN).doubleValue() * -1 );
                     }else{
-                        masterFormaPago.setMImporte((subTotal.multiply(signo)).multiply(cotizacionDolar).setScale(2, RoundingMode.HALF_EVEN).doubleValue() * -1 );
+                        masterFormaPago.setMImporte((subTotal.multiply(signo)).setScale(2, RoundingMode.HALF_EVEN).doubleValue() * -1 );
                     
                     }
                     masterFormaPago.setMDetalle("CREDITO CEREALES");
@@ -2847,7 +2870,7 @@ public class GrabaComprobanteRest {
 
                     masterFormaPago.setMFechaEmi(factCab.getFechaEmision());
 
-                    masterFormaPago.setMVence(factCab.getFechaVto());
+                    masterFormaPago.setMVence(factCab.getFechaEmision());
                     masterFormaPago.setNroComp(factCab.getNumero());
                     masterFormaPago.setPadronCodigo(factCab.getIdPadron());
 
@@ -2855,9 +2878,9 @@ public class GrabaComprobanteRest {
                     masterFormaPago.setMCtacte("N");
                     // debe ir el signo negativo
                     if (factCab.getDiferidoVto().equals(true)){
-                         masterFormaPago.setMImporte((fp.getImporte().multiply(signo)).multiply(cotizacionDolar).setScale(2, RoundingMode.HALF_EVEN).doubleValue());
+                         masterFormaPago.setMImporte((fp.getImporte().multiply(signo).multiply(cotizacionDolar)).setScale(2, RoundingMode.HALF_EVEN).doubleValue());
                     }else{
-                        masterFormaPago.setMImporte((subTotal.multiply(signo)).multiply(cotizacionDolar).setScale(2, RoundingMode.HALF_EVEN).doubleValue() );
+                        masterFormaPago.setMImporte((subTotal.multiply(signo)).setScale(2, RoundingMode.HALF_EVEN).doubleValue() );
                     
                     }
                     masterFormaPago.setMDetalle("CREDITO CTACTE");
@@ -2896,7 +2919,7 @@ public class GrabaComprobanteRest {
                     }
                    
                 }
-               // ACA NO GRABA DOCUMENTO
+               //  GRABA TABLA DOCUMENTO SYBASE
                 // dario
                for (FactFormaPago fp : factFormaPago) {
                    System.out.println(paseDetalle + "::::::::: DOCUMENTO SYBASE  ----------------------> grabaDocumentoSybase()-> Forma pago: setMImporte: " + fp.getImporte().multiply(signo).multiply(cotizacionDolar).setScale(2, RoundingMode.HALF_EVEN).doubleValue());
@@ -2905,8 +2928,13 @@ public class GrabaComprobanteRest {
                     String numeroComp = numeroCompTemp.substring(numeroCompTemp.length()- 8, numeroCompTemp.length());
                    
                     CanjesDocumentoSybase documentoCanje = new CanjesDocumentoSybase(factCab.getIdPadron(), (short) factCab.getIdCteNumerador().getIdPtoVenta().getPtoVenta(), Integer.parseInt(numeroComp));
-                    System.out.println("Covierto a dolares: "+fp.getImporte()+" / "+factCab.getCotDolar()); 
-                    documentoCanje.setImporte(fp.getImporte().divide(factCab.getCotDolar(), 2, RoundingMode.HALF_UP).doubleValue());
+                    if (factCab.getIdmoneda().getIdMoneda() > 1) {
+                     documentoCanje.setImporte(fp.getImporte().doubleValue());
+                    }else{
+                     documentoCanje.setImporte(fp.getImporte().doubleValue());
+                    
+                    }                   
+//documentoCanje.setImporte(fp.getImporte().divide(factCab.getCotDolar(), 2, RoundingMode.HALF_UP).doubleValue());
                    
                     // Non-terminating decimal expansion; no exact representable decimal result.
                     documentoCanje.setVencimiento(factCab.getFechaVto());
