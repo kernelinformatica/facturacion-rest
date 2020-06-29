@@ -27,6 +27,7 @@ ZTgxYTs=]]>
 	`dbFacturacion`.`FactCab`.`fechaEmision` AS fechaEmision,
 	`dbFacturacion`.`FactCab`.`idPadron` AS padronNro,
 	`dbFacturacion`.`FactCab`.`numeroAfip` AS numeroAfip,
+	`dbFacturacion`.`FactCab`.`idMoneda` AS idMoneda,
 	`dbFacturacion`.`Cereal`.`nombre` AS nombreCereal,
 	`dbFacturacion`.`FactFormaPago`.importe AS importeFacFP
 	FROM `dbFacturacion`.`FactCab`
@@ -100,6 +101,10 @@ ZTgxYTs=]]>
 	</field>
 	<field name="padronNro" class="java.lang.Integer">
 		<property name="com.jaspersoft.studio.field.label" value="padronNro"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="FactCab"/>
+	</field>
+	<field name="idMoneda" class="java.lang.Integer">
+		<property name="com.jaspersoft.studio.field.label" value="idMoneda"/>
 		<property name="com.jaspersoft.studio.field.tree.path" value="FactCab"/>
 	</field>
 	<field name="numeroAfip" class="java.math.BigDecimal">
@@ -218,7 +223,7 @@ Aclaración de Firma]]></text>
 				<textElement textAlignment="Justified">
 					<font size="9"/>
 				</textElement>
-				<textFieldExpression><![CDATA["TERCERA: En garantía de las obligaciones contraídas por 'EL PRODUCTOR' en virtud del presente, en este acto suscribe un Pagaré, de u$s " + $V{importeTotalFP}.divide($F{cotDolar}, 2, RoundingMode.HALF_UP) + " con vencimiento el " + new SimpleDateFormat("dd/MM/yyyy").format($F{fechaVto}) + ". En caso de incumplimiento total o parcial, de cualquiera de las claúsulas, rescisión o resolución del presente, por cualquier causa, 'EL PRODUCTOR' sin perjuicio de las demás acciones que pudieran corresponder, autoriza expresamente a 'LA COOPERATIVA', a proceder al cobro judicial del mismo."]]></textFieldExpression>
+				<textFieldExpression><![CDATA["TERCERA: En garantía de las obligaciones contraídas por 'EL PRODUCTOR' en virtud del presente, en este acto suscribe un Pagaré, de u$s " + ($F{idMoneda} == 1 ? $V{importeTotalFP}.divide($F{cotDolar}, 2, RoundingMode.HALF_UP) : $V{importeTotalFP}) + " con vencimiento el " + new SimpleDateFormat("dd/MM/yyyy").format($F{fechaVto}) + ". En caso de incumplimiento total o parcial, de cualquiera de las claúsulas, rescisión o resolución del presente, por cualquier causa, 'EL PRODUCTOR' sin perjuicio de las demás acciones que pudieran corresponder, autoriza expresamente a 'LA COOPERATIVA', a proceder al cobro judicial del mismo."]]></textFieldExpression>
 				<patternExpression><![CDATA["dd/mm/yyyy"]]></patternExpression>
 			</textField>
 			<staticText>
@@ -263,7 +268,7 @@ Aclaración de Firma]]></text>
 				<textElement textAlignment="Justified">
 					<font size="9"/>
 				</textElement>
-				<textFieldExpression><![CDATA["La entrega de los mismos se efectiviza en este acto, sirviendo el presente enunciado de nota de recepcion conforme, amplia y suficiente. 'LA COOPERATIVA' entrega las mercaderias en perfecto estado de conservacion y debidamente acondicionadas, con las especificaciones quimicas, fisicas, fitosanitarias, y demas, garantizadas por el fabricante, siendo el producto destinado a su utilizacion en terrenos agricolas que 'EL PRODUCTOR' explota. La operación financiada al día " + new SimpleDateFormat("dd/MM/yyyy").format($F{fechaVto}) + ", es de pesos " + $V{importeTotalFP} + ", ajustada a valor dolar a la fecha de entrega de los granos especificados en la cláusula segunda. A los fines de la valuación de la factura antes mencionadas el valor del dolar considerado es de (u$s) " + $F{cotDolar}.toString() + " por unidad."]]></textFieldExpression>
+				<textFieldExpression><![CDATA["La entrega de los mismos se efectiviza en este acto, sirviendo el presente enunciado de nota de recepcion conforme, amplia y suficiente. 'LA COOPERATIVA' entrega las mercaderias en perfecto estado de conservacion y debidamente acondicionadas, con las especificaciones quimicas, fisicas, fitosanitarias, y demas, garantizadas por el fabricante, siendo el producto destinado a su utilizacion en terrenos agricolas que 'EL PRODUCTOR' explota. La operación financiada al día " + new SimpleDateFormat("dd/MM/yyyy").format($F{fechaVto}) + ", es de pesos " + ($F{idMoneda} == 1 ? $V{importeTotalFP} : $V{importeTotalFP}.multiply($F{cotDolar}).setScale(2, RoundingMode.HALF_UP)) + ", ajustada a valor dolar a la fecha de entrega de los granos especificados en la cláusula segunda. A los fines de la valuación de la factura antes mencionadas el valor del dolar considerado es de (u$s) " + $F{cotDolar}.toString() + " por unidad."]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="-8" y="17" width="571" height="21" uuid="e2656229-45e4-49bb-a3cf-1e1fc3e3596b"/>

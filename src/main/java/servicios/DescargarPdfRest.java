@@ -228,7 +228,7 @@ public class DescargarPdfRest extends HttpServlet {
             //se divide el numero 0000000,00 -> entero y decimal
             String Num[] = numero.split(",");
             //de da formato al numero decimal
-            parte_decimal = "C/" + Num[1] + " CENTAVOS";
+            parte_decimal = " C/" + Num[1] + " CENTAVOS";
             //se convierte el numero a literal
             if (Integer.parseInt(Num[0]) == 0) {//si el valor es cero
                 literal = "cero ";

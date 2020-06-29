@@ -844,7 +844,7 @@ public class GrabaComprobanteRest {
                             SisCotDolar sisCotDolar = sisCotDolarFacade.getLastCotizacion();
                             precio = precio.divide(sisCotDolar.getCotizacion(), 2, RoundingMode.HALF_UP);
                         }
-                        if ((precio.compareTo(det.getAuxListaPrecioDet().getCotaInf()) < 0
+                        if (factCab.getIdSisTipoOperacion().getIdSisTipoOperacion() != 5 && (precio.compareTo(det.getAuxListaPrecioDet().getCotaInf()) < 0
                                 || precio.compareTo(det.getAuxListaPrecioDet().getCotaSup()) > 0)
                                 && precio.compareTo(BigDecimal.ZERO) != 0) {
                             detallesCotas.add(det);
@@ -924,7 +924,7 @@ public class GrabaComprobanteRest {
                             System.out.println("Error al llevar el importe, venia en 0, "+descripcionPie);
                         }
                         //Pregunto por los que no pueden ser Null
-                        if (cuenta == null || descripcionPie == null || importe == null || totalComprobante == null || idSisTipoModelo == null) {
+                        if (cuenta == null || descripcionPie == null || totalComprobante == null || idSisTipoModelo == null) {
                             respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el pie de la factura, algun campo de la grilla es nulo");
                             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                         }

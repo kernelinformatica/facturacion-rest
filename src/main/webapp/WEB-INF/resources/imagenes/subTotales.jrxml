@@ -153,6 +153,7 @@ where FactPie.idFactCab = $P{idFactCab}]]>
 					<printWhenExpression><![CDATA[$P{idCteTipo} == 72]]></printWhenExpression>
 				</reportElement>
 				<text><![CDATA[Recibí conforme
+
 Firma:_______________________________________]]></text>
 			</staticText>
 		</band>

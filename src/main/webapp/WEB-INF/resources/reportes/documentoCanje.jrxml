@@ -18,7 +18,8 @@
 	`dbFacturacion`.`FactCab`.`fechaEmision` AS fechaEmision,
 	`dbFacturacion`.`FactCab`.`idPadron` AS padron,
 	`dbFacturacion`.`FactCab`.`numeroAfip` AS numeroAfip,
-	`dbFacturacion`.`FactCab`.`cotDolar` AS cotDolar
+	`dbFacturacion`.`FactCab`.`cotDolar` AS cotDolar,
+	`dbFacturacion`.`FactCab`.`idMoneda` AS idMoneda
 FROM `dbFacturacion`.`FactCab`
 	INNER JOIN `dbFacturacion`.`FactFormaPago` ON 
 	 `dbFacturacion`.`FactFormaPago`.`idFactCab` = `dbFacturacion`.`FactCab`.`idFactCab` 
@@ -62,6 +63,10 @@ FROM `dbFacturacion`.`FactCab`
 		<property name="com.jaspersoft.studio.field.label" value="padron"/>
 		<property name="com.jaspersoft.studio.field.tree.path" value="FactCab"/>
 	</field>
+	<field name="idMoneda" class="java.lang.Integer">
+		<property name="com.jaspersoft.studio.field.label" value="idMoneda"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="FactCab"/>
+	</field>
 	<field name="numeroAfip" class="java.math.BigDecimal">
 		<property name="com.jaspersoft.studio.field.label" value="numeroAfip"/>
 		<property name="com.jaspersoft.studio.field.tree.path" value="FactCab"/>
@@ -85,7 +90,7 @@ FROM `dbFacturacion`.`FactCab`
 				<box>
 					<bottomPen lineWidth="1.0"/>
 				</box>
-				<textFieldExpression><![CDATA["POR U$S: " + $V{importeTotal}.divide($F{cotDolar}, 2, RoundingMode.HALF_UP)]]></textFieldExpression>
+				<textFieldExpression><![CDATA["POR U$S: " + ($F{idMoneda} == 1 ? $V{importeTotal}.divide($F{cotDolar}, 2, RoundingMode.HALF_UP) : $V{importeTotal})]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="380" y="40" width="181" height="21" uuid="0beec2e0-b45e-4026-8ce3-7d73f3fdb0e1"/>
@@ -189,7 +194,7 @@ FROM `dbFacturacion`.`FactCab`
 				<box>
 					<bottomPen lineWidth="1.0"/>
 				</box>
-				<textFieldExpression><![CDATA["POR U$S: " + $V{importeTotal}.divide($F{cotDolar}, 2, RoundingMode.HALF_UP)]]></textFieldExpression>
+				<textFieldExpression><![CDATA["POR U$S: " + ($F{idMoneda} == 1 ? $V{importeTotal}.divide($F{cotDolar}, 2, RoundingMode.HALF_UP) : $V{importeTotal})]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="385" y="310" width="181" height="21" uuid="d2e9ca87-1afc-4c3c-b682-2a4601190d11"/>
@@ -273,7 +278,7 @@ FROM `dbFacturacion`.`FactCab`
 				<box>
 					<bottomPen lineWidth="1.0"/>
 				</box>
-				<textFieldExpression><![CDATA["POR U$S: " + $V{importeTotal}.divide($F{cotDolar}, 2, RoundingMode.HALF_UP)]]></textFieldExpression>
+				<textFieldExpression><![CDATA["POR U$S: " + ($F{idMoneda} == 1 ? $V{importeTotal}.divide($F{cotDolar}, 2, RoundingMode.HALF_UP) : $V{importeTotal})]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="385" y="580" width="181" height="21" uuid="b90035cc-029b-49e7-8833-dfb9e42cf23f"/>
