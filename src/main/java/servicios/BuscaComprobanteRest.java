@@ -35,7 +35,7 @@ import utils.Utils;
 
 /**
  *
- * @author FrancoSili
+ * @author Kernel Informatica
  */
 @Stateless
 @Path("buscaComprobantes")
