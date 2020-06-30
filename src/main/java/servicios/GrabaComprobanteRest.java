@@ -1536,7 +1536,7 @@ public class GrabaComprobanteRest {
                 } else {
                     cotizacionDolar = new BigDecimal(1);
                 }
-                System.out.println("COTIZACION DOLAR: " + cotizacionDolar);
+                
 
             }
         masAsiento = masAsiento + 1;
@@ -1758,9 +1758,9 @@ public class GrabaComprobanteRest {
              CANJE: 
              SI ES VENTAS Y ES CANJE
                 
-            
+            si es canjeInsumos es true y si tipo operacion 5 y modulo ventas = 2
              */
-            if (factCab.getIdSisTipoOperacion().getIdSisTipoOperacion().equals(5) || factCab.getIdSisTipoOperacion().getIdSisModulos().getIdSisModulos().equals(2)) {
+            if (factCab.getIdSisTipoOperacion().getIdSisTipoOperacion().equals(5) && factCab.getIdSisTipoOperacion().getIdSisModulos().getIdSisModulos().equals(2) ) {
                
                 // CANJE CREDITO PASE 1  MASTER
                 
@@ -2796,7 +2796,7 @@ public class GrabaComprobanteRest {
                 
             
              */
-            if (factCab.getIdSisTipoOperacion().getIdSisTipoOperacion().equals(5) || factCab.getIdSisTipoOperacion().getIdSisModulos().getIdSisModulos().equals(2)) {
+            if (factCab.getIdSisTipoOperacion().getIdSisTipoOperacion().equals(5) && factCab.getIdSisTipoOperacion().getIdSisModulos().getIdSisModulos().equals(2)) {
 
                 // CANJE CREDITO PASE 1 MASTER SYBASE
                 for (FactFormaPago fp : factFormaPago) {
@@ -2929,13 +2929,12 @@ public class GrabaComprobanteRest {
                    
                     CanjesDocumentoSybase documentoCanje = new CanjesDocumentoSybase(factCab.getIdPadron(), (short) factCab.getIdCteNumerador().getIdPtoVenta().getPtoVenta(), Integer.parseInt(numeroComp));
                     if (factCab.getIdmoneda().getIdMoneda() > 1) {
-                     documentoCanje.setImporte(fp.getImporte().doubleValue());
+                      documentoCanje.setImporte(fp.getImporte().doubleValue());
                     }else{
-                     documentoCanje.setImporte(fp.getImporte().doubleValue());
-                    
+                      documentoCanje.setImporte((fp.getImporte().divide(factCab.getCotDolar(), 2, RoundingMode.HALF_UP).doubleValue()));
+                  
+                     //documentoCanje.setImporte((fp.getImporte().multiply(signo)).divide(factCab.getCotDolar()).setScale(2, RoundingMode.HALF_EVEN).doubleValue());
                     }                   
-//documentoCanje.setImporte(fp.getImporte().divide(factCab.getCotDolar(), 2, RoundingMode.HALF_UP).doubleValue());
-                   
                     // Non-terminating decimal expansion; no exact representable decimal result.
                     documentoCanje.setVencimiento(factCab.getFechaVto());
                     documentoCanje.setEmision(factCab.getFechaEmision());
