@@ -163,13 +163,17 @@ public class CanjesContratosCerealesRest {
                 Empresa empresa = empresaFacade.getEmpresaById(idEmpresa);
                 CanjesContratosCereales ccc = canjesContratosCerealesFacade.findCuentaPorCereal(empresa, cerealCodigo);
                 if(ccc != null) {
-                    respuesta.setControl(AppCodigo.OK, "Ya existe una cuenta contable asociada a ese cereal");
+                    respuesta.setControl(AppCodigo.ERROR, "Ya existe una cuenta contable asociada a ese cereal");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
                 CanjesContratosCereales canjesContratosCereales = new CanjesContratosCereales();
                 Cereales cereal = cerealesFacade.findCerealPorCodigo(cerealCodigo);
                 if(cereal == null) {
-                    respuesta.setControl(AppCodigo.OK, "No existe el cereal");
+                    respuesta.setControl(AppCodigo.ERROR, "No existe el cereal");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                if(ctaContable == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Ingrese un número de cuenta contable válido");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
                 canjesContratosCereales.setCerealCodigo(cereal);
@@ -199,6 +203,7 @@ public class CanjesContratosCerealesRest {
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
             } else if(codigoFuncion == 3) {
+                Empresa empresa = empresaFacade.getEmpresaById(idEmpresa);
                 CanjesContratosCereales ccc = canjesContratosCerealesFacade.findById(idCanjeContratoCereal);
                 if(ccc == null) {
                     respuesta.setControl(AppCodigo.ERROR, "La relación de cereal y cuenta contable no existe");
@@ -206,7 +211,16 @@ public class CanjesContratosCerealesRest {
                 }
                 Cereales cereal = cerealesFacade.findCerealPorCodigo(cerealCodigo);
                 if(cereal == null) {
-                    respuesta.setControl(AppCodigo.OK, "No existe el cereal");
+                    respuesta.setControl(AppCodigo.ERROR, "No existe el cereal");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                CanjesContratosCereales existeRelacion = canjesContratosCerealesFacade.findCuentaPorCereal(empresa, cereal.getCerealCodigo());
+                if(existeRelacion != null && existeRelacion.getIdCanjeContratoCereal() != ccc.getIdCanjeContratoCereal()) {
+                    respuesta.setControl(AppCodigo.ERROR, "Ese cereal tiene una relaciòn preexistente");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                if(ctaContable == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Ingrese un número de cuenta contable válido");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
                 ccc.setCerealCodigo(cereal);

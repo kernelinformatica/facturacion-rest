@@ -168,14 +168,26 @@ public class ParametrosCanjeRest {
                 CanjesContratosCereales ccc = canjesContratosCerealesFacade.findCuentaPorCereal(empresa, cerealCodigo);
                 ParametrosCanjes checkExistente = parametrosCanjesFacade.findParametrosCanjes(idEmpresa, cerealCodigo);
                 if(checkExistente != null) {
-                    respuesta.setControl(AppCodigo.OK, "Un parámetro de canje para ese cereal ya existía previamente");
+                    respuesta.setControl(AppCodigo.ERROR, "Un parámetro de canje para ese cereal ya existía previamente");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
                 ParametrosCanjes parametroCanje = new ParametrosCanjes();
+                if(ccc == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "El cereal elegido no tiene una cuenta contable relacionada");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
                 parametroCanje.setCanjeCereal(ccc);
                 parametroCanje.setCtaContableSisa(ccc.getCtaContable());
+                if(diasLibres == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Ingrese un numero de dias libres válido");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
                 parametroCanje.setDiasLIbres(diasLibres.shortValue());
                 parametroCanje.setIdEmpresa(empresa);
+                if(interesDiario == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Ingrese un numero de interés diario válido");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
                 parametroCanje.setInteresDiario(interesDiario);
                 parametroCanje.setVisible(true);
                 Boolean persistencia = parametrosCanjesFacade.addParametroCanje(parametroCanje);
@@ -209,6 +221,18 @@ public class ParametrosCanjeRest {
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
                 CanjesContratosCereales ccc = canjesContratosCerealesFacade.findCuentaPorCereal(empresa, cerealCodigo);
+                if(ccc == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "El cereal elegido no tiene una cuenta contable relacionada");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                if(diasLibres == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Ingrese un numero de dias libres válido");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+                if(interesDiario == null) {
+                    respuesta.setControl(AppCodigo.ERROR, "Ingrese un numero de interés diario válido");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
                 parametroCanje.setCanjeCereal(ccc);
                 parametroCanje.setCtaContableSisa(ccc.getCtaContable());
                 parametroCanje.setDiasLIbres(diasLibres.shortValue());
