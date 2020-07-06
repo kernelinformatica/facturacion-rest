@@ -1661,7 +1661,9 @@ public class GrabaComprobanteRest {
                         CtacteCategoria ctacteCatego = ctaCteCategoriaFacade.getCategoriaByCodigo(pad.getPadronCatego());
                         masterFormaPago.setPlanCuentas(Integer.toString(ctacteCatego.getPlanCuentas()));
                     } else {
-                        masterFormaPago.setPlanCuentas(fp.getCtaContable());
+                        CtacteCategoria ctacteCatego = ctaCteCategoriaFacade.getCategoriaByCodigo(pad.getPadronCatego());
+                        masterFormaPago.setPlanCuentas(Integer.toString(ctacteCatego.getPlanCuentas()));
+                        //masterFormaPago.setPlanCuentas(fp.getCtaContable());
                     }
                 }
 
@@ -1865,7 +1867,9 @@ public class GrabaComprobanteRest {
                         CtacteCategoria ctacteCatego = ctaCteCategoriaFacade.getCategoriaByCodigo(pad.getPadronCatego());
                         masterFormaPago.setPlanCuentas(Integer.toString(ctacteCatego.getPlanCuentas()));
                     } else {
-                        masterFormaPago.setPlanCuentas(fp.getCtaContable());
+                         CtacteCategoria ctacteCatego = ctaCteCategoriaFacade.getCategoriaByCodigo(pad.getPadronCatego());
+                        masterFormaPago.setPlanCuentas(Integer.toString(ctacteCatego.getPlanCuentas()));
+                        //masterFormaPago.setPlanCuentas(fp.getCtaContable());
                     }
 
                     //Parametros que van en 0
@@ -2703,7 +2707,9 @@ public class GrabaComprobanteRest {
                         CtacteCategoria ctacteCatego = ctaCteCategoriaFacade.getCategoriaByCodigo(pad.getPadronCatego());
                         masterFormaPago.setPlanCuentas(Integer.parseInt(Integer.toString(ctacteCatego.getPlanCuentas())));
                     } else {
-                        masterFormaPago.setPlanCuentas(Integer.parseInt(fp.getCtaContable()));
+                        CtacteCategoria ctacteCatego = ctaCteCategoriaFacade.getCategoriaByCodigo(pad.getPadronCatego());
+                        masterFormaPago.setPlanCuentas(Integer.parseInt(Integer.toString(ctacteCatego.getPlanCuentas())));
+                        //masterFormaPago.setPlanCuentas(Integer.parseInt(fp.getCtaContable()));
                     }
                 }
                 System.out.println(paseDetalle + "::::::::: Master Sybase  ----------------------> GrabaMasterSybase()-> Forma pago: setMImporte: " + fp.getImporte().multiply(signo).multiply(cotizacionDolar).setScale(2, RoundingMode.HALF_EVEN).doubleValue());
@@ -2822,7 +2828,9 @@ public class GrabaComprobanteRest {
                         CtacteCategoria ctacteCatego = ctaCteCategoriaFacade.getCategoriaByCodigo(pad.getPadronCatego());
                         masterFormaPago.setPlanCuentas(ctacteCatego.getPlanCuentas());
                     } else {
-                        masterFormaPago.setPlanCuentas(Integer.valueOf(fp.getCtaContable()));
+                        CtacteCategoria ctacteCatego = ctaCteCategoriaFacade.getCategoriaByCodigo(pad.getPadronCatego());
+                        masterFormaPago.setPlanCuentas(ctacteCatego.getPlanCuentas());
+                        //masterFormaPago.setPlanCuentas(Integer.valueOf(fp.getCtaContable()));
                     }
 
                     System.out.println(paseDetalle + "::::::::: Master Sybase  ----------------------> GrabaMasterSybase()-> Forma pago: setMImporte: " + fp.getImporte().multiply(signo).multiply(cotizacionDolar).setScale(2, RoundingMode.HALF_EVEN).doubleValue());
