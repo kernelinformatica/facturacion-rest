@@ -162,6 +162,7 @@ public class BuscaStockRest {
                     }
                     stock.addAll(sr);
                 }
+              callableStatement.getConnection().close();
             } else if(tipo != null && tipo.equals("general")){
                //seteo el nombre del store
                String noombreSP = "call s_buscaStockGral(?,?,?,?,?,?,?,?,?)";
@@ -206,6 +207,7 @@ public class BuscaStockRest {
                                rs.getString("subRubro"));
                        stock.add(st);
                    }
+               callableStatement.getConnection().close();
             } else {
                 respuesta.setControl(AppCodigo.ERROR, "Error, no existe el servicio");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();

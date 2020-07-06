@@ -84,7 +84,7 @@ FROM `dbFacturacion`.`FactCab`
 	<lastPageFooter>
 		<band height="802">
 			<textField>
-				<reportElement x="380" y="20" width="181" height="17" uuid="94a6d1a0-114d-4d0b-a343-74d036397fab">
+				<reportElement x="320" y="20" width="241" height="17" uuid="94a6d1a0-114d-4d0b-a343-74d036397fab">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<box>
@@ -93,7 +93,7 @@ FROM `dbFacturacion`.`FactCab`
 				<textFieldExpression><![CDATA["POR U$S: " + ($F{idMoneda} == 1 ? $V{importeTotal}.divide($F{cotDolar}, 2, RoundingMode.HALF_UP) : $V{importeTotal})]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="380" y="40" width="181" height="21" uuid="0beec2e0-b45e-4026-8ce3-7d73f3fdb0e1"/>
+				<reportElement x="320" y="40" width="241" height="21" uuid="0beec2e0-b45e-4026-8ce3-7d73f3fdb0e1"/>
 				<textFieldExpression><![CDATA["Máximo Paz, " + $P{emisionString}]]></textFieldExpression>
 			</textField>
 			<textField>
@@ -159,7 +159,7 @@ FROM `dbFacturacion`.`FactCab`
 				<text><![CDATA[ORIGINAL]]></text>
 			</staticText>
 			<textField>
-				<reportElement x="380" y="0" width="181" height="17" uuid="fbfec3b8-5ad8-4759-a306-6a4a9ae0e662">
+				<reportElement x="320" y="0" width="241" height="17" uuid="fbfec3b8-5ad8-4759-a306-6a4a9ae0e662">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<box>
@@ -179,7 +179,7 @@ FROM `dbFacturacion`.`FactCab`
 				<text><![CDATA[Static Text]]></text>
 			</staticText>
 			<textField>
-				<reportElement x="385" y="270" width="181" height="17" uuid="3fee2f4d-a7f7-4ae0-a191-96be1664b3bc">
+				<reportElement x="320" y="270" width="246" height="17" uuid="3fee2f4d-a7f7-4ae0-a191-96be1664b3bc">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<box>
@@ -188,7 +188,7 @@ FROM `dbFacturacion`.`FactCab`
 				<textFieldExpression><![CDATA["VENCE EL: " + $P{vtoString}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="385" y="290" width="181" height="17" uuid="62d2bdaa-e7d2-4ef2-91be-87d2c2692b23">
+				<reportElement x="320" y="290" width="246" height="17" uuid="62d2bdaa-e7d2-4ef2-91be-87d2c2692b23">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<box>
@@ -197,7 +197,7 @@ FROM `dbFacturacion`.`FactCab`
 				<textFieldExpression><![CDATA["POR U$S: " + ($F{idMoneda} == 1 ? $V{importeTotal}.divide($F{cotDolar}, 2, RoundingMode.HALF_UP) : $V{importeTotal})]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="385" y="310" width="181" height="21" uuid="d2e9ca87-1afc-4c3c-b682-2a4601190d11"/>
+				<reportElement x="320" y="310" width="246" height="21" uuid="d2e9ca87-1afc-4c3c-b682-2a4601190d11"/>
 				<textFieldExpression><![CDATA["Máximo Paz, " + $P{emisionString}]]></textFieldExpression>
 			</textField>
 			<textField>
@@ -263,7 +263,7 @@ FROM `dbFacturacion`.`FactCab`
 				<text><![CDATA[COPIA - CONTABILIDAD - COPIA NO VÁLIDA COMO DOCUMENTO]]></text>
 			</staticText>
 			<textField>
-				<reportElement x="385" y="540" width="181" height="17" uuid="640c59a4-f049-4c98-a4a0-05c7d7ee58b5">
+				<reportElement x="320" y="540" width="246" height="17" uuid="640c59a4-f049-4c98-a4a0-05c7d7ee58b5">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<box>
@@ -272,7 +272,7 @@ FROM `dbFacturacion`.`FactCab`
 				<textFieldExpression><![CDATA["VENCE EL: " + $P{vtoString}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="385" y="560" width="181" height="17" uuid="78a5acc3-b2c2-4f3c-8238-fe399f2c9984">
+				<reportElement x="320" y="560" width="246" height="17" uuid="78a5acc3-b2c2-4f3c-8238-fe399f2c9984">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<box>
@@ -281,7 +281,7 @@ FROM `dbFacturacion`.`FactCab`
 				<textFieldExpression><![CDATA["POR U$S: " + ($F{idMoneda} == 1 ? $V{importeTotal}.divide($F{cotDolar}, 2, RoundingMode.HALF_UP) : $V{importeTotal})]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="385" y="580" width="181" height="21" uuid="b90035cc-029b-49e7-8833-dfb9e42cf23f"/>
+				<reportElement x="320" y="580" width="246" height="21" uuid="b90035cc-029b-49e7-8833-dfb9e42cf23f"/>
 				<textFieldExpression><![CDATA["Máximo Paz, " + $P{emisionString}]]></textFieldExpression>
 			</textField>
 			<textField>

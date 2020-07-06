@@ -160,6 +160,7 @@ public class BuscaLotes {
                             rs.getInt("idProducto"));
                     lotesResponse.add(lote);
                 }
+                callableStatement.getConnection().close();
             }
             if(lotesResponse.isEmpty()) {
                 respuesta.setArraydatos(lotes);

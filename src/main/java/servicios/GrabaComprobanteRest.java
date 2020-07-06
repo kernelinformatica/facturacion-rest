@@ -898,7 +898,11 @@ public class GrabaComprobanteRest {
                         calendar.setTime(fechaEmision);
                         calendar.add(Calendar.DAY_OF_YEAR, plazo);
                         //seteo la fecha 
-                        factFPago.setFechaPago(calendar.getTime());
+                        if(factCab.getIdSisTipoOperacion().getIdSisModulos().getIdSisModulos() > 1) {
+                            factFPago.setFechaPago(factCab.getFechaVto());
+                        } else {
+                            factFPago.setFechaPago(calendar.getTime());
+                        }
                         factFPago.setIdFormaPago(formaPagoDet.getIdFormaPago());
                         factFPago.setImporte(monto);
                         factFPago.setPorcentaje(interes);
@@ -2931,7 +2935,7 @@ public class GrabaComprobanteRest {
                     if (factCab.getIdmoneda().getIdMoneda() > 1) {
                       documentoCanje.setImporte(fp.getImporte().doubleValue());
                     }else{
-                      documentoCanje.setImporte((fp.getImporte().divide(factCab.getCotDolar(), 2, RoundingMode.HALF_UP).doubleValue()));
+                      documentoCanje.setImporte(fp.getImporte().divide(factCab.getCotDolar(), 2, RoundingMode.HALF_UP).doubleValue());
                   
                      //documentoCanje.setImporte((fp.getImporte().multiply(signo)).divide(factCab.getCotDolar()).setScale(2, RoundingMode.HALF_EVEN).doubleValue());
                     }                   

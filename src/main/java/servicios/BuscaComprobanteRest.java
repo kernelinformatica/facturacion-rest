@@ -241,6 +241,8 @@ public class BuscaComprobanteRest {
                     comprobantes.add(c);
                 }
             //}
+            callableStatement.getConnection().close();
+            callableStatementDetalle.getConnection().close();
             respuesta.setArraydatos(comprobantes);
             respuesta.setControl(AppCodigo.OK, "Comprobantes");
             return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();

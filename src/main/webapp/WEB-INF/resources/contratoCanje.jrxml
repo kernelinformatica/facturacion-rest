@@ -12,7 +12,8 @@ ZTgxYTs=]]>
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="dbFacturacion"/>
 	<parameter name="idFactCab" class="java.lang.Integer"/>
 	<queryString language="SQL">
-		<![CDATA[SELECT `dbFacturacion`.`FactDetalle`.importe AS importeProd,
+		<![CDATA[SELECT `dbFacturacion`.`FactPie`.importe AS importePie,
+	`dbFacturacion`.`FactDetalle`.importe AS importeProd,
 	`dbFacturacion`.`FactDetalle`.cantidad AS cantidad,
 	`dbFacturacion`.`FactDetalle`.detalle AS detalleProd,
 	`dbFacturacion`.`PadronGral`.localidad AS localidad,
@@ -40,6 +41,10 @@ ZTgxYTs=]]>
 	 `dbFacturacion`.`FactFormaPago`.`idFactCab` = `dbFacturacion`.`FactCab`.`idFactCab`
 	 WHERE `dbFacturacion`.`FactCab`.`idFactCab` = $P{idFactCab}]]>
 	</queryString>
+	<field name="importePie" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="importePie"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="FactPie"/>
+	</field>
 	<field name="importeFacFP" class="java.math.BigDecimal">
 		<property name="com.jaspersoft.studio.field.label" value="importeFacFP"/>
 		<property name="com.jaspersoft.studio.field.tree.path" value="FactFormaPago"/>
@@ -108,6 +113,9 @@ ZTgxYTs=]]>
 		<property name="com.jaspersoft.studio.field.label" value="nombreCereal"/>
 		<property name="com.jaspersoft.studio.field.tree.path" value="Cereal"/>
 	</field>
+	<variable name="importePieTotal" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{importePie}]]></variableExpression>
+	</variable>
 	<variable name="importeDetalleTotal" class="java.math.BigDecimal" calculation="Sum">
 		<variableExpression><![CDATA[$F{importeProd}]]></variableExpression>
 	</variable>
@@ -155,7 +163,7 @@ ZTgxYTs=]]>
 	<detail>
 		<band height="21" splitType="Stretch">
 			<textField>
-				<reportElement x="0" y="-1" width="290" height="15" uuid="7b7311ae-a6c9-4680-8a85-421f63b50c75">
+				<reportElement isPrintRepeatedValues="false" x="0" y="-1" width="290" height="15" uuid="7b7311ae-a6c9-4680-8a85-421f63b50c75">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<textElement>
@@ -164,7 +172,7 @@ ZTgxYTs=]]>
 				<textFieldExpression><![CDATA[$F{detalleProd}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="290" y="0" width="181" height="15" uuid="33a51934-5cbb-42f6-9fbe-368ce472b6cd">
+				<reportElement isPrintRepeatedValues="false" x="290" y="0" width="181" height="15" uuid="33a51934-5cbb-42f6-9fbe-368ce472b6cd">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<textElement>

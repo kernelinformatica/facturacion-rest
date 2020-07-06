@@ -167,6 +167,7 @@ public class BuscaLote {
                         rs.getInt("idProducto"));
                 lotes.add(lote);
             }
+            callableStatement.getConnection().close();
             
             if(lotes.isEmpty()) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, no hay lotes con esos parametros");
