@@ -115,6 +115,7 @@ public class BuscaProductosRest {
                             rs.getString("subRubro"));
                     productos.add(prod);
                 }
+            callableStatement.getConnection().close();
             respuesta.setArraydatos(productos);
             respuesta.setControl(AppCodigo.OK, "Producto/s");
             return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();

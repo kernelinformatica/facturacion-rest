@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
@@ -168,14 +169,18 @@ public class DescargarPdfRest extends HttpServlet {
                     }
                     BigDecimal importeTotalFact = BigDecimal.ZERO;
                     for(FactFormaPago formaPago : formaPagos) {
-                        importeTotalFact = importeTotalFact.add(formaPago.getImporte());
+                        if(formaPago.getIdFactCab().getIdmoneda().getIdMoneda() == 1) {
+                            importeTotalFact = importeTotalFact.add(formaPago.getImporte().divide(formaPago.getIdFactCab().getCotDolar(), 2, RoundingMode.HALF_UP));
+                        } else {
+                            importeTotalFact = importeTotalFact.add(formaPago.getImporte());
+                        }
                     }
                     String[] meses = { "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre" };
                     LocalDate localDate = factCab.getFechaEmision().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
                     int year  = localDate.getYear();
                     int month = localDate.getMonthValue();
                     int day   = localDate.getDayOfMonth();
-                    String fechaEmision = String.valueOf(day) + " de " + meses[month] + " del " + String.valueOf(year);
+                    String fechaEmision = String.valueOf(day) + " de " + meses[month - 1] + " del " + String.valueOf(year);
                     localDate = factCab.getFechaVto().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
                     year  = localDate.getYear();
                     month = localDate.getMonthValue();
@@ -228,7 +233,7 @@ public class DescargarPdfRest extends HttpServlet {
             //se divide el numero 0000000,00 -> entero y decimal
             String Num[] = numero.split(",");
             //de da formato al numero decimal
-            parte_decimal = "C/" + Num[1] + " CENTAVOS";
+            parte_decimal = " C/" + Num[1] + " CENTAVOS";
             //se convierte el numero a literal
             if (Integer.parseInt(Num[0]) == 0) {//si el valor es cero
                 literal = "cero ";

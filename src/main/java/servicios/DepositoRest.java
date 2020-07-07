@@ -131,7 +131,7 @@ public class DepositoRest {
                        depositos.add(dep);
                    }
              
-                
+                callableStatement.getConnection().close();
             } else {
                 //valido que la empresa tenga Depositos disponibles
                 
@@ -180,7 +180,7 @@ public class DepositoRest {
                
                
               
-               
+               callableStatement.getConnection().close();
                
             }
             // Dario
