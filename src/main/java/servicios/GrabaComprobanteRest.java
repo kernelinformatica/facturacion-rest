@@ -1802,16 +1802,11 @@ public class GrabaComprobanteRest {
                     masterFormaPago.setTipoComp(Short.valueOf(Integer.toString(factCab.getIdCteTipo().getIdCteTipo())));
                     masterFormaPago.setMDetalle("CREDITO CTA CEREAL");
                     masterFormaPago.setMCtacte("S");
-                    if (fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(2)) {
-
-                        if (!objContratosCereales.getCerealCodigo().getCerealCodigo().isEmpty()) {
+                    if (objContratosCereales != null) {
                             masterFormaPago.setPlanCuentas(objContratosCereales.getCtaContable());
                         } else {
                             masterFormaPago.setPlanCuentas(fp.getCtaContable());
                         }
-                    } else {
-                        masterFormaPago.setPlanCuentas(fp.getCtaContable());
-                    }
 
                     //Parametros que van en 0
                     masterFormaPago.setAutorizaCodigo(Short.valueOf("0"));
@@ -2826,7 +2821,7 @@ public class GrabaComprobanteRest {
                         masterFormaPago.setMImporte((subTotal.multiply(signo)).setScale(2, RoundingMode.HALF_EVEN).doubleValue() * -1 );
                     
                     }
-                    masterFormaPago.setMDetalle("CREDITO CEREALES");
+                    masterFormaPago.setMDetalle("CREDITO CTACTE");
                     if (fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(2)) {
                         CtacteCategoria ctacteCatego = ctaCteCategoriaFacade.getCategoriaByCodigo(pad.getPadronCatego());
                         masterFormaPago.setPlanCuentas(ctacteCatego.getPlanCuentas());
@@ -2887,19 +2882,13 @@ public class GrabaComprobanteRest {
                         masterFormaPago.setMImporte((subTotal.multiply(signo)).setScale(2, RoundingMode.HALF_EVEN).doubleValue() );
                     
                     }
-                    masterFormaPago.setMDetalle("CREDITO CTACTE");
-                    // Si es Compras a Cuenta Corriente busco la cuenta contable en la categoria del padron
-                    if (fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(2)) {
-
-                        if (!objContratosCereales.getCerealCodigo().getCerealCodigo().isEmpty()) {
+                    masterFormaPago.setMDetalle("CREDITO CEREALES");
+                     if (objContratosCereales != null) {
                             masterFormaPago.setPlanCuentas(Integer.valueOf(objContratosCereales.getCtaContable()));
                         } else {
                             masterFormaPago.setPlanCuentas(Integer.valueOf(fp.getCtaContable()));
                         }
-                    } else {
-                        masterFormaPago.setPlanCuentas(Integer.valueOf(fp.getCtaContable()));
-                    }
-
+                   
                     //Parametros que van en 0
                     masterFormaPago.setAutorizaCodigo(Short.valueOf("0"));
                     masterFormaPago.setTipoCompAsoc(Short.valueOf("0"));
@@ -2935,9 +2924,8 @@ public class GrabaComprobanteRest {
                     if (factCab.getIdmoneda().getIdMoneda() > 1) {
                       documentoCanje.setImporte(fp.getImporte().doubleValue());
                     }else{
-                      documentoCanje.setImporte(fp.getImporte().divide(factCab.getCotDolar(), 2, RoundingMode.HALF_UP).doubleValue());
-                  
-                     //documentoCanje.setImporte((fp.getImporte().multiply(signo)).divide(factCab.getCotDolar()).setScale(2, RoundingMode.HALF_EVEN).doubleValue());
+                      System.out.println("::::::::: DOCUMENTO SYBASE (SON PESOS SE CONVIERNTEN DOLARES) " +fp.getImporte()+" / "+factCab.getCotDolar()+" : "+fp.getImporte().divide(factCab.getCotDolar(), 2, RoundingMode.HALF_UP).doubleValue());
+                      documentoCanje.setImporte((fp.getImporte().divide(factCab.getCotDolar(), 2, RoundingMode.HALF_UP).doubleValue()));
                     }                   
                     // Non-terminating decimal expansion; no exact representable decimal result.
                     documentoCanje.setVencimiento(factCab.getFechaVto());

@@ -185,7 +185,7 @@ public class DescargarPdfRest extends HttpServlet {
                     year  = localDate.getYear();
                     month = localDate.getMonthValue();
                     day   = localDate.getDayOfMonth();
-                    String fechaVto = String.valueOf(day) + " de " + meses[month] + " del " + String.valueOf(year);
+                    String fechaVto = String.valueOf(day) + " de " + meses[month - 1] + " del " + String.valueOf(year);
                     String importeString = this.Convertir(importeTotalFact.setScale(2).toString(), true);
                     HashMap hm = new HashMap();
                     hm.put("idFactCab", idFactCab);
