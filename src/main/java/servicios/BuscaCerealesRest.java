@@ -73,7 +73,7 @@ public class BuscaCerealesRest {
             if(user == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, Usuario nulo");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-            }
+            } 
 
             //valido vencimiento token
             if(!accesoFacade.validarToken(userToken, user)) {

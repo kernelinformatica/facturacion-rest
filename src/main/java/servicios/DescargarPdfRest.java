@@ -73,7 +73,9 @@ public class DescargarPdfRest extends HttpServlet {
             
             // Obtengo los atributos del body
             Integer idFactCab = (Integer) Utils.getKeyFromJsonObject("idFactCab", jsonBody, "Integer");
+            Integer nroCopias = (Integer) Utils.getKeyFromJsonObject("nroCopias", jsonBody, "Integer");
             String nombrePdf = (String) Utils.getKeyFromJsonObject("nombrePdf", jsonBody, "String");
+            Boolean esCanje = (Boolean) Utils.getKeyFromJsonObject("esCanje", jsonBody, "boolean");
             System.out.println(nombrePdf);
             
             //valido que token no sea null
@@ -81,6 +83,7 @@ public class DescargarPdfRest extends HttpServlet {
                 respuesta.setControl(AppCodigo.ERROR, "Error, token vacio");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
+            
 
             //Busco el token
             Acceso userToken = accesoFacade.findByToken(token);
@@ -126,6 +129,25 @@ public class DescargarPdfRest extends HttpServlet {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
              
+             if(nroCopias == null) { 
+                 nroCopias = 1;
+             }
+             
+             if(esCanje == null) {
+                 if(factCab.getFactFormaPagoCollection() != null && factCab.getFactFormaPagoCollection().size() > 0) {
+                     List<FactFormaPago> listaFFP = new ArrayList(factCab.getFactFormaPagoCollection());
+                     if(listaFFP != null && listaFFP.size() == 1 && listaFFP.get(0).getIdFormaPago().getIdFormaPago() == 12) {
+                         esCanje = true;
+                     } else {
+                         esCanje = false;
+                     }
+                 }
+             }
+             
+             if(factCab.getIdCteTipo().getIdCteTipo() != 75) {
+                 esCanje = false;
+             }
+             
             if(nombrePdf == null) {
                 //Codigo verificador
                 String codigoVerificador = "";
@@ -141,6 +163,41 @@ public class DescargarPdfRest extends HttpServlet {
                     String txtVtoCae = formatoFecha.format(factCab.getFechaVto());
                     codigoVerificador = utils.calculoDigitoVerificador(txtCuit, txtCodComp, txtPtoVta, txtCae, txtVtoCae);
                 } 
+                HashMap hm2 = new HashMap();
+                HashMap hm3 = new HashMap();
+                if(esCanje) {
+                    hm2.put("idFactCab", idFactCab);
+                    Collection<FactFormaPago> formaPagos = factFormaPagoFacade.getFactFormaPago(idFactCab);
+                    if(formaPagos == null) {
+                        respuesta.setControl(AppCodigo.ERROR, "Error al buscar el importe de la factura");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                    BigDecimal importeTotalFact = BigDecimal.ZERO;
+                    for(FactFormaPago formaPago : formaPagos) {
+                        if(formaPago.getIdFactCab().getIdmoneda().getIdMoneda() == 1) {
+                            importeTotalFact = importeTotalFact.add(formaPago.getImporte().divide(formaPago.getIdFactCab().getCotDolar(), 2, RoundingMode.HALF_UP));
+                        } else {
+                            importeTotalFact = importeTotalFact.add(formaPago.getImporte());
+                        }
+                    }
+                    String[] meses = { "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre" };
+                    LocalDate localDate = factCab.getFechaEmision().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                    int year  = localDate.getYear();
+                    int month = localDate.getMonthValue();
+                    int day   = localDate.getDayOfMonth();
+                    String fechaEmision = String.valueOf(day) + " de " + meses[month - 1] + " del " + String.valueOf(year);
+                    localDate = factCab.getFechaVto().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                    year  = localDate.getYear();
+                    month = localDate.getMonthValue();
+                    day   = localDate.getDayOfMonth();
+                    String fechaVto = String.valueOf(day) + " de " + meses[month - 1] + " del " + String.valueOf(year);
+                    String importeString = this.Convertir(importeTotalFact.setScale(2).toString(), true);
+                    HashMap hm = new HashMap();
+                    hm3.put("idFactCab", idFactCab);
+                    hm3.put("vtoString", fechaVto);
+                    hm3.put("emisionString", fechaEmision);
+                    hm3.put("importeString", importeString);
+                }
                 System.out.println("codigoVerificador: " + codigoVerificador);
                 HashMap hm = new HashMap();
                 hm.put("idFactCab", idFactCab);
@@ -148,16 +205,16 @@ public class DescargarPdfRest extends HttpServlet {
                 hm.put("prefijoEmpresa", "05");
                 System.out.println(idFactCab + " - " + codigoVerificador);
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                byte[] bytes = utils.generateJasperReportPDF(request, nombreReporte, hm, user, outputStream);
+                byte[] bytes = utils.generateJasperReportPDF(request, nombreReporte, hm, user, outputStream, nroCopias, esCanje, hm2, hm3);
                 System.out.println(request.toString() + " - " + nombreReporte + " - " + user.toString());
                 String nomeRelatorio= nombreReporte + ".pdf";
                 return Response.ok(bytes).type("application/pdf").header("Content-Disposition", "filename=\"" + nomeRelatorio + "\"").build();
             } else {
-                if(nombrePdf.equals("contratoCanje")) {
-                    HashMap hm = new HashMap();
-                    hm.put("idFactCab", idFactCab);
+                /*if(nombrePdf.equals("contratoCanje")) {
+                    HashMap hm2 = new HashMap();
+                    hm2.put("idFactCab", idFactCab);
                     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                    byte[] bytes = utils.generateJasperReportPDF(request, nombrePdf, hm, user, outputStream);
+                    byte[] bytes = utils.generateJasperReportPDF(request, nombrePdf, hm2, user, outputStream);
                     System.out.println(request.toString() + " - " + nombrePdf + " - " + user.toString());
                     String nomeRelatorio= nombrePdf + ".pdf";
                     return Response.ok(bytes).type("application/pdf").header("Content-Disposition", "filename=\"" + nomeRelatorio + "\"").build();
@@ -200,7 +257,9 @@ public class DescargarPdfRest extends HttpServlet {
                 } else {
                     respuesta.setControl(AppCodigo.ERROR, "No existe ese comprobante para imprimir");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                }
+                }*/
+                respuesta.setControl(AppCodigo.ERROR, "No existe ese comprobante para imprimir");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
         } catch (Exception e) {

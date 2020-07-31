@@ -153,7 +153,7 @@ public class MandaMailPdfRest extends HttpServlet{
                 hm.put("prefijoEmpresa", "05");
                 System.out.println(idFactCab + " - " + codigoVerificador);
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                byte[] bytes = utils.generateJasperReportPDF(request, nombreReporte, hm, user, outputStream);
+                byte[] bytes = utils.generateJasperReportPDF(request, nombreReporte, hm, user, outputStream, 1, false, null, null);
                 System.out.println(request.toString() + " - " + nombreReporte + " - " + user.toString());
                 String nomeRelatorio= nombreReporte + ".pdf";
                 

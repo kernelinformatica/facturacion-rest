@@ -74,6 +74,8 @@ public class BuscaComprobanteRest {
             Integer idSisTipoOperacion = (Integer) Utils.getKeyFromJsonObject("idSisTipoOperacion", jsonBody, "Integer");
             String autorizada = (String) Utils.getKeyFromJsonObject("autorizada", jsonBody, "String");
             Integer contratoRelacionado = (Integer) Utils.getKeyFromJsonObject("contratoRelacionado", jsonBody, "Integer");
+            String codProductoDesde = (String) Utils.getKeyFromJsonObject("codProductoDesde", jsonBody, "String");
+            String codProductoHasta = (String) Utils.getKeyFromJsonObject("codProductoHasta", jsonBody, "String");
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -112,10 +114,10 @@ public class BuscaComprobanteRest {
             }
                   
             //seteo el nombre del store cabecera
-            String nombreSP = "call s_buscaComprobantesCabecera(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+            String nombreSP = "call s_buscaComprobantesCabecera(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
             
             //seteo el nombre del store detalle
-            String nombreSPDetalle = "call s_buscaComprobantesDetalles(?,?,?,?,?,?,?,?,?,?,?,?)";
+            String nombreSPDetalle = "call s_buscaComprobantesDetalles(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
             
             //invoco al store
             CallableStatement callableStatement = this.utils.procedimientoAlmacenado(user, nombreSP);
@@ -151,7 +153,10 @@ public class BuscaComprobanteRest {
             callableStatement.setInt(12, idSisTipoOperacion);
             callableStatement.setString(13, autorizada);
             callableStatement.setInt(14, contratoRelacionado);
-           
+            callableStatement.setString(15, codProductoDesde);
+            callableStatement.setString(16, codProductoHasta);
+            
+            
             //Seteo los parametros para los detalle
             callableStatementDetalle.setInt(1,user.getIdPerfil().getIdSucursal().getIdEmpresa().getIdEmpresa());
             callableStatementDetalle.setInt(2,comprobanteModulo);
@@ -170,6 +175,8 @@ public class BuscaComprobanteRest {
             callableStatementDetalle.setInt(10, idEstado);
             callableStatementDetalle.setInt(11, idVendedor);
             callableStatementDetalle.setInt(12, idSisTipoOperacion);
+            callableStatementDetalle.setString(13, codProductoDesde);
+            callableStatementDetalle.setString(14, codProductoHasta);
             
             //Reccorro los resultados para la cabecera
             ResultSet rs = callableStatement.executeQuery();

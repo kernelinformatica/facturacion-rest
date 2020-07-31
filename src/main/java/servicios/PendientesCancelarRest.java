@@ -54,6 +54,7 @@ import javax.ws.rs.core.Response;
 import persistencia.AccesoFacade;
 import persistencia.CteTipoFacade;
 import persistencia.FactCabFacade;
+import persistencia.ListaPrecioDetFacade;
 import persistencia.ListaPrecioFacade;
 import persistencia.ParametroFacade;
 import persistencia.ParametrosCanjesFacade;
@@ -86,6 +87,7 @@ public class PendientesCancelarRest {
     @Inject CteTipoFacade cteTipoFacade;
     @Inject ParametroFacade parametroFacade;
     @Inject ParametrosCanjesFacade parametrosCanjesFacade;
+    @Inject ListaPrecioDetFacade listaPreciosDetFacade;
     
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -115,6 +117,7 @@ public class PendientesCancelarRest {
             Integer modulo = (Integer) Utils.getKeyFromJsonObject("modulo", jsonBody, "Integer");
             String diferenciaFechas = (String) Utils.getKeyFromJsonObject("diferenciaFechas", jsonBody, "String");
             String codigoCereal = (String) Utils.getKeyFromJsonObject("codigoCereal", jsonBody, "String");
+            Boolean esCanje = (Boolean) Utils.getKeyFromJsonObject("esCanje", jsonBody, "boolean");
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -168,6 +171,10 @@ public class PendientesCancelarRest {
             
             if(idListaPrecio == null) {
                 idListaPrecio = 0;
+            }
+            
+            if(esCanje == null) {
+                esCanje = false;
             }
                    
             //seteo el nombre del store
@@ -238,7 +245,12 @@ public class PendientesCancelarRest {
                             rs.getString("letra"),
                             rs.getInt("idFactDetalle"),
                             producto);
-                    if(idSisTipoOperacion != null && idSisTipoOperacion == 5 && cteTipo != null && diferenciaFechas != null) {
+                    if(idListaPrecio != null && idListaPrecio != 0) {
+                        ListaPrecioDet det = listaPreciosDetFacade.getListaPrecioDet(pendientesCancelar.getIdListaPrecio(), pendientesCancelar.getProducto().getIdProductos());
+                        pendientesCancelar.setCotaInferior(det.getCotaInf());
+                        pendientesCancelar.setCotaSuperior(det.getCotaSup());
+                    }
+                    if(idSisTipoOperacion != null && esCanje && cteTipo != null && diferenciaFechas != null) {
                         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                         LocalDate vencimientoDate = LocalDate.parse(diferenciaFechas, dtf);
                         LocalDate currentDate = LocalDate.now();
@@ -424,6 +436,8 @@ public class PendientesCancelarRest {
         @QueryParam ("idCteTipo") Integer idCteTipo,
         @QueryParam ("idSisTipoOperacion") Integer idSisTipoOperacion,
         @QueryParam ("diferenciaFechas") String diferenciaFechas,
+        @QueryParam ("esCanje") Boolean esCanje,
+        @QueryParam ("codigoCereal") String codigoCereal,
         @PathParam ("idProducto") Integer idProducto,
         @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         ServicioResponse respuesta = new ServicioResponse();
@@ -467,9 +481,13 @@ public class PendientesCancelarRest {
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
             
+            if(esCanje == null) {
+                esCanje = false;
+            }
+            
             List<Payload> productosResponse = new ArrayList<>();
             
-            if(idModulo != null && idSisTipoModelo != null && idProducto != null &&  idListaPrecios == null && idMoneda != null) {
+            if(idModulo != null && idSisTipoModelo != null && idProducto != null &&  idListaPrecios == null && idMoneda != null && !esCanje) {
                 //Busco el modulo(Por lo general en este if viene el de compras)
                 SisModulo modulo = sisModuloFacade.find(idModulo);
                 if(modulo == null) {
@@ -525,7 +543,7 @@ public class PendientesCancelarRest {
                 pr.setPrecio(sr.getCostoReposicion());
                 
                 productosResponse.add(pr);               
-            } /*else if(idListaPrecios != null && idModulo != null && idSisTipoModelo != null && idProducto != null && idMoneda != null && idSisTipoOperacion != null && idSisTipoOperacion == 5 && idCteTipo != null && diferenciaFechas != null) { 
+            } else if(idListaPrecios != null && idModulo != null && idSisTipoModelo != null && idProducto != null && idMoneda != null && idSisTipoOperacion != null && idCteTipo != null && diferenciaFechas != null && esCanje) { 
             
                 ListaPrecio listaPrecio = listaPrecioFacade.find(idListaPrecios);
                 if(listaPrecio == null) {
@@ -585,44 +603,63 @@ public class PendientesCancelarRest {
                     //seteo el precio de la lista de precios seleccionada
                     if(moneda.getDescripcion().equals("u$s") && l.getIdListaPrecios().getIdMoneda().getDescripcion().equals("$AR")) {
                         SisCotDolar cotDolar = sisCotDolarFacade.getLastCotizacion();
-                        ParametrosCanjes params = parametrosCanjesFacade.findParametrosCanjes(2, 1);
+                        ParametrosCanjes params = parametrosCanjesFacade.findParametrosCanjes(2, codigoCereal);
                         Integer diasTotales = 0;
                         BigDecimal recargo = BigDecimal.ZERO;
                         Integer diasLibres = new Short(params.getDiasLIbres()).intValue();
                         if(diasPorMedio > diasLibres) {
                             diasTotales = diasPorMedio - diasLibres;
+                            pr.setDiasLibres(diasLibres);
+                            pr.setDiasResultantes(diasTotales);
+                            pr.setRecargo(params.getInteresDiario());
                             recargo = params.getInteresDiario().multiply(new BigDecimal(diasTotales));
-                            pr.setPrecio(sr.getCostoReposicion().divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP).add(sr.getCostoReposicion().divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP).multiply(recargo).divide(new BigDecimal(100))));
+                            pr.setRecargoTotal(recargo);
+                            BigDecimal nuevoPrecio = sr.getCostoReposicion().divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP).add(sr.getCostoReposicion().divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP).multiply(recargo).divide(new BigDecimal(100)));
+                            pr.setDiferenciaPrecio(sr.getCostoReposicion().divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP));
+                            pr.setPrecio(nuevoPrecio);
                         } else {
                             pr.setPrecio(sr.getCostoReposicion().divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP));
                         }
                     } else if(moneda.getDescripcion().equals("$AR") && l.getIdListaPrecios().getIdMoneda().getDescripcion().equals("u$s")){
                        SisCotDolar cotDolar = sisCotDolarFacade.getLastCotizacion();
-                       ParametrosCanjes params = parametrosCanjesFacade.findParametrosCanjes(2, 1);
+                       ParametrosCanjes params = parametrosCanjesFacade.findParametrosCanjes(2, codigoCereal);
                        Integer diasTotales = 0;
                        BigDecimal recargo = BigDecimal.ZERO;
                        Integer diasLibres = new Short(params.getDiasLIbres()).intValue();
                        if(diasPorMedio > diasLibres) {
                            diasTotales = diasPorMedio - diasLibres;
+                           pr.setDiasLibres(diasLibres);
+                           pr.setDiasResultantes(diasTotales);
+                           pr.setRecargo(params.getInteresDiario());
                            recargo = params.getInteresDiario().multiply(new BigDecimal(diasTotales));
-                           pr.setPrecio(sr.getCostoReposicion().add(sr.getCostoReposicion().multiply(recargo).divide(new BigDecimal(100))).multiply(cotDolar.getCotizacion()));
+                           pr.setRecargoTotal(recargo);
+                           BigDecimal nuevoPrecio = sr.getCostoReposicion().add(sr.getCostoReposicion().multiply(recargo).divide(new BigDecimal(100))).multiply(cotDolar.getCotizacion());
+                           pr.setDiferenciaPrecio(sr.getCostoReposicion().multiply(cotDolar.getCotizacion()));
+                           pr.setPrecio(nuevoPrecio);
                         } else {
                            pr.setPrecio(sr.getCostoReposicion().multiply(cotDolar.getCotizacion()));
                        }
                     } else {
                         SisCotDolar cotDolar = sisCotDolarFacade.getLastCotizacion();
-                        ParametrosCanjes params = parametrosCanjesFacade.findParametrosCanjes(2, 1);
+                        ParametrosCanjes params = parametrosCanjesFacade.findParametrosCanjes(2, codigoCereal);
                         Integer diasTotales = 0;
                         BigDecimal recargo = BigDecimal.ZERO;
                         System.out.println("dias libres ---->" + params.getDiasLIbres());
                         Integer diasLibres = new Short(params.getDiasLIbres()).intValue();
                         if(diasPorMedio > diasLibres) {
                             diasTotales = diasPorMedio - diasLibres;
+                            pr.setDiasLibres(diasLibres);
+                            pr.setDiasResultantes(diasTotales);
+                            pr.setRecargo(params.getInteresDiario());
                             recargo = params.getInteresDiario().multiply(new BigDecimal(diasTotales));
+                            pr.setRecargoTotal(recargo);
                             if(moneda.getDescripcion().equals("$AR")) {
-                                pr.setPrecio(sr.getCostoReposicion().divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP).add(sr.getCostoReposicion().divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP).multiply(recargo).divide(new BigDecimal(100))).multiply(cotDolar.getCotizacion()));
+                                BigDecimal nuevoPrecio = sr.getCostoReposicion().divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP).add(sr.getCostoReposicion().divide(cotDolar.getCotizacion(),2, RoundingMode.HALF_UP).multiply(recargo).divide(new BigDecimal(100))).multiply(cotDolar.getCotizacion());
+                                pr.setDiferenciaPrecio(sr.getCostoReposicion());
+                                pr.setPrecio(nuevoPrecio);
                             } else {
-                                pr.setPrecio(sr.getCostoReposicion().add(sr.getCostoReposicion().multiply(recargo).divide(new BigDecimal(100))));
+                                BigDecimal nuevoPrecio = sr.getCostoReposicion().add(sr.getCostoReposicion().multiply(recargo).divide(new BigDecimal(100)));
+                                pr.setPrecio(sr.getCostoReposicion());
                             }
                          } else {
                             pr.setPrecio(sr.getCostoReposicion());
@@ -631,7 +668,7 @@ public class PendientesCancelarRest {
                     productosResponse.add(pr);
                 }
                 
-            }*/ else if(idListaPrecios != null && idModulo != null && idSisTipoModelo != null && idProducto != null && idMoneda != null) {
+            } else if(idListaPrecios != null && idModulo != null && idSisTipoModelo != null && idProducto != null && idMoneda != null) {
                 //Busco la lista de precios seleccionada
                 ListaPrecio listaPrecio = listaPrecioFacade.find(idListaPrecios);
                 if(listaPrecio == null) {
@@ -682,6 +719,8 @@ public class PendientesCancelarRest {
                     }
                     //Armo la respuesta de pendientes de cancelar asi es igual a la del store procedure
                     PendientesCancelarResponse pr = new PendientesCancelarResponse(sr);
+                    pr.setCotaInferior(l.getCotaInf());
+                    pr.setCotaSuperior(l.getCotaSup());
                     //seteo el precio de la lista de precios seleccionada
                     if(moneda.getDescripcion().equals("u$s") && l.getIdListaPrecios().getIdMoneda().getDescripcion().equals("$AR")) {
                         SisCotDolar cotDolar = sisCotDolarFacade.getLastCotizacion();
