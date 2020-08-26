@@ -136,7 +136,7 @@ public class DescargarPdfRest extends HttpServlet {
              if(esCanje == null) {
                  if(factCab.getFactFormaPagoCollection() != null && factCab.getFactFormaPagoCollection().size() > 0) {
                      List<FactFormaPago> listaFFP = new ArrayList(factCab.getFactFormaPagoCollection());
-                     if(listaFFP != null && listaFFP.size() == 1 && listaFFP.get(0).getIdFormaPago().getIdFormaPago() == 12) {
+                     if(listaFFP != null && listaFFP.size() == 1 && (listaFFP.get(0).getIdFormaPago().getIdFormaPago() == 12 || listaFFP.get(0).getIdFormaPago().getIdFormaPago() == 13)) {
                          esCanje = true;
                      } else {
                          esCanje = false;

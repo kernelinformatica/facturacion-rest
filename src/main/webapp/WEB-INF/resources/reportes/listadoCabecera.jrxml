@@ -17,8 +17,10 @@
 	<parameter name="idVendedor" class="java.lang.Integer"/>
 	<parameter name="idSisTipoOperacion" class="java.lang.Integer"/>
 	<parameter name="autorizada" class="java.lang.String"/>
+	<parameter name="productoDesde" class="java.lang.String"/>
+	<parameter name="productoHasta" class="java.lang.String"/>
 	<queryString language="plsql">
-		<![CDATA[call s_buscaComprobantesCabecera($P{empresa},$P{modulo},$P{tipo},$P{numero},$P{fechaDesde},$P{fechaHasta},$P{producto},$P{padCodigo}, $P{deposito},$P{estado},$P{idVendedor},$P{idSisTipoOperacion},$P{autorizada}, '0', NULL, NULL);]]>
+		<![CDATA[call s_buscaComprobantesCabecera($P{empresa},$P{modulo},$P{tipo},$P{numero},$P{fechaDesde},$P{fechaHasta},$P{producto},$P{padCodigo}, $P{deposito},$P{estado},$P{idVendedor},$P{idSisTipoOperacion},$P{autorizada}, '0', $P{productoDesde}, $P{productoHasta});]]>
 	</queryString>
 	<field name="idFactCab" class="java.lang.Integer"/>
 	<field name="comprobante" class="java.lang.String"/>

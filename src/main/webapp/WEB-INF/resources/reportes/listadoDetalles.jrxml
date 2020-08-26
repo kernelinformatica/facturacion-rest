@@ -16,8 +16,10 @@
 	<parameter name="titulo" class="java.lang.String"/>
 	<parameter name="idVendedor" class="java.lang.Integer"/>
 	<parameter name="idSisTipoOperacion" class="java.lang.Integer"/>
+	<parameter name="productoDesde" class="java.lang.String"/>
+	<parameter name="productoHasta" class="java.lang.String"/>
 	<queryString language="plsql">
-		<![CDATA[call s_buscaComprobantesDetalles($P{empresa},$P{modulo},$P{tipo},$P{numero},$P{fechaDesde},$P{fechaHasta},$P{producto},$P{padCodigo}, $P{deposito},$P{estado},$P{idVendedor},$P{idSisTipoOperacion}, NULL, NULL);]]>
+		<![CDATA[call s_buscaComprobantesDetalles($P{empresa},$P{modulo},$P{tipo},$P{numero},$P{fechaDesde},$P{fechaHasta},$P{producto},$P{padCodigo}, $P{deposito},$P{estado},$P{idVendedor},$P{idSisTipoOperacion}, $P{productoDesde}, $P{productoHasta});]]>
 	</queryString>
 	<field name="comprobante" class="java.lang.String"/>
 	<field name="numero" class="java.lang.String"/>

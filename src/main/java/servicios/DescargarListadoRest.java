@@ -66,6 +66,9 @@ public class DescargarListadoRest {
             Integer idVendedor = (Integer) Utils.getKeyFromJsonObject("idVendedor", jsonBody, "Integer");
             Integer idSisTipoOperacion = (Integer) Utils.getKeyFromJsonObject("idSisTipoOperacion", jsonBody, "Integer");
             String autorizada = (String) Utils.getKeyFromJsonObject("autorizada", jsonBody, "String");
+            String productoDesde = (String) Utils.getKeyFromJsonObject("productoDesde", jsonBody, "String");
+            String productoHasta = (String) Utils.getKeyFromJsonObject("productoHasta", jsonBody, "String");
+
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -134,6 +137,8 @@ public class DescargarListadoRest {
             hm.put("idVendedor", idVendedor);
             hm.put("idSisTipoOperacion", idSisTipoOperacion);
             hm.put("autorizada", autorizada);
+            hm.put("productoDesde", productoDesde);
+            hm.put("productoHasta", productoHasta);
             
             
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
