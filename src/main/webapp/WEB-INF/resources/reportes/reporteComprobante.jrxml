@@ -13,6 +13,7 @@
 	<parameter name="pathImagen" class="java.lang.String"/>
 	<parameter name="codigoVerificador" class="java.lang.String"/>
 	<parameter name="prefijoEmpresa" class="java.lang.String"/>
+	<parameter name="copia" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[Select 
 LPAD(SUBSTRING(FactCab.numero,1,length(FactCab.numero)-8),4,'0') as prefijoComprobante,
@@ -822,6 +823,10 @@ where FactCab.idFactCab = $P{idFactCab}]]>
 					<font size="6"/>
 				</textElement>
 				<textFieldExpression><![CDATA["El presente comprobante equivale a u$s " + ($F{moneda}.equals("u$s") ? $V{subTotal}.add($V{bruto}).setScale(2, java.math.RoundingMode.HALF_UP).toString() : $V{subTotal}.divide($F{cotDolar}, 2, RoundingMode.HALF_UP).setScale(2, java.math.RoundingMode.HALF_UP).add($V{bruto}.divide($F{cotDolar}, 2, RoundingMode.HALF_UP).setScale(2, java.math.RoundingMode.HALF_UP)).toString()) + ". Tomando como base 1 dólares = $ " + $F{cotDolar}.toString() + ". El precio de la presente factura deberá ser cancelada en dólares estadounidense o su equivalente en pesos de curso legal calculados de acuerdo a la cotización al tipo de cambio vendedor del Banco Nación Argentina correspondiente al día inmediato anterior a que efectivamente se acredite el pago. La diferencia que pudiera corresponder pagar o devolver a una u otra parte es virtud de la presente cláusula deberá efectivizarse dentro de las 72 horas de acreditado el pago de la presente factura. El señor " + $F{nombreCilente} + " " + $F{apellido} + " Autoriza a la Coop. Agrop. de Maximo Paz a liquidar el cereal/oleaginosa entregado en las plantas pertenecientes a nuestra Cooperativa, segun certificados de deposito suscriptos oportunamente, al precio pizarra del Puerto que corresponda y del día del vencimiento de las facturas. La presente autorización tiene el carácter de irrevocable."]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="150" y="306" width="131" height="14" uuid="47b19cbb-3754-454a-b394-542aa3444b7f"/>
+				<textFieldExpression><![CDATA[$P{copia}]]></textFieldExpression>
 			</textField>
 		</band>
 	</lastPageFooter>

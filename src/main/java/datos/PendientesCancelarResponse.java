@@ -36,7 +36,9 @@ public class PendientesCancelarResponse implements Payload{
     private BigDecimal recargoTotal;
     private Integer diasLibres;
     private Integer diasResultantes;
-
+    private BigDecimal cotaInferior;
+    private BigDecimal cotaSuperior;
+    
     public PendientesCancelarResponse(String comprobante, String numero, BigDecimal original, BigDecimal pendiente, BigDecimal precio, BigDecimal dolar, String moneda, BigDecimal porCalc, BigDecimal ivaPorc, Integer deposito, Integer idFactDetalleImputa, Integer idFactCabImputada, BigDecimal descuento, String tipoDescuento, BigDecimal cantBultos, String despacho, String observaciones, Integer itemImputada,BigDecimal importe,Integer idListaPrecio, String codigoListaPrecio, String letra,Integer idFactDetalle, ProductoResponse p) {
         this.comprobante = comprobante;
         this.numero = numero;
@@ -67,6 +69,8 @@ public class PendientesCancelarResponse implements Payload{
         this.recargoTotal = BigDecimal.ZERO;
         this.diasLibres = 0;
         this.diasResultantes = 0;
+        this.cotaInferior = null;
+        this.cotaSuperior = null;
     }
     public PendientesCancelarResponse(ProductoResponse p) {
         this.comprobante = "";
@@ -93,6 +97,8 @@ public class PendientesCancelarResponse implements Payload{
         this.recargoTotal = BigDecimal.ZERO;
         this.diasLibres = 0;
         this.diasResultantes = 0;
+        this.cotaInferior = null;
+        this.cotaSuperior = null;
     }
 
 
@@ -328,6 +334,22 @@ public class PendientesCancelarResponse implements Payload{
     
     public void setDiasResultantes(Integer diasResultantes) {
         this.diasResultantes = diasResultantes;
+    }
+    
+    public BigDecimal getCotaInferior() {
+        return cotaInferior;
+    }
+    
+    public void setCotaInferior(BigDecimal cotaInferior) {
+        this.cotaInferior = cotaInferior;
+    }
+    
+    public BigDecimal getCotaSuperior() {
+        return cotaSuperior;
+    }
+    
+    public void setCotaSuperior(BigDecimal cotaSuperior) {
+        this.cotaSuperior = cotaSuperior;
     }
     
 

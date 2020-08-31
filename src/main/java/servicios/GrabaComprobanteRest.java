@@ -555,7 +555,6 @@ public class GrabaComprobanteRest {
                 factCab.setInteresMensualCompra(interesMensualCompra);
                 factCab.setCanjeInsumos(canjeInsumos);
                 factCab.setTipoCambio(tipoCambio);
-
             } else {
                 if (idFactCab == null) {
                     respuesta.setControl(AppCodigo.ERROR, "El parametro de cabecera no puede ser nulo");
@@ -846,34 +845,7 @@ public class GrabaComprobanteRest {
                         }
                     }
                 }
-                //Aca filtro por las cotas en la lista de precios seleccionada y el precio ingresado
-                if (listaPrecio != null) {
-                    List<FactDetalle> detallesCotas = new ArrayList<>();
-                    for (FactDetalle det : listaDetalles) {
-                        BigDecimal precio = det.getPrecioDesc();
-                        if (sisMonedas.getDescripcion().equals("u$s") && det.getAuxListaPrecioDet().getIdListaPrecios().getIdMoneda().getDescripcion().equals("$AR")) {
-                            SisCotDolar sisCotDolar = sisCotDolarFacade.getLastCotizacion();
-                            precio = precio.multiply(sisCotDolar.getCotizacion());
-                        } else if (sisMonedas.getDescripcion().equals("$AR") && det.getAuxListaPrecioDet().getIdListaPrecios().getIdMoneda().getDescripcion().equals("u$s")) {
-                            SisCotDolar sisCotDolar = sisCotDolarFacade.getLastCotizacion();
-                            precio = precio.divide(sisCotDolar.getCotizacion(), 2, RoundingMode.HALF_UP);
-                        }
-                        if (factCab.getIdSisTipoOperacion().getIdSisTipoOperacion() != 5 && (precio.compareTo(det.getAuxListaPrecioDet().getCotaInf()) < 0
-                                || precio.compareTo(det.getAuxListaPrecioDet().getCotaSup()) > 0)
-                                && precio.compareTo(BigDecimal.ZERO) != 0) {
-                            detallesCotas.add(det);
-                        }
-                    }
-                    String prod = "";
-                    if (detallesCotas.size() > 0) {
-                        for (FactDetalle d : detallesCotas) {
-                            prod = prod.concat(d.getDetalle()).concat(", ");
-                        }
-                        respuesta.setControl(AppCodigo.ERROR, "Los productos: " + prod + ", deben estar entre las cotas indicadas en la lista de precios");
-                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
-                    }
-                }
-
+                
                 //Termina el recorrido de la Grilla de articulos y empiezo con la de factFormaPago
                 System.out.println("::::::::: grillaFormaPago ::::::::::::: -> " + grillaFormaPago);
                 if (factFormaPago && grillaFormaPago != null) {
@@ -925,6 +897,42 @@ public class GrabaComprobanteRest {
                         listaFormaPago.add(factFPago);
                     }
                 }
+                
+                //Aca filtro por las cotas en la lista de precios seleccionada y el precio ingresado
+                if (listaPrecio != null) {
+                    List<FactDetalle> detallesCotas = new ArrayList<>();
+                    for (FactDetalle det : listaDetalles) {
+                        BigDecimal precio = det.getPrecioDesc();
+                        if (sisMonedas.getDescripcion().equals("u$s") && det.getAuxListaPrecioDet().getIdListaPrecios().getIdMoneda().getDescripcion().equals("$AR")) {
+                            SisCotDolar sisCotDolar = sisCotDolarFacade.getLastCotizacion();
+                            precio = precio.multiply(sisCotDolar.getCotizacion());
+                        } else if (sisMonedas.getDescripcion().equals("$AR") && det.getAuxListaPrecioDet().getIdListaPrecios().getIdMoneda().getDescripcion().equals("u$s")) {
+                            SisCotDolar sisCotDolar = sisCotDolarFacade.getLastCotizacion();
+                            precio = precio.divide(sisCotDolar.getCotizacion(), 2, RoundingMode.HALF_UP);
+                        }
+                        /*Boolean usaCota = true;
+                        if(listaFormaPago != null && listaFormaPago.size() == 1 && (listaFormaPago.get(0).getIdFormaPago().getIdFormaPago() == 12 || listaFormaPago.get(0).getIdFormaPago().getIdFormaPago() == 13 || listaFormaPago.get(0).getIdFormaPago().getIdFormaPago() == 14)) {
+                            usaCota = false;
+                        } else {
+                            usaCota = true;
+                        }
+                        if (usaCota && (precio.compareTo(det.getAuxListaPrecioDet().getCotaInf()) < 0
+                                || precio.compareTo(det.getAuxListaPrecioDet().getCotaSup()) > 0)
+                                && precio.compareTo(BigDecimal.ZERO) != 0) {
+                            detallesCotas.add(det);
+                        }*/
+                    }
+                    String prod = "";
+                    if (detallesCotas.size() > 0) {
+                        for (FactDetalle d : detallesCotas) {
+                            prod = prod.concat(d.getDetalle()).concat(", ");
+                        }
+                        respuesta.setControl(AppCodigo.ERROR, "Los productos: " + prod + ", deben estar entre las cotas indicadas en la lista de precios");
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                }
+
+                
 
                 //Empiezo con la grilla de SubTotales para grabar FactPie
                 if (factPie) {
@@ -2988,6 +2996,7 @@ public class GrabaComprobanteRest {
 
                     CanjesDocumentoSybase documentoCanje = new CanjesDocumentoSybase(factCab.getIdPadron(), (short) factCab.getIdCteNumerador().getIdPtoVenta().getPtoVenta(), Integer.parseInt(numeroComp));
                     if (factCab.getIdmoneda().getIdMoneda() > 1) {
+
                         if (factCab.getDiferidoVto().equals(true)) {
                             documentoCanje.setImporte(fp.getImporte().doubleValue());
                         } else {
@@ -3003,6 +3012,7 @@ public class GrabaComprobanteRest {
                         }
 
                     }
+
                     // Non-terminating decimal expansion; no exact representable decimal result.
                     documentoCanje.setVencimiento(factCab.getFechaVto());
                     documentoCanje.setEmision(factCab.getFechaEmision());
@@ -3070,7 +3080,7 @@ public class GrabaComprobanteRest {
                 hm.put("prefijoEmpresa", "05");
                 System.out.println(factCab.getIdFactCab() + " - " + codigoVerificador + " - " + factCab.getIdCteTipo().getIdCteTipo());
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                bytes = utilidadesFacade.generateJasperReportPDF(request, nombreReporte, hm, user, outputStream);
+                bytes = utilidadesFacade.generateJasperReportPDF(request, nombreReporte, hm, user, outputStream, 1, false, null, null);
             } catch (Exception ex) {
                 ex.printStackTrace();
                 System.out.println("Error: " + ex.getMessage());
@@ -3371,8 +3381,13 @@ public class GrabaComprobanteRest {
                 totalDetalleFactura = new BigDecimal(0);
                 facVentasDetalle.setVCondicionIva(Short.valueOf(Integer.toString(condiIva.getCondIva().getCondiva())));
                 facVentasDetalle.setVDeposito(det.getIdDepositos().getCodigoDep());
-                if (det.getIdFactCab().getIdSisTipoOperacion().getIdSisTipoOperacion() == 5) {
-                    facVentasDetalle.setCanjeSn("S");
+                if (det.getIdFactCab().getFactFormaPagoCollection() != null && det.getIdFactCab().getFactFormaPagoCollection().size() > 0 && det.getIdFactCab().getFactFormaPagoCollection().size() == 1) {
+                    List<FactFormaPago> listaFFP = new ArrayList(det.getIdFactCab().getFactFormaPagoCollection());
+                    if(listaFFP != null && listaFFP.size() == 1 && listaFFP.get(0).getIdFormaPago().getIdFormaPago() == 12) {
+                        facVentasDetalle.setCanjeSn("S");
+                    } else {
+                        facVentasDetalle.setCanjeSn("N");
+                    }
                 } else {
                     facVentasDetalle.setCanjeSn("N");
                 }
@@ -3501,8 +3516,13 @@ public class GrabaComprobanteRest {
             }
             movCierre.setVFormaPago((Short.valueOf(Integer.toString(formaPagoSeleccionada))));
 
-            if (factCab.getIdSisTipoOperacion().getIdSisTipoOperacion() == 5) {
-                movCierre.setCanjeSn("S");
+            if (factCab.getFactFormaPagoCollection() != null && factCab.getFactFormaPagoCollection().size() > 0 && factCab.getFactFormaPagoCollection().size() == 1) {
+                List<FactFormaPago> listaFFP = new ArrayList(factCab.getFactFormaPagoCollection());
+                if(listaFFP != null && listaFFP.size() == 1 && listaFFP.get(0).getIdFormaPago().getIdFormaPago() == 12) {
+                    movCierre.setCanjeSn("S");
+                } else {
+                    movCierre.setCanjeSn("N");
+                }
             } else {
                 movCierre.setCanjeSn("N");
             }

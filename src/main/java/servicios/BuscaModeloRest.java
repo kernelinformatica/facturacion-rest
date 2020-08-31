@@ -93,6 +93,7 @@ public class BuscaModeloRest {
             List<JsonElement> productos = (List<JsonElement>) Utils.getKeyFromJsonObjectArray("productos", jsonBody, "ArrayList");
             Integer tipoComprobante = (Integer) Utils.getKeyFromJsonObject("tipoComprobante", jsonBody, "Integer");
             BigDecimal porcentajeSisa = (BigDecimal) Utils.getKeyFromJsonObject("porcentajeSisa", jsonBody, "BigDecimal");
+            Boolean esCanje = (Boolean) Utils.getKeyFromJsonObject("esCanje", jsonBody, "boolean");
             
             //valido que token no sea null
             if(token == null || token.trim().isEmpty()) {
@@ -337,7 +338,7 @@ public class BuscaModeloRest {
                             porcentaje = p.getValor();
                                 total = total.multiply(porcentaje.divide(cien));
                         //Busco percepciones de iva para el cliente de acuerdo a la tabla del sisa en venas solamente si es canje
-                        } else if(p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(8).getTipo()) && idCliente != null && idSisTipoOperacion == 5) {
+                        } else if(p.getIdSisTipoModelo().getTipo().equals(sisTipoModeloFacade.find(8).getTipo()) && idCliente != null && esCanje) {
                             //Busco en la base Sybasse el CerealSisa
                             if(tipoComprobante == null || tipoComprobante != 75) {
                                 continue;

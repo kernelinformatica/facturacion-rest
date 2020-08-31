@@ -123,7 +123,7 @@ public class DescargarStockRest {
             hm.put("titulo", tituloReporte);
             
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            byte[] bytes = utils.generateJasperReportPDF(request, nombreReporte, hm, user, outputStream);
+            byte[] bytes = utils.generateJasperReportPDF(request, nombreReporte, hm, user, outputStream, 1, false, null, null);
             String nomeRelatorio = nombreReporte + ".pdf";
             return Response.ok(bytes).type("application/pdf").header("Content-Disposition", "filename=\"" + nomeRelatorio + "\"").build();
         } catch (Exception e) {
