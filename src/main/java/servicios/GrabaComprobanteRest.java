@@ -2,6 +2,7 @@ package servicios;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import compra.GrabaFacCompraSybase;
 import datos.AppCodigo;
 import datos.DatosResponse;
 import datos.ServicioResponse;
@@ -56,6 +57,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Formatter;
@@ -70,6 +72,7 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -209,6 +212,15 @@ public class GrabaComprobanteRest {
     CerealesFacade cerealesFacade;
     @Inject
     CanjesContratosCerealesFacade canjesContratosCerealesFacade;
+    
+    @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response checkHttp(@Context HttpServletRequest request) {
+        ServicioResponse respuesta = new ServicioResponse();
+        respuesta.setControl(AppCodigo.OK, "Funciona graba comprobante");
+        return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();
+    }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -277,7 +289,7 @@ public class GrabaComprobanteRest {
             boolean factFormaPago = (Boolean) Utils.getKeyFromJsonObject("factFormaPago", jsonBody, "boolean");
             boolean lote = (Boolean) Utils.getKeyFromJsonObject("lote", jsonBody, "boolean");
             boolean grabaFactura = (Boolean) Utils.getKeyFromJsonObject("grabaFactura", jsonBody, "boolean");
-
+            boolean pesificadoSn = (Boolean) Utils.getKeyFromJsonObject("pesificado", jsonBody, "boolean");
             //Datos de la factura relacionada a un remito
             Integer tipoFact = (Integer) Utils.getKeyFromJsonObject("tipoFact", jsonBody, "Integer");
             String letraFact = (String) Utils.getKeyFromJsonObject("letraFact", jsonBody, "String");
@@ -301,7 +313,11 @@ public class GrabaComprobanteRest {
                 respuesta.setControl(AppCodigo.ERROR, "Error, token vacio");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-
+            if (pesificadoSn == false){
+                pesificadoSn = false;
+            }else{
+                pesificadoSn = true;
+            }
             //Busco el token
             Acceso userToken = accesoFacade.findByToken(token);
 
@@ -1326,34 +1342,39 @@ public class GrabaComprobanteRest {
                     transaccion7 = factFormaPagoFacade.setFactFormaPagoNuevo(f);
                     //si la trnsaccion fallo devuelvo el mensaje
                     if (!transaccion7) {
+
                         respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta la forma de pago: " + f.getDetalle());
                         return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                     }
                 }
             }
+            // SOLO SI ES COMPRAS
             // Verifico si son remitos y paso solamente a facComprasSybase //
             if (factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(1)
                     || factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(28)
                     || factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(29)
                     || factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(31)) {
-                this.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
+                 GrabaFacCompraSybase fcSybase = new GrabaFacCompraSybase();
+                 fcSybase.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
+                 
+            this.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
             } else {
-                // caso contrario verifico el curso legal si es verdadero (true) contabiliza y paso a factComprasSybase
                 if (factCab.getIdCteTipo().getCursoLegal()) {
-                    Response respGrabarMaster = grabarMaster(factCab, factDetalle, factFormaPago, factPie, user);
-                    if (respGrabarMaster.getStatusInfo().equals(Response.Status.CREATED) || respGrabarMaster.getStatusInfo().equals(Response.Status.BAD_REQUEST)) {
-                        Boolean respGrabaMasterSybase = this.grabarMasterSybase(factCab, factDetalle, factFormaPago, factPie, user);
-                        if (respGrabaMasterSybase == true) {
-                            if (factCab.getIdCteTipo().getIdSisComprobante().getIdSisModulos().getIdSisModulos() == 1) {
+                    if (factCab.getIdCteTipo().getIdSisComprobante().getIdSisModulos().getIdSisModulos() == 1) {
+                        // es compras
+                        Response respGrabarMaster = grabarMaster(factCab, factDetalle, factFormaPago, factPie, user);
+                        if (respGrabarMaster.getStatusInfo().equals(Response.Status.CREATED) || respGrabarMaster.getStatusInfo().equals(Response.Status.BAD_REQUEST)) {
+                            Boolean respGrabaMasterSybase = this.grabarMasterSybase(factCab, factDetalle, factFormaPago, factPie, user);
+                            if (respGrabaMasterSybase == true) {
+                                //GrabaFacCompraSybase fcSybase = new GrabaFacCompraSybase();
+                                //fcSybase.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
                                 this.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
-                            } else if (factCab.getIdCteTipo().getIdSisComprobante().getIdSisModulos().getIdSisModulos() == 2) {
-                                this.grabarFactVentasSybase(factCab, factDetalle, factFormaPago, factPie, user);
                             }
                         }
                     }
                 }
-
             }
+            // FIN SOLO SI ES COMPRAS
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -2834,7 +2855,7 @@ public class GrabaComprobanteRest {
             
              */
             if (factCab.getIdSisTipoOperacion().getIdSisTipoOperacion().equals(5) && factCab.getIdSisTipoOperacion().getIdSisModulos().getIdSisModulos().equals(2)) {
-                BigDecimal subTotalCanje = new   BigDecimal(0);
+                BigDecimal subTotalCanje = new BigDecimal(0);
                 // CANJE CREDITO PASE 1 MASTER SYBASE
                 for (FactFormaPago fp : factFormaPago) {
                     //fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(7) 
@@ -2951,17 +2972,16 @@ public class GrabaComprobanteRest {
                 }
                 //  GRABA TABLA DOCUMENTO SYBASE
                 // dario
-               
-               /* for (FactDetalle det : factDetalle) {
-                    if (factCab.getIdmoneda().getIdMoneda() > 1) {
-                        subTotalCanje = subTotalCanje.add(det.getImporte());
-                    } else {
-                        subTotalCanje = subTotalCanje.add((det.getImporte().multiply(signo)).multiply(cotizacionDolar).setScale(2, RoundingMode.HALF_EVEN));
-                    }
-                }*/
 
+                /* for (FactDetalle det : factDetalle) {
+                 if (factCab.getIdmoneda().getIdMoneda() > 1) {
+                 subTotalCanje = subTotalCanje.add(det.getImporte());
+                 } else {
+                 subTotalCanje = subTotalCanje.add((det.getImporte().multiply(signo)).multiply(cotizacionDolar).setScale(2, RoundingMode.HALF_EVEN));
+                 }
+                 }*/
                 for (FactFormaPago fp : factFormaPago) {
-                    System.out.println(paseDetalle + "::::::::: DOCUMENTO SYBASE  ----------------------> grabaDocumentoSybase()-> Moneda: "+factCab.getIdmoneda().getIdMoneda()+", Diferido: "+factCab.getDiferidoVto()+", SubTotal: "+subTotal);
+                    System.out.println(paseDetalle + "::::::::: DOCUMENTO SYBASE  ----------------------> grabaDocumentoSybase()-> Moneda: " + factCab.getIdmoneda().getIdMoneda() + ", Diferido: " + factCab.getDiferidoVto() + ", SubTotal: " + subTotal);
 
                     String numeroCompTemp = String.valueOf(factCab.getNumero());
                     String numeroComp = numeroCompTemp.substring(numeroCompTemp.length() - 8, numeroCompTemp.length());
@@ -2971,10 +2991,10 @@ public class GrabaComprobanteRest {
                         if (factCab.getDiferidoVto().equals(true)) {
                             documentoCanje.setImporte(fp.getImporte().doubleValue());
                         } else {
-                             documentoCanje.setImporte(subTotal.multiply(signo).divide(factCab.getCotDolar(), 2, RoundingMode.HALF_UP).doubleValue());
+                            documentoCanje.setImporte(subTotal.multiply(signo).divide(factCab.getCotDolar(), 2, RoundingMode.HALF_UP).doubleValue());
                         }
 
-                    } else { 
+                    } else {
                         if (factCab.getDiferidoVto().equals(true)) {
                             documentoCanje.setImporte(fp.getImporte().divide(factCab.getCotDolar(), 2, RoundingMode.HALF_UP).doubleValue());
                         } else {
@@ -3532,5 +3552,79 @@ public class GrabaComprobanteRest {
         return true;
     }
 
-    // fin factCompras Sybase
+    // PASAJES
+    @POST
+    @Path("/pasajes")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response pasaje(@HeaderParam("token") String token, @HeaderParam("idModulo") Integer idModulo, @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException, Exception {
+        ServicioResponse respuesta = new ServicioResponse();
+        // Obtengo el body de la request
+        System.out.println("<----- pasajes()");
+        JsonObject jsonBody = Utils.getJsonObjectFromRequest(request);
+
+        //Obtengo los atributos del body
+        //Datos de FactCab
+        //valido valido parametros
+        if (idModulo == null) {
+            respuesta.setControl(AppCodigo.ERROR, "Error, Parametros nulos, no se pudo especificar el modulo.");
+            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+        }
+
+        if (token == null || token.trim().isEmpty()) {
+            respuesta.setControl(AppCodigo.ERROR, "Error, token vacio");
+            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+        }
+
+        //Busco el token
+        Acceso userToken = accesoFacade.findByToken(token);
+
+        //valido que Acceso no sea null
+        if (userToken == null) {
+            respuesta.setControl(AppCodigo.ERROR, "Error, Acceso nulo");
+            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+        }
+
+        //Busco el usuario
+        Usuario user = usuarioFacade.getByToken(userToken);
+
+        //valido que el Usuario no sea null
+        if (user == null) {
+            respuesta.setControl(AppCodigo.ERROR, "Error, Usuario nulo");
+            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+
+        }
+
+        //valido vencimiento token
+        if (!accesoFacade.validarToken(userToken, user)) {
+            respuesta.setControl(AppCodigo.ERROR, "Credenciales incorrectas");
+            return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
+        }
+
+        Integer idFactCab = (Integer) Utils.getKeyFromJsonObject("idFactCab", jsonBody, "Integer");
+        FactCab objFactCab = factCabFacade.getByIdFactCab(idFactCab);
+        List<FactDetalle> objFactDetalle = factDetalleFacade.getFactDetalleByIdFactCab(idFactCab);
+        List<FactFormaPago> objFactFormaPago = factFormaPagoFacade.getFactFormaPago(idFactCab);
+        List<FactPie> objFactPie = factPieFacade.getFactFie(idFactCab);
+        // caso contrario verifico el curso legal si es verdadero (true) contabiliza y paso a factComprasSybase
+        if (objFactCab.getIdCteTipo().getCursoLegal()) {
+            if (objFactCab.getIdCteTipo().getIdSisComprobante().getIdSisModulos().getIdSisModulos() == 2) {
+                Response respGrabarMaster = this.grabarMaster(objFactCab, objFactDetalle, objFactFormaPago, objFactPie, user);
+                if (respGrabarMaster.getStatusInfo().equals(Response.Status.CREATED) || respGrabarMaster.getStatusInfo().equals(Response.Status.BAD_REQUEST)) {
+                    Boolean respGrabaMasterSybase = this.grabarMasterSybase(objFactCab, objFactDetalle, objFactFormaPago, objFactPie, user);
+                    if (respGrabaMasterSybase == true) {
+                        this.grabarFactVentasSybase(objFactCab, objFactDetalle, objFactFormaPago, objFactPie, user);
+
+                    } else {
+                        respuesta.setControl(AppCodigo.ERROR, "El pasaje a contabilidad ha fallado");
+                        return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
+                    }
+                }
+            }
+
+        }
+        respuesta.setControl(AppCodigo.OK, "El pasaje de ventas se realizo con éxito.");
+        return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
+    }
+
 }

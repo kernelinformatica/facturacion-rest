@@ -1,13 +1,11 @@
-
 package servicios;
-
 import java.util.Set;
 import javax.ws.rs.core.Application;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 /**
  *
- * @author Franco Sili
+ * @author Kernel Informatica
  */
 @javax.ws.rs.ApplicationPath("ws")
 public class ApplicationConfig extends Application {
@@ -56,7 +54,9 @@ public class ApplicationConfig extends Application {
         resources.add(servicios.EstadoSisaRest.class);
         resources.add(servicios.FiltroListaPrecioRest.class);
         resources.add(servicios.FormaPagoRest.class);
+        resources.add(servicios.GrabaComprobanteCompraRest.class);
         resources.add(servicios.GrabaComprobanteRest.class);
+        resources.add(servicios.GrabaComprobanteVentaRest.class);
         resources.add(servicios.ImputacionesRest.class);
         resources.add(servicios.LibroRest.class);
         resources.add(servicios.ListaPrecioRest.class);
