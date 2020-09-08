@@ -206,6 +206,8 @@ public class GrabaComprobanteRest {
     @Inject
     CanjesDocumentoSybaseFacade canjesDocumentosSybaseFacade;
     @Inject
+    CanjesDocumentoSybaseFacade documentoSybaseFacade;
+    @Inject
     CerealesFacade cerealesFacade;
     @Inject
     CanjesContratosCerealesFacade canjesContratosCerealesFacade;
@@ -253,7 +255,7 @@ public class GrabaComprobanteRest {
             String direccion = (String) Utils.getKeyFromJsonObject("direccion", jsonBody, "String");
             String codigoCereal = (String) Utils.getKeyFromJsonObject("cereal", jsonBody, "String");
             Boolean diferidoVto = (Boolean) Utils.getKeyFromJsonObject("diferidoVto", jsonBody, "boolean");
-            //Para canje
+            /// Para canje /////////
             String productoCanje = (String) Utils.getKeyFromJsonObject("productoCanje", jsonBody, "String");
             BigDecimal precioReferenciaCanje = (BigDecimal) Utils.getKeyFromJsonObject("precioReferenciaCanje", jsonBody, "BigDecimal");
             BigDecimal interesCanje = (BigDecimal) Utils.getKeyFromJsonObject("interesCanje", jsonBody, "BigDecimal");
@@ -277,6 +279,8 @@ public class GrabaComprobanteRest {
             boolean factFormaPago = (Boolean) Utils.getKeyFromJsonObject("factFormaPago", jsonBody, "boolean");
             boolean lote = (Boolean) Utils.getKeyFromJsonObject("lote", jsonBody, "boolean");
             boolean grabaFactura = (Boolean) Utils.getKeyFromJsonObject("grabaFactura", jsonBody, "boolean");
+            //boolean esPesificado = (Boolean) Utils.getKeyFromJsonObject("marcaPesificado", jsonBody, "boolean");
+            //boolean esPesificadoPersisteSn = (Boolean) Utils.getKeyFromJsonObject("pesificadoPersisteSn", jsonBody, "boolean");
 
             //Datos de la factura relacionada a un remito
             Integer tipoFact = (Integer) Utils.getKeyFromJsonObject("tipoFact", jsonBody, "Integer");
@@ -326,7 +330,16 @@ public class GrabaComprobanteRest {
                 respuesta.setControl(AppCodigo.ERROR, "Credenciales incorrectas");
                 return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
             }
-
+            /* if (esPesificado == false) {
+             esPesificado = false;
+             } else {
+             esPesificado = true;
+             }
+             if (esPesificadoPersisteSn == false) {
+             esPesificadoPersisteSn = false;
+             } else {
+             esPesificadoPersisteSn = true;
+             }*/
             //Me fijo que  los campos que tienen el atributo NotNull no sean nulos
             if (idCteTipo == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, tipo de comprobante nulo");
@@ -829,7 +842,7 @@ public class GrabaComprobanteRest {
                         }
                     }
                 }
-                
+
                 //Termina el recorrido de la Grilla de articulos y empiezo con la de factFormaPago
                 System.out.println("::::::::: grillaFormaPago ::::::::::::: -> " + grillaFormaPago);
                 if (factFormaPago && grillaFormaPago != null) {
@@ -881,7 +894,7 @@ public class GrabaComprobanteRest {
                         listaFormaPago.add(factFPago);
                     }
                 }
-                
+
                 //Aca filtro por las cotas en la lista de precios seleccionada y el precio ingresado
                 if (listaPrecio != null) {
                     List<FactDetalle> detallesCotas = new ArrayList<>();
@@ -895,16 +908,16 @@ public class GrabaComprobanteRest {
                             precio = precio.divide(sisCotDolar.getCotizacion(), 2, RoundingMode.HALF_UP);
                         }
                         /*Boolean usaCota = true;
-                        if(listaFormaPago != null && listaFormaPago.size() == 1 && (listaFormaPago.get(0).getIdFormaPago().getIdFormaPago() == 12 || listaFormaPago.get(0).getIdFormaPago().getIdFormaPago() == 13 || listaFormaPago.get(0).getIdFormaPago().getIdFormaPago() == 14)) {
-                            usaCota = false;
-                        } else {
-                            usaCota = true;
-                        }
-                        if (usaCota && (precio.compareTo(det.getAuxListaPrecioDet().getCotaInf()) < 0
-                                || precio.compareTo(det.getAuxListaPrecioDet().getCotaSup()) > 0)
-                                && precio.compareTo(BigDecimal.ZERO) != 0) {
-                            detallesCotas.add(det);
-                        }*/
+                         if(listaFormaPago != null && listaFormaPago.size() == 1 && (listaFormaPago.get(0).getIdFormaPago().getIdFormaPago() == 12 || listaFormaPago.get(0).getIdFormaPago().getIdFormaPago() == 13 || listaFormaPago.get(0).getIdFormaPago().getIdFormaPago() == 14)) {
+                         usaCota = false;
+                         } else {
+                         usaCota = true;
+                         }
+                         if (usaCota && (precio.compareTo(det.getAuxListaPrecioDet().getCotaInf()) < 0
+                         || precio.compareTo(det.getAuxListaPrecioDet().getCotaSup()) > 0)
+                         && precio.compareTo(BigDecimal.ZERO) != 0) {
+                         detallesCotas.add(det);
+                         }*/
                     }
                     String prod = "";
                     if (detallesCotas.size() > 0) {
@@ -915,8 +928,6 @@ public class GrabaComprobanteRest {
                         return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                     }
                 }
-
-                
 
                 //Empiezo con la grilla de SubTotales para grabar FactPie
                 if (factPie) {
@@ -1118,7 +1129,7 @@ public class GrabaComprobanteRest {
                             factCab.setCaiVto(cteNumerador.getVtoCai());
                         }
                     }
-                    return this.persistirObjetos(factCab, contratoDet, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumerador, user);
+                    return this.persistirObjetos(factCab, contratoDet, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumerador, user /*, esPesificado, esPesificadoPersisteSn*/);
                 } else if (tipoFact != null || letraFact != null || numeroFact != null || fechaVencimientoFact != null || fechaContaFact != null) {
                     CteNumerador cteNumerador = null;
                     if (idNumero != null) {
@@ -1141,9 +1152,19 @@ public class GrabaComprobanteRest {
                             factCab.setCaiVto(cteNumerador.getVtoCai());
                         }
                     }
+                    /* if (esPesificado == false) {
+                     esPesificado = false;
+                     } else {
+                     esPesificado = true;
+                     }
+                     if (esPesificadoPersisteSn == false) {
+                     esPesificadoPersisteSn = false;
+                     } else {
+                     esPesificadoPersisteSn = true;
+                     }*/
 
                     //Persisto Primero los objetos del remito
-                    this.persistirObjetos(factCab, contratoDet, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumerador, user);
+                    this.persistirObjetos(factCab, contratoDet, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumerador, user/*, esPesificado, esPesificadoPersisteSn*/);
 
                     //Luego empiezo con los datos de la factura relacionada
                     CteTipo cteTipoFac = cteTipoFacade.find(tipoFact);
@@ -1204,7 +1225,7 @@ public class GrabaComprobanteRest {
                     fc.setIdSisTipoOperacion(sisTipoOperacion);
                     fc.setIdVendedor(idVendedor);
 
-                    return this.generarFacturaRelacionada(fc, contratoDet, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumeradorRel, user, request);
+                    return this.generarFacturaRelacionada(fc, contratoDet, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumeradorRel, user, request /*, esPesificado, esPesificadoPersisteSn*/);
                 } else {
                     respuesta.setControl(AppCodigo.ERROR, "No pudo grabar la factura asociada, algun campo no es valido");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
@@ -1230,7 +1251,10 @@ public class GrabaComprobanteRest {
             List<Lote> listaLotes,
             List<FactFormaPago> factFormaPago,
             CteNumerador cteNumerador,
-            Usuario user) {
+            Usuario user/*,
+     Boolean marcaPesificado,
+     Boolean pesificadoPersisteSn*/
+    ) {
         ServicioResponse respuesta = new ServicioResponse();
         try {
 
@@ -1339,6 +1363,7 @@ public class GrabaComprobanteRest {
                     }
                 }
             }
+
             // Verifico si son remitos y paso solamente a facComprasSybase //
             if (factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(1)
                     || factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(28)
@@ -1346,7 +1371,7 @@ public class GrabaComprobanteRest {
                     || factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(31)) {
                 this.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
             } else {
-                // caso contrario verifico el curso legal si es verdadero (true) contabiliza y paso a factComprasSybase
+
                 if (factCab.getIdCteTipo().getCursoLegal()) {
                     Response respGrabarMaster = grabarMaster(factCab, factDetalle, factFormaPago, factPie, user);
                     if (respGrabarMaster.getStatusInfo().equals(Response.Status.CREATED) || respGrabarMaster.getStatusInfo().equals(Response.Status.BAD_REQUEST)) {
@@ -1355,10 +1380,30 @@ public class GrabaComprobanteRest {
                             if (factCab.getIdCteTipo().getIdSisComprobante().getIdSisModulos().getIdSisModulos() == 1) {
                                 this.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
                             } else if (factCab.getIdCteTipo().getIdSisComprobante().getIdSisModulos().getIdSisModulos() == 2) {
+                                // ventas
+                                /*if (marcaPesificado.equals(true)) {
+                                 // separo el punto de venta del nro de comprobante 
+                                 String puntoVentaTemp = String.valueOf(factCab.getNumero());
+                                 String puntoVenta = puntoVentaTemp.substring(puntoVentaTemp.length(), puntoVentaTemp.length()-8);
+                                 String numeroCompTemp = String.valueOf(factCab.getNumero());
+                                 String numeroComp = numeroCompTemp.substring(numeroCompTemp.length() - 8, numeroCompTemp.length());
+                                 CanjesDocumentoSybase documento =  documentoSybaseFacade.buscaDocumento(factCab.getIdPadron(),Integer.parseInt(puntoVenta) , Integer.parseInt(numeroComp), factCab.getFechaEmision());
+                                 if (documento.equals(true)){
+                                 documento.setFactura(factCab.getNumero());
+                                       
+                                 } 
+                                 if (pesificadoPersisteSn.equals(true)){
+                                       
+                                 this.grabarFactVentasSybase(factCab, factDetalle, factFormaPago, factPie, user);
+                                 }
+                                 } else {
+                                    
+                                 }*/
                                 this.grabarFactVentasSybase(factCab, factDetalle, factFormaPago, factPie, user);
                             }
                         }
                     }
+
                 }
 
             }
@@ -1406,7 +1451,7 @@ public class GrabaComprobanteRest {
         }
     }
 
-    public Response generarFacturaRelacionada(FactCab factCab, ContratoDet contratoDet, List<FactDetalle> factDetalle, List<FactImputa> factImputa, List<Produmo> produmo, List<FactPie> factPie, List<Lote> listaLotes, List<FactFormaPago> factFormaPago, CteNumerador cteNumerador, Usuario user, HttpServletRequest request) {
+    public Response generarFacturaRelacionada(FactCab factCab, ContratoDet contratoDet, List<FactDetalle> factDetalle, List<FactImputa> factImputa, List<Produmo> produmo, List<FactPie> factPie, List<Lote> listaLotes, List<FactFormaPago> factFormaPago, CteNumerador cteNumerador, Usuario user, HttpServletRequest request/*, Boolean marcaPesificado, Boolean pesificadoPersisteSn*/) {
         ServicioResponse respuesta = new ServicioResponse();
         try {
             List<FactDetalle> listaDetalles = new ArrayList<>();
@@ -1512,7 +1557,7 @@ public class GrabaComprobanteRest {
             }
 
             //Persisto los objetos y devuelvo la respuesta
-            return this.persistirObjetos(factCab, contratoDet, listaDetalles, listaImputa, produmo, listaPie, listaLotes, listaFormaPago, cteNumerador, user);
+            return this.persistirObjetos(factCab, contratoDet, listaDetalles, listaImputa, produmo, listaPie, listaLotes, listaFormaPago, cteNumerador, user/*, marcaPesificado, pesificadoPersisteSn*/);
         } catch (Exception ex) {
             ex.printStackTrace();
             System.out.println("Error: " + ex.getMessage());
@@ -2308,7 +2353,6 @@ public class GrabaComprobanteRest {
             BigDecimal cotizacionDolar = new BigDecimal(1);
             // dolarizo o pesifico 
             if (factCab.getIdCteTipo().getcTipoOperacion() <= 17) {
-                // factura
                 if (factCab.getIdmoneda().getIdMoneda() > 1) {
                     cotizacionDolar = factCab.getCotDolar();
                     System.out.println("ES EN DOLARES LA DEBO DE PESIFICAR (cotizacion: " + cotizacionDolar + ") ");
@@ -2316,7 +2360,6 @@ public class GrabaComprobanteRest {
                     cotizacionDolar = new BigDecimal(1);
                 }
                 System.out.println("COTIZACION DOLAR: " + cotizacionDolar);
-
             }
             Integer formaPagoSeleccionada = 0;
             for (FactDetalle det : factDetalle) {
@@ -2457,7 +2500,13 @@ public class GrabaComprobanteRest {
                 if (det.getIdFactCab().getIdCteTipo().getcTipoOperacion() >= 17) {
                     if (det.getIdFactCab().getIdCteTipo().getcTipoOperacion().equals(17)) {
                         // si son remitos  grabo la cotizacion del dolar
-                        facComprasDetalle.setcDolar(factCab.getCotDolar().doubleValue());
+                        if (factCab.getIdmoneda().getIdMoneda().equals(2)) {
+                            facComprasDetalle.setcDolar(factCab.getCotDolar().doubleValue());
+                        } else {
+
+                            facComprasDetalle.setcDolar(Double.valueOf(1));
+                        }
+
                     } else {
                         facComprasDetalle.setcDolar(Double.valueOf(0));
                     }
@@ -2471,7 +2520,7 @@ public class GrabaComprobanteRest {
                 }
             }
             /* Movimiento 0 cierre */
-            System.out.println("-------------> Movimiento 0 CIERRE L50 " + (cotizacionDolar));
+            System.out.println("-------------> FAC COMPRAS Movimiento 0 CIERRE L50 " + (cotizacionDolar));
             FacComprasSybase movCierre = new FacComprasSybase("CIERRE L50",
                     Short.valueOf(Integer.toString(factCab.getIdCteTipo().getcTipoOperacion())),
                     factCab.getFechaEmision(),
@@ -2516,8 +2565,14 @@ public class GrabaComprobanteRest {
             movCierre.setCDescuento(Double.valueOf(0));
             movCierre.setCDescripcion("N");
             // si son remitos  grabo la cotizacion del dolar getcTipoOperacion = 17 
+
             if (factCab.getIdCteTipo().getcTipoOperacion().equals(17)) {
-                movCierre.setcDolar(factCab.getCotDolar().doubleValue());
+                if (factCab.getIdmoneda().getIdMoneda().equals(1)) {
+                    movCierre.setcDolar(Double.valueOf(1));
+                } else {
+                    movCierre.setcDolar(factCab.getCotDolar().doubleValue());
+                }
+
             } else {
                 movCierre.setcDolar(Double.valueOf(0));
             }
@@ -2842,7 +2897,7 @@ public class GrabaComprobanteRest {
             
              */
             if (factCab.getIdSisTipoOperacion().getIdSisTipoOperacion().equals(5) && factCab.getIdSisTipoOperacion().getIdSisModulos().getIdSisModulos().equals(2)) {
-                BigDecimal subTotalCanje = new   BigDecimal(0);
+                BigDecimal subTotalCanje = new BigDecimal(0);
                 // CANJE CREDITO PASE 1 MASTER SYBASE
                 for (FactFormaPago fp : factFormaPago) {
                     //fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(7) 
@@ -2959,17 +3014,16 @@ public class GrabaComprobanteRest {
                 }
                 //  GRABA TABLA DOCUMENTO SYBASE
                 // dario
-               
-               /* for (FactDetalle det : factDetalle) {
-                    if (factCab.getIdmoneda().getIdMoneda() > 1) {
-                        subTotalCanje = subTotalCanje.add(det.getImporte());
-                    } else {
-                        subTotalCanje = subTotalCanje.add((det.getImporte().multiply(signo)).multiply(cotizacionDolar).setScale(2, RoundingMode.HALF_EVEN));
-                    }
-                }*/
 
+                /* for (FactDetalle det : factDetalle) {
+                 if (factCab.getIdmoneda().getIdMoneda() > 1) {
+                 subTotalCanje = subTotalCanje.add(det.getImporte());
+                 } else {
+                 subTotalCanje = subTotalCanje.add((det.getImporte().multiply(signo)).multiply(cotizacionDolar).setScale(2, RoundingMode.HALF_EVEN));
+                 }
+                 }*/
                 for (FactFormaPago fp : factFormaPago) {
-                    System.out.println(paseDetalle + "::::::::: DOCUMENTO SYBASE  ----------------------> grabaDocumentoSybase()-> Moneda: "+factCab.getIdmoneda().getIdMoneda()+", Diferido: "+factCab.getDiferidoVto()+", SubTotal: "+subTotal);
+                    System.out.println(paseDetalle + "::::::::: DOCUMENTO SYBASE  ----------------------> grabaDocumentoSybase()-> Moneda: " + factCab.getIdmoneda().getIdMoneda() + ", Diferido: " + factCab.getDiferidoVto() + ", SubTotal: " + subTotal);
 
                     String numeroCompTemp = String.valueOf(factCab.getNumero());
                     String numeroComp = numeroCompTemp.substring(numeroCompTemp.length() - 8, numeroCompTemp.length());
@@ -2980,10 +3034,10 @@ public class GrabaComprobanteRest {
                         if (factCab.getDiferidoVto().equals(true)) {
                             documentoCanje.setImporte(fp.getImporte().doubleValue());
                         } else {
-                             documentoCanje.setImporte(subTotal.multiply(signo).divide(factCab.getCotDolar(), 2, RoundingMode.HALF_UP).doubleValue());
+                            documentoCanje.setImporte(subTotal.multiply(signo).divide(factCab.getCotDolar(), 2, RoundingMode.HALF_UP).doubleValue());
                         }
 
-                    } else { 
+                    } else {
                         if (factCab.getDiferidoVto().equals(true)) {
                             documentoCanje.setImporte(fp.getImporte().divide(factCab.getCotDolar(), 2, RoundingMode.HALF_UP).doubleValue());
                         } else {
@@ -3363,7 +3417,7 @@ public class GrabaComprobanteRest {
                 facVentasDetalle.setVDeposito(det.getIdDepositos().getCodigoDep());
                 if (det.getIdFactCab().getFactFormaPagoCollection() != null && det.getIdFactCab().getFactFormaPagoCollection().size() > 0 && det.getIdFactCab().getFactFormaPagoCollection().size() == 1) {
                     List<FactFormaPago> listaFFP = new ArrayList(det.getIdFactCab().getFactFormaPagoCollection());
-                    if(listaFFP != null && listaFFP.size() == 1 && listaFFP.get(0).getIdFormaPago().getIdFormaPago() == 12) {
+                    if (listaFFP != null && listaFFP.size() == 1 && listaFFP.get(0).getIdFormaPago().getIdFormaPago() == 12) {
                         facVentasDetalle.setCanjeSn("S");
                     } else {
                         facVentasDetalle.setCanjeSn("N");
@@ -3402,7 +3456,7 @@ public class GrabaComprobanteRest {
                 }
             }
             /* Movimiento 0 cierre */
-            System.out.println("-------------> Movimiento 0 CIERRE L50 " + (cotizacionDolar));
+            System.out.println("-------------> FAC VENTAS Movimiento 0 CIERRE L50 " + (cotizacionDolar));
             FacVentasSybase movCierre = new FacVentasSybase("CIERRE L50",
                     Short.valueOf(Integer.toString(factCab.getIdCteTipo().getcTipoOperacion())),
                     factCab.getFechaEmision(),
@@ -3498,7 +3552,7 @@ public class GrabaComprobanteRest {
 
             if (factCab.getFactFormaPagoCollection() != null && factCab.getFactFormaPagoCollection().size() > 0 && factCab.getFactFormaPagoCollection().size() == 1) {
                 List<FactFormaPago> listaFFP = new ArrayList(factCab.getFactFormaPagoCollection());
-                if(listaFFP != null && listaFFP.size() == 1 && listaFFP.get(0).getIdFormaPago().getIdFormaPago() == 12) {
+                if (listaFFP != null && listaFFP.size() == 1 && listaFFP.get(0).getIdFormaPago().getIdFormaPago() == 12) {
                     movCierre.setCanjeSn("S");
                 } else {
                     movCierre.setCanjeSn("N");
