@@ -51,8 +51,10 @@ public class FactCabResponse implements Payload{
     private BigDecimal interesMensualCompra;
     private Boolean canjeInsumos;
     private String tipoCambio;
+    private Boolean diferidoVto;
     private List<FactDetalleResponse> detalle;
     private List<FactImputaResponse> imputa;
+    private List<MasterResponse> master;
     
     
     public FactCabResponse(FactCab f) {
@@ -76,8 +78,10 @@ public class FactCabResponse implements Payload{
         this.interesMensualCompra = f.getInteresMensualCompra();
         this.canjeInsumos = f.getCanjeInsumos();
         this.tipoCambio = f.getTipoCambio();
+        this.diferidoVto = f.getDiferidoVto();
         this.detalle = new ArrayList<>();
         this.imputa = new ArrayList<>();
+        this.master = new ArrayList<>();
     }
 
     public FactCabResponse(Integer idFactCab, String comprobante,long numero, Date fechaEmision, Integer idPadron, String nombre, String cuit, BigDecimal cotDolar, String moneda, String imputada, String modulo, String vendedor, Integer idCteTipo, BigDecimal importeNeto, BigDecimal importeTotal, String tipoOperacion, String autorizada, String permiteBorrado, Integer kilosCanje, Boolean pesificado, Boolean dolarizadoAlVto, BigDecimal interesMensualCompra, Boolean canjeInsumos, String tipoCambio) {
@@ -107,6 +111,7 @@ public class FactCabResponse implements Payload{
         this.interesMensualCompra = interesMensualCompra;
         this.canjeInsumos = canjeInsumos;
         this.tipoCambio = tipoCambio;
+        this.master = new ArrayList<>();
     }
 
     public FactCabResponse(Integer idFactCab) {
@@ -357,6 +362,12 @@ public class FactCabResponse implements Payload{
             this.detalle.add(fd);
         }
     }
+    
+    public void agregarMaster(List<MasterResponse> f) {
+        for(MasterResponse fd: f) {
+            this.master.add(fd);
+        }
+    }
 
     public List<FactImputaResponse> getImputa() {
         return imputa;
@@ -364,6 +375,14 @@ public class FactCabResponse implements Payload{
 
     public void setImputa(List<FactImputaResponse> imputa) {
         this.imputa = imputa;
+    }
+    
+    public List<MasterResponse> getMaster() {
+        return master;
+    }
+
+    public void setMaster(List<MasterResponse> master) {
+        this.master = master;
     }
     
     
