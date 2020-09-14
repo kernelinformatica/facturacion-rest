@@ -3562,7 +3562,11 @@ public class GrabaComprobanteRest {
             }
             ///////////////////////////////////////////////
             movCierre.setVNombre(factCab.getNombre());
-            movCierre.setVDescripcion(factDetalle.get(0).getDetalle());
+            if(factDetalle.get(0).getDetalle().length() > 35) {
+                movCierre.setVDescripcion(factDetalle.get(0).getDetalle().substring(0, 34));
+            } else {
+                movCierre.setVDescripcion(factDetalle.get(0).getDetalle());
+            }
             movCierre.setVFechaVencimiento(factCab.getFechaVto());
             movCierre.setVFacturadoSn(facturadoSn.charAt(0));
             movCierre.setVCodigoOperador(user.getUsuarioSybase());
