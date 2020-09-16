@@ -279,8 +279,8 @@ public class GrabaComprobanteRest {
             boolean factFormaPago = (Boolean) Utils.getKeyFromJsonObject("factFormaPago", jsonBody, "boolean");
             boolean lote = (Boolean) Utils.getKeyFromJsonObject("lote", jsonBody, "boolean");
             boolean grabaFactura = (Boolean) Utils.getKeyFromJsonObject("grabaFactura", jsonBody, "boolean");
-            //boolean esPesificado = (Boolean) Utils.getKeyFromJsonObject("marcaPesificado", jsonBody, "boolean");
-            //boolean esPesificadoPersisteSn = (Boolean) Utils.getKeyFromJsonObject("pesificadoPersisteSn", jsonBody, "boolean");
+            boolean esPesificado = (Boolean) Utils.getKeyFromJsonObject("marcaPesificado", jsonBody, "boolean");
+            boolean esPesificadoPersisteSn = (Boolean) Utils.getKeyFromJsonObject("pesificadoPersisteSn", jsonBody, "boolean");
 
             //Datos de la factura relacionada a un remito
             Integer tipoFact = (Integer) Utils.getKeyFromJsonObject("tipoFact", jsonBody, "Integer");
@@ -330,16 +330,16 @@ public class GrabaComprobanteRest {
                 respuesta.setControl(AppCodigo.ERROR, "Credenciales incorrectas");
                 return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
             }
-            /* if (esPesificado == false) {
-             esPesificado = false;
-             } else {
-             esPesificado = true;
-             }
-             if (esPesificadoPersisteSn == false) {
-             esPesificadoPersisteSn = false;
-             } else {
-             esPesificadoPersisteSn = true;
-             }*/
+            if (esPesificado == false) {
+                esPesificado = false;
+            } else {
+                esPesificado = true;
+            }
+            if (esPesificadoPersisteSn == false) {
+                esPesificadoPersisteSn = false;
+            } else {
+                esPesificadoPersisteSn = true;
+            }
             //Me fijo que  los campos que tienen el atributo NotNull no sean nulos
             if (idCteTipo == null) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, tipo de comprobante nulo");
@@ -1129,7 +1129,7 @@ public class GrabaComprobanteRest {
                             factCab.setCaiVto(cteNumerador.getVtoCai());
                         }
                     }
-                    return this.persistirObjetos(factCab, contratoDet, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumerador, user /*, esPesificado, esPesificadoPersisteSn*/);
+                    return this.persistirObjetos(factCab, contratoDet, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumerador, user, esPesificado, esPesificadoPersisteSn);
                 } else if (tipoFact != null || letraFact != null || numeroFact != null || fechaVencimientoFact != null || fechaContaFact != null) {
                     CteNumerador cteNumerador = null;
                     if (idNumero != null) {
@@ -1152,19 +1152,19 @@ public class GrabaComprobanteRest {
                             factCab.setCaiVto(cteNumerador.getVtoCai());
                         }
                     }
-                    /* if (esPesificado == false) {
-                     esPesificado = false;
-                     } else {
-                     esPesificado = true;
-                     }
-                     if (esPesificadoPersisteSn == false) {
-                     esPesificadoPersisteSn = false;
-                     } else {
-                     esPesificadoPersisteSn = true;
-                     }*/
+                    if (esPesificado == false) {
+                        esPesificado = false;
+                    } else {
+                        esPesificado = true;
+                    }
+                    if (esPesificadoPersisteSn == false) {
+                        esPesificadoPersisteSn = false;
+                    } else {
+                        esPesificadoPersisteSn = true;
+                    }
 
                     //Persisto Primero los objetos del remito
-                    this.persistirObjetos(factCab, contratoDet, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumerador, user/*, esPesificado, esPesificadoPersisteSn*/);
+                    this.persistirObjetos(factCab, contratoDet, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumerador, user, esPesificado, esPesificadoPersisteSn);
 
                     //Luego empiezo con los datos de la factura relacionada
                     CteTipo cteTipoFac = cteTipoFacade.find(tipoFact);
@@ -1225,7 +1225,7 @@ public class GrabaComprobanteRest {
                     fc.setIdSisTipoOperacion(sisTipoOperacion);
                     fc.setIdVendedor(idVendedor);
 
-                    return this.generarFacturaRelacionada(fc, contratoDet, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumeradorRel, user, request /*, esPesificado, esPesificadoPersisteSn*/);
+                    return this.generarFacturaRelacionada(fc, contratoDet, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumeradorRel, user, request, esPesificado, esPesificadoPersisteSn);
                 } else {
                     respuesta.setControl(AppCodigo.ERROR, "No pudo grabar la factura asociada, algun campo no es valido");
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
@@ -1251,9 +1251,9 @@ public class GrabaComprobanteRest {
             List<Lote> listaLotes,
             List<FactFormaPago> factFormaPago,
             CteNumerador cteNumerador,
-            Usuario user/*,
-     Boolean marcaPesificado,
-     Boolean pesificadoPersisteSn*/
+            Usuario user,
+            Boolean marcaPesificado,
+            Boolean pesificadoPersisteSn
     ) {
         ServicioResponse respuesta = new ServicioResponse();
         try {
@@ -1381,25 +1381,25 @@ public class GrabaComprobanteRest {
                                 this.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
                             } else if (factCab.getIdCteTipo().getIdSisComprobante().getIdSisModulos().getIdSisModulos() == 2) {
                                 // ventas
-                                /*if (marcaPesificado.equals(true)) {
-                                 // separo el punto de venta del nro de comprobante 
-                                 String puntoVentaTemp = String.valueOf(factCab.getNumero());
-                                 String puntoVenta = puntoVentaTemp.substring(puntoVentaTemp.length(), puntoVentaTemp.length()-8);
-                                 String numeroCompTemp = String.valueOf(factCab.getNumero());
-                                 String numeroComp = numeroCompTemp.substring(numeroCompTemp.length() - 8, numeroCompTemp.length());
-                                 CanjesDocumentoSybase documento =  documentoSybaseFacade.buscaDocumento(factCab.getIdPadron(),Integer.parseInt(puntoVenta) , Integer.parseInt(numeroComp), factCab.getFechaEmision());
-                                 if (documento.equals(true)){
-                                 documento.setFactura(factCab.getNumero());
-                                       
-                                 } 
-                                 if (pesificadoPersisteSn.equals(true)){
-                                       
-                                 this.grabarFactVentasSybase(factCab, factDetalle, factFormaPago, factPie, user);
-                                 }
-                                 } else {
-                                    
-                                 }*/
-                                this.grabarFactVentasSybase(factCab, factDetalle, factFormaPago, factPie, user);
+                                if (marcaPesificado.equals(true)) {
+                                    // separo el punto de venta del nro de comprobante 
+                                    String puntoVentaTemp = String.valueOf(factCab.getNumero());
+                                    String puntoVenta = puntoVentaTemp.substring(puntoVentaTemp.length(), puntoVentaTemp.length() - 8);
+                                    String numeroCompTemp = String.valueOf(factCab.getNumero());
+                                    String numeroComp = numeroCompTemp.substring(numeroCompTemp.length() - 8, numeroCompTemp.length());
+                                    CanjesDocumentoSybase documento = documentoSybaseFacade.buscaDocumento(factCab.getIdPadron(), Integer.parseInt(puntoVenta), Integer.parseInt(numeroComp), factCab.getFechaEmision());
+                                    if (documento.equals(true)) {
+                                        documento.setFactura(factCab.getNumero());
+                                         boolean transaccionCanjeDoc;
+                                         transaccionCanjeDoc = canjesDocumentosSybaseFacade.setCanjeDocsNuevo(documento);
+                                    }
+                                    if (pesificadoPersisteSn.equals(true)) {
+                                        this.grabarFactVentasSybase(factCab, factDetalle, factFormaPago, factPie, user);
+                                    }
+                                } else {
+                                    this.grabarFactVentasSybase(factCab, factDetalle, factFormaPago, factPie, user);
+                                }
+
                             }
                         }
                     }
@@ -1451,7 +1451,7 @@ public class GrabaComprobanteRest {
         }
     }
 
-    public Response generarFacturaRelacionada(FactCab factCab, ContratoDet contratoDet, List<FactDetalle> factDetalle, List<FactImputa> factImputa, List<Produmo> produmo, List<FactPie> factPie, List<Lote> listaLotes, List<FactFormaPago> factFormaPago, CteNumerador cteNumerador, Usuario user, HttpServletRequest request/*, Boolean marcaPesificado, Boolean pesificadoPersisteSn*/) {
+    public Response generarFacturaRelacionada(FactCab factCab, ContratoDet contratoDet, List<FactDetalle> factDetalle, List<FactImputa> factImputa, List<Produmo> produmo, List<FactPie> factPie, List<Lote> listaLotes, List<FactFormaPago> factFormaPago, CteNumerador cteNumerador, Usuario user, HttpServletRequest request, Boolean marcaPesificado, Boolean pesificadoPersisteSn) {
         ServicioResponse respuesta = new ServicioResponse();
         try {
             List<FactDetalle> listaDetalles = new ArrayList<>();
@@ -1557,7 +1557,7 @@ public class GrabaComprobanteRest {
             }
 
             //Persisto los objetos y devuelvo la respuesta
-            return this.persistirObjetos(factCab, contratoDet, listaDetalles, listaImputa, produmo, listaPie, listaLotes, listaFormaPago, cteNumerador, user/*, marcaPesificado, pesificadoPersisteSn*/);
+            return this.persistirObjetos(factCab, contratoDet, listaDetalles, listaImputa, produmo, listaPie, listaLotes, listaFormaPago, cteNumerador, user, marcaPesificado, pesificadoPersisteSn);
         } catch (Exception ex) {
             ex.printStackTrace();
             System.out.println("Error: " + ex.getMessage());

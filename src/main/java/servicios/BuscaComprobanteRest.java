@@ -481,4 +481,117 @@ public class BuscaComprobanteRest {
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
         }
     }
+    
+    
+    
+    
+    
+    @POST
+    @Path("/verificaSiExisteComprobante")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getVerificaSiExisteComprobante(  
+        @HeaderParam ("token") String token,
+        @Context HttpServletRequest request) throws NoSuchAlgorithmException, UnsupportedEncodingException, SQLException {
+        ServicioResponse respuesta = new ServicioResponse();
+        try {  
+            
+            // Obtengo el body de la request
+            JsonObject jsonBody = Utils.getJsonObjectFromRequest(request);
+            
+            // Obtengo los atributos del body
+            Integer modulo = (Integer) Utils.getKeyFromJsonObject("modulo", jsonBody, "Integer");
+            BigDecimal padronCuit = (BigDecimal) Utils.getKeyFromJsonObject("cuit", jsonBody, "BigDecimal");
+            BigDecimal numeroComprobante = (BigDecimal) Utils.getKeyFromJsonObject("numeroComprobante", jsonBody, "BigDecimal");
+            Integer tipoComprobante = (Integer) Utils.getKeyFromJsonObject("tipoComprobante", jsonBody, "Integer");
+            Integer tipoOperacion = (Integer) Utils.getKeyFromJsonObject("tipoOperacion", jsonBody, "Integer");
+            String letra = (String) Utils.getKeyFromJsonObject("letra", jsonBody, "String");
+            
+            //valido que token no sea null
+            if(token == null || token.trim().isEmpty()) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, token vacio");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+
+            //Busco el token
+            Acceso userToken = accesoFacade.findByToken(token);
+
+            //valido que Acceso no sea null
+            if(userToken == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, Acceso nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+
+            //Busco el usuario
+            Usuario user = usuarioFacade.getByToken(userToken);
+
+            //valido que el Usuario no sea null
+            if(user == null) {
+                respuesta.setControl(AppCodigo.ERROR, "Error, Usuario nulo");
+                return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+            }
+
+            //valido vencimiento token
+            if(!accesoFacade.validarToken(userToken, user)) {
+                respuesta.setControl(AppCodigo.ERROR, "Credenciales incorrectas");
+                return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
+            }
+            
+             if(numeroComprobante != null) {
+               
+            
+             List<FactCab> factCabList = (List<FactCab>) factCabFacade.getByVerificaSiExiste(numeroComprobante, tipoOperacion, tipoComprobante, padronCuit, letra, modulo);
+
+                if(factCabList == null || factCabList.size() < 1) {
+                    respuesta.setControl(AppCodigo.ERROR, "No se encontraron comprobantes con esas propiedades");
+                    return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                }
+             
+             List<FactCabResponse> factCabResponses = new ArrayList<>();
+                for(FactCab factCab : factCabList) {
+                    List<FactDetalle> factDetalleList = factDetalleFacade.getFactDetalleByIdFactCab(factCab.getIdFactCab());
+                    List<Master> masterList = masterFacade.getMasterByIdFactCab(factCab.getIdFactCab());
+
+                    FactCabResponse factCabResponse = new FactCabResponse(factCab);
+
+                    for(FactDetalle factDetalle : factDetalleList) {
+                        FactDetalleResponse factDetalleResponse = new FactDetalleResponse(factDetalle);
+                        factCabResponse.getDetalle().add(factDetalleResponse);
+                    }
+
+                    for(Master master : masterList) {
+                        MasterResponse masterResponse = new MasterResponse(master);
+                        factCabResponse.getMaster().add(masterResponse);
+                    }
+
+                    factCabResponses.add(factCabResponse);
+                }
+
+
+                List<Payload> comprobantes = new ArrayList<>();
+
+                for(FactCabResponse c : factCabResponses) {
+                    comprobantes.add(c);
+                }
+
+                respuesta.setArraydatos(comprobantes);
+                respuesta.setControl(AppCodigo.OK, "Comprobantes");
+                return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();
+             
+              }
+            respuesta.setControl(AppCodigo.ERROR, "No existe Comprobantes");
+               return Response.status(Response.Status.OK).entity(respuesta.toJson()).build();
+            
+           
+                
+        } catch (Exception e) {
+            respuesta.setControl(AppCodigo.ERROR, e.getMessage());
+            return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+        }
+    }
+    
+    
+    
+    
+    
 }
