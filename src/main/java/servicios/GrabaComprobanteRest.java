@@ -1373,7 +1373,9 @@ public class GrabaComprobanteRest {
             } else {
 
                 if (factCab.getIdCteTipo().getCursoLegal()) {
+                    /// 
                     Response respGrabarMaster = grabarMaster(factCab, factDetalle, factFormaPago, factPie, user);
+                    
                     if (respGrabarMaster.getStatusInfo().equals(Response.Status.CREATED) || respGrabarMaster.getStatusInfo().equals(Response.Status.BAD_REQUEST)) {
                         Boolean respGrabaMasterSybase = this.grabarMasterSybase(factCab, factDetalle, factFormaPago, factPie, user);
                         if (respGrabaMasterSybase == true) {
@@ -1388,11 +1390,12 @@ public class GrabaComprobanteRest {
                                     String numeroCompTemp = String.valueOf(factCab.getNumero());
                                     String numeroComp = numeroCompTemp.substring(numeroCompTemp.length() - 8, numeroCompTemp.length());
                                     CanjesDocumentoSybase documento = documentoSybaseFacade.buscaDocumento(factCab.getIdPadron(), Integer.parseInt(puntoVenta), Integer.parseInt(numeroComp), factCab.getFechaEmision());
-                                    if (documento.equals(true)) {
+                                    if (documento != null) {
                                         documento.setFactura(factCab.getNumero());
                                          boolean transaccionCanjeDoc;
                                          transaccionCanjeDoc = canjesDocumentosSybaseFacade.setCanjeDocsNuevo(documento);
                                     }
+                                    
                                     if (pesificadoPersisteSn.equals(true)) {
                                         this.grabarFactVentasSybase(factCab, factDetalle, factFormaPago, factPie, user);
                                     }
