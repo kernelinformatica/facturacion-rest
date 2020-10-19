@@ -175,7 +175,7 @@ public class ActualizaProductosRest {
                         SisIVA iva = sisIvaFacade.getIvaById(2);
                         nuevoProducto.setIdIVA(iva);
                     } else {
-                        SisIVA iva = sisIvaFacade.getIvaById(3);
+                        SisIVA iva = sisIvaFacade.getIvaById(1);
                         nuevoProducto.setIdIVA(iva);
                     }
                     if(articuloSybase.getArtRubro() != null && articuloSybase.getArtRubro().length() > 0) {

@@ -279,8 +279,8 @@ public class GrabaComprobanteRest {
             boolean factFormaPago = (Boolean) Utils.getKeyFromJsonObject("factFormaPago", jsonBody, "boolean");
             boolean lote = (Boolean) Utils.getKeyFromJsonObject("lote", jsonBody, "boolean");
             boolean grabaFactura = (Boolean) Utils.getKeyFromJsonObject("grabaFactura", jsonBody, "boolean");
-            boolean esPesificado = (Boolean) Utils.getKeyFromJsonObject("marcaPesificado", jsonBody, "boolean");
-            boolean esPesificadoPersisteSn = (Boolean) Utils.getKeyFromJsonObject("pesificadoPersisteSn", jsonBody, "boolean");
+            Boolean esPesificado = (Boolean) Utils.getKeyFromJsonObject("marcaPesificado", jsonBody, "boolean");
+            Boolean esPesificadoPersisteSn = (Boolean) Utils.getKeyFromJsonObject("pesificadoPersisteSn", jsonBody, "boolean");
            BigDecimal nroCompPesificado = (BigDecimal) Utils.getKeyFromJsonObject("nroCompPesificado", jsonBody, "BigDecimal");
             //Datos de la factura relacionada a un remito
             Integer tipoFact = (Integer) Utils.getKeyFromJsonObject("tipoFact", jsonBody, "Integer");
@@ -330,15 +330,11 @@ public class GrabaComprobanteRest {
                 respuesta.setControl(AppCodigo.ERROR, "Credenciales incorrectas");
                 return Response.status(Response.Status.UNAUTHORIZED).entity(respuesta.toJson()).build();
             }
-            if (esPesificado == false) {
+            if (esPesificado == null) {
                 esPesificado = false;
-            } else {
-                esPesificado = true;
             }
-            if (esPesificadoPersisteSn == false) {
+            if (esPesificadoPersisteSn == null) {
                 esPesificadoPersisteSn = false;
-            } else {
-                esPesificadoPersisteSn = true;
             }
             //Me fijo que  los campos que tienen el atributo NotNull no sean nulos
             if (idCteTipo == null) {
