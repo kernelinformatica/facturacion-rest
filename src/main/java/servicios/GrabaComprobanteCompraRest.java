@@ -1551,7 +1551,7 @@ public class GrabaComprobanteCompraRest {
                 hm.put("prefijoEmpresa", "05");
                 System.out.println(factCab.getIdFactCab() + " - " + codigoVerificador + " - " + factCab.getIdCteTipo().getIdCteTipo());
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                bytes = utilidadesFacade.generateJasperReportPDF(request, nombreReporte, hm, user, outputStream);
+                //bytes = utilidadesFacade.generateJasperReportPDF(request, nombreReporte, hm, user, outputStream);
             } catch (Exception ex) {
                 ex.printStackTrace();
                 System.out.println("Error: " + ex.getMessage());

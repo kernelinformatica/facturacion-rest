@@ -3624,7 +3624,7 @@ public class GrabaComprobanteRest {
         Integer idFactCab = (Integer) Utils.getKeyFromJsonObject("idFactCab", jsonBody, "Integer");
         FactCab objFactCab = factCabFacade.getByIdFactCab(idFactCab);
         List<FactDetalle> objFactDetalle = factDetalleFacade.getFactDetalleByIdFactCab(idFactCab);
-        List<FactFormaPago> objFactFormaPago = factFormaPagoFacade.getFactFormaPago(idFactCab);
+        List<FactFormaPago> objFactFormaPago = (List<FactFormaPago>) factFormaPagoFacade.getFactFormaPago(idFactCab);
         List<FactPie> objFactPie = factPieFacade.getFactFie(idFactCab);
         // caso contrario verifico el curso legal si es verdadero (true) contabiliza y paso a factComprasSybase
         if (objFactCab.getIdCteTipo().getCursoLegal()) {
