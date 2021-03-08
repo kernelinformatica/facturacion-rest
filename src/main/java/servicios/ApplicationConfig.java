@@ -25,6 +25,7 @@ public class ApplicationConfig extends Application {
      * If required, comment out calling this method in getClasses().
      */
     private void addRestResourceClasses(Set<Class<?>> resources) {
+        resources.add(servicios.ActualizaProductosRest.class);
         resources.add(servicios.BorraComprobanteRest.class);
         resources.add(servicios.BuscaCerealesRest.class);
         resources.add(servicios.BuscaComprobanteAnticipadoRest.class);
@@ -34,6 +35,7 @@ public class ApplicationConfig extends Application {
         resources.add(servicios.BuscaLote.class);
         resources.add(servicios.BuscaLotes.class);
         resources.add(servicios.BuscaModeloRest.class);
+        resources.add(servicios.BuscaPosicionStockRest.class);
         resources.add(servicios.BuscaProductosRest.class);
         resources.add(servicios.BuscaStockRest.class);
         resources.add(servicios.CalculoImportesSubtotales.class);
@@ -58,6 +60,7 @@ public class ApplicationConfig extends Application {
         resources.add(servicios.GrabaComprobanteCompraRest.class);
         resources.add(servicios.GrabaComprobanteRest.class);
         resources.add(servicios.GrabaComprobanteVentaRest.class);
+        resources.add(servicios.GrabaOrdenesDePagoRest.class);
         resources.add(servicios.ImputacionesRest.class);
         resources.add(servicios.LibroRest.class);
         resources.add(servicios.ListaPrecioRest.class);

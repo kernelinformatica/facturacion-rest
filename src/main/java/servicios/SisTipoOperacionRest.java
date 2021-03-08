@@ -32,7 +32,7 @@ import persistencia.UsuarioFacade;
 
 /**
  *
- * @author FrancoSili
+ * @author DarioQuiroga
  */
 @Stateless
 @Path("sisTipoOperacion")
@@ -103,7 +103,7 @@ public class SisTipoOperacionRest {
                     sisTipo.add(sr);
                 }
             } else {           
-                List<SisTipoOperacion> sisTipoOperacion = sisTipoOperacionFacade.findAll();
+                List<SisTipoOperacion> sisTipoOperacion = sisTipoOperacionFacade.getTodos();
 
                 //Valido que la lista de SisFormaPago no este vacia.
                 if(sisTipoOperacion.isEmpty()) {
