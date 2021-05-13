@@ -54,6 +54,8 @@ public class FactCabResponse implements Payload{
     private Boolean diferidoVto;
     private List<FactDetalleResponse> detalle;
     private List<FactImputaResponse> imputa;
+    private List<FactPieResponse> pie;
+    private List<FactFormaPagoResponse> formaPago;
     private List<MasterResponse> master;
     
     
@@ -80,6 +82,8 @@ public class FactCabResponse implements Payload{
         this.tipoCambio = f.getTipoCambio();
         this.diferidoVto = f.getDiferidoVto();
         this.detalle = new ArrayList<>();
+        this.formaPago =  new ArrayList<>();
+        this.pie =  new ArrayList<>();;
         this.imputa = new ArrayList<>();
         this.master = new ArrayList<>();
     }
@@ -93,12 +97,10 @@ public class FactCabResponse implements Payload{
         this.nombre = nombre;
         this.cuit = cuit;
         this.cotDolar = cotDolar;
-        this.detalle = new ArrayList<>();
         this.moneda = moneda;
         this.imputada = imputada;
         this.modulo = modulo;
         this.vendedor = vendedor;
-        this.imputa = new ArrayList<>();
         this.idCteTipo = idCteTipo;
         this.importeNeto = importeNeto;
         this.importeTotal = importeTotal;
@@ -111,13 +113,22 @@ public class FactCabResponse implements Payload{
         this.interesMensualCompra = interesMensualCompra;
         this.canjeInsumos = canjeInsumos;
         this.tipoCambio = tipoCambio;
+        this.detalle = new ArrayList<>();
+        this.imputa = new ArrayList<>();
+        this.formaPago = new ArrayList();
+        this.pie = new ArrayList<>();       
         this.master = new ArrayList<>();
+
     }
 
     public FactCabResponse(Integer idFactCab) {
         this.idFactCab = idFactCab;
     }
     
+    public List<FactFormaPagoResponse> getFormaPago() {
+        return formaPago;
+    }
+
 //    public String getLetra() {
 //        return letra;
 //    }
@@ -125,6 +136,9 @@ public class FactCabResponse implements Payload{
 //    public void setLetra(String letra) {
 //        this.letra = letra;
 //    }
+    public void setFormaPago(List<FactFormaPagoResponse> formaPago) {
+        this.formaPago = formaPago;
+    }
 
     public long getNumero() {
         return numero;
@@ -367,6 +381,14 @@ public class FactCabResponse implements Payload{
         for(MasterResponse fd: f) {
             this.master.add(fd);
         }
+    }
+
+    public List<FactPieResponse> getPie() {
+        return pie;
+    }
+
+    public void setPie(List<FactPieResponse> pie) {
+        this.pie = pie;
     }
 
     public List<FactImputaResponse> getImputa() {

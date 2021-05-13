@@ -12,13 +12,13 @@ import java.util.Date;
 import java.util.List;
 
 /**
- *
+ * 
  * @author DaarioQuiroga
  */
 public class OrdenPagoFormaPagoResponse implements Payload {
 
     private Integer idOPFormaPago;
-    private List<OrdenPagoCabResponse> idOPCab;
+    private Integer idOPCab;
     private Integer idFormaPago;
     private BigDecimal importe;
     private Date fechaAcreditacion;
@@ -27,22 +27,29 @@ public class OrdenPagoFormaPagoResponse implements Payload {
 
     public OrdenPagoFormaPagoResponse(OrdenesPagosFormaPago c) {
         this.idOPFormaPago = c.getIdFormaPago();
-
+        this.idOPCab = c.getIdOPCab().getIdOPCab();
         this.idFormaPago = c.getIdFormaPago();
         this.importe = c.getImporte();
         this.fechaAcreditacion = c.getFechaAcreditacion();
         this.numero = c.getNumero();
         this.detalle = c.getDetalle();
-        this.idOPCab = new ArrayList<>();
+        
 
+    }
+
+    public OrdenPagoFormaPagoResponse(Integer idOPFormaPago, Integer idOPCab, Integer IdFormaPago, BigDecimal importe, Date fechaAcreditacion, Long  numero, String detalle) {
+        this.idOPFormaPago = idOPFormaPago;
+        this.idOPCab = idOPCab;
+        this.idFormaPago = IdFormaPago;
+        this.importe = importe;
+        this.fechaAcreditacion = fechaAcreditacion;
+        this.numero = numero;
+        this.detalle = detalle;
+    
     }
 
     
-     public void agregarIdOpCab(List<OrdenPagoCabResponse> f) {
-        for(OrdenPagoCabResponse op: f) {
-            this.idOPCab.add(op);
-        }
-    }
+     
     public Integer getIdOPFormaPago() {
         return idOPFormaPago;
     }
@@ -51,13 +58,17 @@ public class OrdenPagoFormaPagoResponse implements Payload {
         this.idOPFormaPago = idOPFormaPago;
     }
 
-    public List<OrdenPagoCabResponse> getIdOPCab() {
+    public Integer getIdOPCab() {
         return idOPCab;
     }
 
-    public void setIdOPCab(List<OrdenPagoCabResponse> idOPCab) {
+    public void setIdOPCab(Integer idOPCab) {
         this.idOPCab = idOPCab;
     }
+
+    
+
+   
 
    
 

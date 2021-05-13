@@ -114,14 +114,15 @@ import compra.GrabaComprasMaster;
 import compra.GrabaComprasMasterSybase;
 import utils.Utils;
 
-        
 /**
  *
  * @author Kernel informatica
- *//**
+ */
+/**
  *
  * @author Kernel informatica
- *//**
+ */
+/**
  *
  * @author Kernel informatica
  */
@@ -173,7 +174,6 @@ public class GrabaComprobanteCompraRest {
     ModeloDetalleFacade modeloDetalleFacade;
     @Inject
     CtacteCategoriaFacade ctaCteCategoriaFacade;
-    
 
     @Inject
     SisOperacionComprobanteFacade sisOperacionComprobanteFacade;
@@ -195,7 +195,7 @@ public class GrabaComprobanteCompraRest {
     CanjesContratosCerealesFacade canjesContratosCereales;
     @Inject
     MasterSybaseFacade masterSybaseFacade;
-    
+
     @Inject
     ParametrosFacSybaseFacade parametrosFacSybaseFacade;
     @Inject
@@ -772,6 +772,24 @@ public class GrabaComprobanteCompraRest {
                         facturaImputa.setMasAsiento(0);
                         facturaImputa.setMasAsientoImputado(0);
                         listaImputa.add(facturaImputa);
+                        // si no proviene de un comprobante pendiente no se graba ////////////////
+                        // si pendiente es mayor a 0 es pendiente y si es 0 no pendiente  ///////
+                        if (pendiente.compareTo(BigDecimal.ZERO) == 0) {
+                            // no es pendiente
+                        } else {
+                            if (factDetalle.getIdFactCab().getNumero() != imputa.getIdFactCab().getNumero()) {
+                                FactImputa facturaImputaExtra = new FactImputa();
+                                facturaImputaExtra.setCantidadImputada(factDetalle.getCantidad());
+                                facturaImputaExtra.setIdFactDetalle(factDetalle);
+                                facturaImputaExtra.setIdFactDetalleImputa(imputa);
+                                facturaImputaExtra.setImporteImputado(pendiente.multiply(porCalc).multiply(precio));
+                                facturaImputaExtra.setMasAsiento(0);
+                                facturaImputaExtra.setMasAsientoImputado(0);
+                                listaImputa.add(facturaImputaExtra);
+                            }
+
+                        }
+
                     }
 
                     //Pregunto si se graba produmo y empiezo con la transaccion
@@ -1333,27 +1351,26 @@ public class GrabaComprobanteCompraRest {
                     || factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(28)
                     || factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(29)
                     || factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(31)) {
-                
-                    GrabaFacCompraSybase fcSybase = new GrabaFacCompraSybase();
-                    fcSybase.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
-               // reemplazar por la clase: this.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
+
+                GrabaFacCompraSybase fcSybase = new GrabaFacCompraSybase();
+                fcSybase.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
+                // reemplazar por la clase: this.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
             } else {
                 // caso contrario verifico el curso legal si es verdadero (true) contabiliza y paso a factComprasSybase
                 // reemplazar por las clases correspondientes
-               
+
                 if (factCab.getIdCteTipo().getCursoLegal()) {
                     GrabaComprasMaster compraMaster = new GrabaComprasMaster();
-                     Response respGrabarMaster = compraMaster.grabarMaster(factCab, factDetalle, factFormaPago, factPie, user);
+                    Response respGrabarMaster = compraMaster.grabarMaster(factCab, factDetalle, factFormaPago, factPie, user);
                     if (respGrabarMaster.getStatusInfo().equals(Response.Status.CREATED) || respGrabarMaster.getStatusInfo().equals(Response.Status.BAD_REQUEST)) {
-                        GrabaComprasMasterSybase compraMasterSybase =  new GrabaComprasMasterSybase();
+                        GrabaComprasMasterSybase compraMasterSybase = new GrabaComprasMasterSybase();
                         Boolean respGrabaMasterSybase = compraMasterSybase.grabarMasterSybase(factCab, factDetalle, factFormaPago, factPie, user);
                         if (respGrabaMasterSybase == true) {
-                                GrabaFacCompraSybase fcSybase = new GrabaFacCompraSybase();
-                                fcSybase.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
+                            GrabaFacCompraSybase fcSybase = new GrabaFacCompraSybase();
+                            fcSybase.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
                         }
                     }
                 }
-                
 
             }
 
@@ -1515,7 +1532,6 @@ public class GrabaComprobanteCompraRest {
         }
     }
 
-   
     public void mandarMailPdf(Boolean enviaMail,
             FactCab factCab,
             HttpServletRequest request,
@@ -1651,8 +1667,6 @@ public class GrabaComprobanteCompraRest {
             System.out.println("No se envia mail");
         }
     }
-
-  
 
     // fin factCompras Sybase
 }

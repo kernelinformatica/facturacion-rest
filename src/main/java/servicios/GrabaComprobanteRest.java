@@ -214,7 +214,7 @@ public class GrabaComprobanteRest {
     CerealesFacade cerealesFacade;
     @Inject
     CanjesContratosCerealesFacade canjesContratosCerealesFacade;
-    
+
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -295,7 +295,7 @@ public class GrabaComprobanteRest {
             boolean pesificadoSn = (Boolean) Utils.getKeyFromJsonObject("pesificado", jsonBody, "boolean");
             Boolean esPesificado = (Boolean) Utils.getKeyFromJsonObject("marcaPesificado", jsonBody, "boolean");
             Boolean esPesificadoPersisteSn = (Boolean) Utils.getKeyFromJsonObject("pesificadoPersisteSn", jsonBody, "boolean");
-           BigDecimal nroCompPesificado = (BigDecimal) Utils.getKeyFromJsonObject("nroCompPesificado", jsonBody, "BigDecimal");
+            BigDecimal nroCompPesificado = (BigDecimal) Utils.getKeyFromJsonObject("nroCompPesificado", jsonBody, "BigDecimal");
 
             //Datos de la factura relacionada a un remito
             Integer tipoFact = (Integer) Utils.getKeyFromJsonObject("tipoFact", jsonBody, "Integer");
@@ -320,9 +320,9 @@ public class GrabaComprobanteRest {
                 respuesta.setControl(AppCodigo.ERROR, "Error, token vacio");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
             }
-            if (pesificadoSn == false){
+            if (pesificadoSn == false) {
                 pesificadoSn = false;
-            }else{
+            } else {
                 pesificadoSn = true;
             }
             //Busco el token
@@ -642,6 +642,7 @@ public class GrabaComprobanteRest {
                 //Armo la listas de Fact par luego parsearlas todas juntas
                 List<FactDetalle> listaDetalles = new ArrayList<>();
                 List<FactImputa> listaImputa = new ArrayList<>();
+                List<FactImputa> listaImputaExtra = new ArrayList<>();
                 List<Produmo> listaProdumo = new ArrayList<>();
                 List<FactPie> listaPie = new ArrayList<>();
                 List<Lote> listaLotes = new ArrayList<>();
@@ -705,7 +706,8 @@ public class GrabaComprobanteRest {
                         return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                     }
 
-                    //Actualizo el precio del aritulo si es compra, si es distinto de 0 y si el precio es distinto. Ademas lo convierto de acuerdo al tipo de moneda
+                    //Actualizo el precio del aritulo si es compra, si es distinto de 0 y si el precio es distinto. 
+                    // Ademas lo convierto de acuerdo al tipo de moneda
                     if (!precio.equals(producto.getCostoReposicion()) && cteTipo.getIdSisComprobante().getIdSisModulos().getIdSisModulos().equals(1) && precio.compareTo(BigDecimal.ZERO) != 0) {
                         SisCotDolar sisCotDolar = sisCotDolarFacade.getLastCotizacion();
                         BigDecimal precioAtualizado = new BigDecimal(0);
@@ -778,22 +780,24 @@ public class GrabaComprobanteRest {
                     factDetalle.setUnidadDescuento(unidadDescuento);
                     factDetalle.setPrecioDesc(precioDesc);
                     factDetalle.setIdLibro(idLibro);
+                    // calculo el proximo factDetalle 
 
                     // Busco listaPrecioDet
                     if (listaPrecio != null) {
                         ListaPrecioDet detalleProd = listaPrecioFacade.findByIdProductoAndIdLista(listaPrecio, idProducto);
                         factDetalle.setAuxListaPrecioDet(detalleProd);
                     }
-
                     listaDetalles.add(factDetalle);
-
                     //Empiezo la transaccion para la grabacion de FactImputa
                     if (factImputa && idFactDetalleImputa != null) {
+                        // id facdetalleimputa ya esta en el remito original ! existe
                         FactDetalle imputa = factDetalleFacade.find(idFactDetalleImputa);
+
                         if (imputa == null) {
                             respuesta.setControl(AppCodigo.ERROR, "Error al cargar Imputacion, la factura con id " + idFactDetalleImputa + " no existe");
                             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                         }
+
                         FactImputa facturaImputa = new FactImputa();
                         facturaImputa.setCantidadImputada(pendiente);
                         facturaImputa.setIdFactDetalle(imputa);
@@ -802,6 +806,30 @@ public class GrabaComprobanteRest {
                         facturaImputa.setMasAsiento(0);
                         facturaImputa.setMasAsientoImputado(0);
                         listaImputa.add(facturaImputa);
+
+                    }
+                      
+                    //Empiezo la transaccion para la grabacion de FactImputaExtra IMPUTA EXTRA
+                    if (factImputa && idFactDetalleImputa != null) {
+                        // id facdetalleimputa ya esta en el remito original ! existe
+                        if (pendiente.compareTo(BigDecimal.ZERO) == 0) {
+                            // no es pendiente
+                        } else {
+                           
+                            
+                            FactDetalle imputa = factDetalleFacade.find(idFactDetalleImputa);    
+                            
+                            if (factDetalle.getIdFactCab().getNumero() != imputa.getIdFactCab().getNumero()) {
+                                FactImputa facturaImputaExtra = new FactImputa();
+                                facturaImputaExtra.setCantidadImputada(pendiente);
+                                facturaImputaExtra.setIdFactDetalleImputa(factDetalle);
+                                facturaImputaExtra.setIdFactDetalle(imputa);
+                                facturaImputaExtra.setImporteImputado(pendiente.multiply(porCalc).multiply(precio));
+                                facturaImputaExtra.setMasAsiento(0);
+                                facturaImputaExtra.setMasAsientoImputado(0);
+                                listaImputaExtra.add(facturaImputaExtra);
+                            }
+                        }
                     }
 
                     //Pregunto si se graba produmo y empiezo con la transaccion
@@ -1144,7 +1172,7 @@ public class GrabaComprobanteRest {
                             factCab.setCaiVto(cteNumerador.getVtoCai());
                         }
                     }
-                    return this.persistirObjetos(factCab, contratoDet, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumerador, user, esPesificado, esPesificadoPersisteSn, nroCompPesificado);
+                    return this.persistirObjetos(factCab, contratoDet, listaDetalles, listaImputa, listaImputaExtra, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumerador, user, esPesificado, esPesificadoPersisteSn, nroCompPesificado);
                 } else if (tipoFact != null || letraFact != null || numeroFact != null || fechaVencimientoFact != null || fechaContaFact != null) {
                     CteNumerador cteNumerador = null;
                     if (idNumero != null) {
@@ -1179,8 +1207,20 @@ public class GrabaComprobanteRest {
                     }
 
                     //Persisto Primero los objetos del remito
-                    this.persistirObjetos(factCab, contratoDet, listaDetalles, listaImputa, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumerador, user, esPesificado, esPesificadoPersisteSn, nroCompPesificado);
-
+                    this.persistirObjetos(factCab, contratoDet, listaDetalles, listaImputa, listaImputaExtra, listaProdumo, listaPie, listaLotes, listaFormaPago, cteNumerador, user, esPesificado, esPesificadoPersisteSn, nroCompPesificado);
+                   
+                    // -> Voy a actualizar en la base  el FactImputa extra que se agrego  EN LISTA IMPUTA
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
                     //Luego empiezo con los datos de la factura relacionada
                     CteTipo cteTipoFac = cteTipoFacade.find(tipoFact);
                     if (cteTipoFac == null) {
@@ -1261,6 +1301,7 @@ public class GrabaComprobanteRest {
             ContratoDet contratoDet,
             List<FactDetalle> factDetalle,
             List<FactImputa> factImputa,
+            List<FactImputa> factImputaExtra,
             List<Produmo> produmo,
             List<FactPie> factPie,
             List<Lote> listaLotes,
@@ -1302,12 +1343,14 @@ public class GrabaComprobanteRest {
                     return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                 }
             }
-
+                
             //Comienzo con la transaccion de FacDetalle
+            Integer idFactImputaNuevo = null;
             if (!factDetalle.isEmpty()) {
                 for (FactDetalle d : factDetalle) {
                     boolean transaccion2;
                     transaccion2 = factDetalleFacade.setFactDetalleNuevo(d);
+                    
                     //si la trnsaccion fallo devuelvo el mensaje
                     if (!transaccion2) {
                         respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta el Detalle con el articulo: " + d.getDetalle());
@@ -1320,13 +1363,44 @@ public class GrabaComprobanteRest {
                 for (FactImputa i : factImputa) {
                     boolean transaccion3;
                     transaccion3 = factImputaFacade.setFactImputaNuevo(i);
+                    idFactImputaNuevo  = factImputa.get(0).getIdFactDetalleImputa().getIdFactDetalle();
                     //si la trnsaccion fallo devuelvo el mensaje
                     if (!transaccion3) {
                         respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta la imputacion con el articulo: " + i.getIdFactDetalle().getCodProducto());
                         return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
                     }
+                    
                 }
+               
             }
+            
+             //Comienzo con la transaccion de FactImputaExtra
+            if (!factImputaExtra.isEmpty()) {
+                
+                 
+                for (FactImputa ie : factImputaExtra) {
+                 //   List<FactDetalle> fd =   factDetalleFacade.getProximoIdDetalle();
+                 FactDetalle detalleImputa = factDetalleFacade.getFactDetalle(idFactImputaNuevo);
+                 FactDetalle detalle = factDetalleFacade.getFactDetalle(factImputaExtra.get(0).getIdFactDetalle().getIdFactDetalle());
+                    System.out.println("-----------> idFactImputaNuevo -------------------> " + idFactImputaNuevo);
+                    ie.setIdFactDetalle(detalleImputa);
+                    ie.setIdFactDetalleImputa(detalle);
+                    ie.setCantidadImputada(detalle.getCantidad());
+                    boolean transaccion33;
+                    transaccion33 = factImputaFacade.setFactImputaNuevo(ie);
+                    //si la trnsaccion fallo devuelvo el mensaje
+                    if (!transaccion33) {
+                        respuesta.setControl(AppCodigo.ERROR, "No se pudo dar de alta la imputacion extra con el articulo: " + ie.getIdFactDetalle().getCodProducto());
+                        return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
+                    }
+                    
+                }
+               
+            }
+            
+            
+            
+            
             //Comienzo con la transaccion de FactPie
             if (!factPie.isEmpty()) {
                 for (FactPie p : factPie) {
@@ -1383,18 +1457,16 @@ public class GrabaComprobanteRest {
             }
 
             // SOLO SI ES COMPRAS
-
             // Verifico si son remitos y paso solamente a facComprasSybase //
             if (factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(1)
                     || factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(28)
                     || factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(29)
                     || factCab.getIdCteTipo().getIdSisComprobante().getIdSisComprobantes().equals(31)) {
-                 GrabaFacCompraSybase fcSybase = new GrabaFacCompraSybase();
-                 fcSybase.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
-                 
-            this.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
-            } else {
+                GrabaFacCompraSybase fcSybase = new GrabaFacCompraSybase();
+                fcSybase.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
 
+                this.grabarFactComprasSybase(factCab, factDetalle, factFormaPago, factPie, user);
+            } else {
 
                 if (factCab.getIdCteTipo().getCursoLegal()) {
 
@@ -1408,7 +1480,6 @@ public class GrabaComprobanteRest {
                             } else if (factCab.getIdCteTipo().getIdSisComprobante().getIdSisModulos().getIdSisModulos() == 2) {
                                 // ventas
                                 this.grabarFactVentasSybase(factCab, factDetalle, factFormaPago, factPie, user);
-
 
                             }
                         }
@@ -1460,12 +1531,13 @@ public class GrabaComprobanteRest {
             return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();
         }
     }
- 
+
     public Response generarFacturaRelacionada(FactCab factCab, ContratoDet contratoDet, List<FactDetalle> factDetalle, List<FactImputa> factImputa, List<Produmo> produmo, List<FactPie> factPie, List<Lote> listaLotes, List<FactFormaPago> factFormaPago, CteNumerador cteNumerador, Usuario user, HttpServletRequest request, Boolean marcaPesificado, Boolean pesificadoPersisteSn, BigDecimal nroCompPesificado) {
         ServicioResponse respuesta = new ServicioResponse();
         try {
             List<FactDetalle> listaDetalles = new ArrayList<>();
             List<FactImputa> listaImputa = new ArrayList<>();
+            List<FactImputa> listaImputaExtra = new ArrayList<>();
             List<FactPie> listaPie = new ArrayList<>();
             List<FactFormaPago> listaFormaPago = new ArrayList<>();
 
@@ -1567,7 +1639,7 @@ public class GrabaComprobanteRest {
             }
 
             //Persisto los objetos y devuelvo la respuesta
-            return this.persistirObjetos(factCab, contratoDet, listaDetalles, listaImputa, produmo, listaPie, listaLotes, listaFormaPago, cteNumerador, user, marcaPesificado, pesificadoPersisteSn, nroCompPesificado);
+            return this.persistirObjetos(factCab, contratoDet, listaDetalles, listaImputa, listaImputaExtra, produmo, listaPie, listaLotes, listaFormaPago, cteNumerador, user, marcaPesificado, pesificadoPersisteSn, nroCompPesificado);
         } catch (Exception ex) {
             ex.printStackTrace();
             System.out.println("Error: " + ex.getMessage());
@@ -1979,7 +2051,7 @@ public class GrabaComprobanteRest {
                     /* PASE 1 */
                     // CANJE CREDITO PASE 98  MASTER
                     for (FactFormaPago fp : factFormaPago) {
-                    //fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(7) 
+                        //fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(7) 
                         // busco la cuenta contable para el cereal que viene en la factcab
                         // CanjesContratosCereales objContratosCereales = canjesContratosCerealesFacade.findCuentaPorCereal(factCab.getIdCteTipo().getIdEmpresa(), factCab.getCerealCanje().getCerealCodigo());
 
@@ -2035,7 +2107,7 @@ public class GrabaComprobanteRest {
                         paseDetalle++;
                     }
 
-             // FIN PASE 98  
+                    // FIN PASE 98  
                     // PASE 99 
                     for (FactFormaPago fp : factFormaPago) {
                         //fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(7) 
@@ -2098,7 +2170,7 @@ public class GrabaComprobanteRest {
                         paseDetalle++;
                     }
 
-                // FIN PASE 99 PESIFICACION
+                    // FIN PASE 99 PESIFICACION
                 }
 
             }
@@ -3228,7 +3300,7 @@ public class GrabaComprobanteRest {
 
                     BigDecimal subTotalCanje = new BigDecimal(0);
                     for (FactFormaPago fp : factFormaPago) {
-                    //fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(7) 
+                        //fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(7) 
                         //Sumo uno al contador de pases
                         paseDetalle = paseDetalle + 1;
                         MasterSybase masterFormaPago = new MasterSybase(factCab.getFechaConta(), masAsiento, Short.valueOf(Integer.toString(98)), Short.valueOf(Integer.toString(libroCodigo)));
@@ -3285,11 +3357,11 @@ public class GrabaComprobanteRest {
                         }
 
                     }
-                // PESIFICACION  PASE 2 MASER SYBASE
+                    // PESIFICACION  PASE 2 MASER SYBASE
                     // calculo el subtotal
 
                     for (FactFormaPago fp : factFormaPago) {
-                    //fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(7)
+                        //fp.getIdFormaPago().getTipo().getIdSisFormaPago().equals(7)
                         // busco la cuenta contable para el cereal que viene en la factcab
                         //CanjesContratosCereales objContratosCereales = canjesContratosCerealesFacade.findCuentaPorCereal(factCab.getIdCteTipo().getIdEmpresa(), factCab.getCerealCanje().getCerealCodigo());
 
@@ -3313,10 +3385,10 @@ public class GrabaComprobanteRest {
                         masterFormaPago.setMDetalle("2-PESIFICACION FAC. " + factCab.getNumero());
                         masterFormaPago.setPlanCuentas(Integer.valueOf(fp.getCtaContable()));
                         /*if (objContratosCereales != null) {
-                            masterFormaPago.setPlanCuentas(Integer.valueOf(objContratosCereales.getCtaContable()));
-                        } else {
-                            masterFormaPago.setPlanCuentas(Integer.valueOf(fp.getCtaContable()));
-                        }*/
+                         masterFormaPago.setPlanCuentas(Integer.valueOf(objContratosCereales.getCtaContable()));
+                         } else {
+                         masterFormaPago.setPlanCuentas(Integer.valueOf(fp.getCtaContable()));
+                         }*/
 
                         //Parametros que van en 0
                         masterFormaPago.setAutorizaCodigo(Short.valueOf("0"));
@@ -3342,23 +3414,21 @@ public class GrabaComprobanteRest {
 
                     }
                     //el 137 es el afip el que viene en nroCompPësificado es el interno
-                    
-                  
-                        if( nroCompPesificado != null){
-                            String puntoVentaTemp = String.valueOf(nroCompPesificado);
-                            String puntoVenta = puntoVentaTemp.substring(0, puntoVentaTemp.length() - 8);
-                            String numeroCompTemp = String.valueOf(nroCompPesificado);
-                            String numeroComp = numeroCompTemp.substring(puntoVentaTemp.length() - 8, puntoVentaTemp.length());
-                            CanjesDocumentoSybase documento = documentoSybaseFacade.buscaDocumento(factCab.getIdPadron(), Integer.parseInt(puntoVenta), Integer.parseInt(numeroComp));
-                            if (documento != null) {
-                                documento.setFactura(factCab.getNumero());
-                                boolean transaccionCanjeDoc;
-                                transaccionCanjeDoc = canjesDocumentosSybaseFacade.setCanjeDocsNuevo(documento);
-                            }else{
-                                return false;
-                            }
+
+                    if (nroCompPesificado != null) {
+                        String puntoVentaTemp = String.valueOf(nroCompPesificado);
+                        String puntoVenta = puntoVentaTemp.substring(0, puntoVentaTemp.length() - 8);
+                        String numeroCompTemp = String.valueOf(nroCompPesificado);
+                        String numeroComp = numeroCompTemp.substring(puntoVentaTemp.length() - 8, puntoVentaTemp.length());
+                        CanjesDocumentoSybase documento = documentoSybaseFacade.buscaDocumento(factCab.getIdPadron(), Integer.parseInt(puntoVenta), Integer.parseInt(numeroComp));
+                        if (documento != null) {
+                            documento.setFactura(factCab.getNumero());
+                            boolean transaccionCanjeDoc;
+                            transaccionCanjeDoc = canjesDocumentosSybaseFacade.setCanjeDocsNuevo(documento);
+                        } else {
+                            return false;
                         }
-                   
+                    }
 
                 }
 
@@ -3916,9 +3986,9 @@ public class GrabaComprobanteRest {
         // Obtengo el body de la request
         System.out.println("<----- pasajes()");
         JsonObject jsonBody = Utils.getJsonObjectFromRequest(request);
-            Boolean esPesificado = (Boolean) Utils.getKeyFromJsonObject("marcaPesificado", jsonBody, "boolean");
-            Boolean esPesificadoPersisteSn = (Boolean) Utils.getKeyFromJsonObject("pesificadoPersisteSn", jsonBody, "boolean");
-           BigDecimal nroCompPesificado = (BigDecimal) Utils.getKeyFromJsonObject("nroCompPesificado", jsonBody, "BigDecimal");
+        Boolean esPesificado = (Boolean) Utils.getKeyFromJsonObject("marcaPesificado", jsonBody, "boolean");
+        Boolean esPesificadoPersisteSn = (Boolean) Utils.getKeyFromJsonObject("pesificadoPersisteSn", jsonBody, "boolean");
+        BigDecimal nroCompPesificado = (BigDecimal) Utils.getKeyFromJsonObject("nroCompPesificado", jsonBody, "BigDecimal");
 
         //Obtengo los atributos del body
         //Datos de FactCab

@@ -326,7 +326,6 @@ public class BuscaComprobanteRest {
             }
             
             FactCab factCab = factCabFacade.getByCodigoNumeroAfip(codigoAfipRelacionado, numeroAfipRelacionado);
-            
             if(factCab == null || factCab.getCai() == null || factCab.getCai().equals("") || factCab.getCai().equals(" ")) {
                 respuesta.setControl(AppCodigo.ERROR, "Error, no se encontró un comprobante autorizado con esos datos");
                 return Response.status(Response.Status.BAD_REQUEST).entity(respuesta.toJson()).build();

@@ -3,6 +3,8 @@ import entidades.SisMonedas;
 import entidades.OrdenesPagosPCab;
 import entidades.SisTipoOperacion;
 import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -33,10 +35,10 @@ public class OrdenPagoCabResponse implements Payload{
     private List<SisTipoOperacionResponse> idSisTipoOperacion;
     private Integer moneda;
     private List<OrdenPagoDetalleResponse> detalle;
-   
+    private List<OrdenPagoFormaPagoResponse> formaPago;
+    private List<OrdenPagoPieResponse> pie;
     
-    
-    public OrdenPagoCabResponse (OrdenesPagosPCab op) {
+    public OrdenPagoCabResponse (OrdenesPagosPCab op) throws ParseException {
         this.idOPCab = op.getIdOPCab();
         this.idCteTipo = op.getIdCteTipo();
         this.numero = op.getNumero();
@@ -44,15 +46,21 @@ public class OrdenPagoCabResponse implements Payload{
         this.idPadron = op.getIdPadron();
         this.nombre = op.getNombre();
         this.cuit = op.getCuit();
+        this.codigoPostal=op. getCodigoPostal();
         this.cotDolar = op.getCotDolar();       
-        this.idSisOperacionComprobantes = op.getIdSisOperacionComprobantes();
-        this.idUsuario = op.getIdUsuarios();
-        this.idUsuarioAutorizante = op.getIdUsuariosAutorizante();
-        this.fechaAutorizacion = op.getFechaAutorizacion();
-        this.numeroReciboCaja = op.getNumeroReciboCaja();
+        this.idSisOperacionComprobantes = op.getIdSisOperacionComprobantes()==null?0:op.getIdSisOperacionComprobantes();;
+        this.idUsuario = op.getIdUsuarios()==null?0:op.getIdUsuarios();
+        this.idUsuarioAutorizante = op.getIdUsuariosAutorizante()==null?0:op.getIdUsuariosAutorizante();
+        this.fechaAutorizacion = op.getFechaAutorizacion()==null?(new SimpleDateFormat("yyyy-MM-dd").parse("1900-01-01")):op.getFechaAutorizacion();
+        this.numeroReciboCaja = op.getNumeroReciboCaja()==null?0:op.getNumeroReciboCaja();
         this.pagoCerrado = op.getPagoCerrado();
+        //-----Esto hay que modificarlo---
+        this.moneda=2;
+         //--------------------------------
         this.detalle = new ArrayList<>();
-        
+        this.formaPago =new ArrayList<>();
+        this.pie = new ArrayList<>();
+        //---------------------------------
     }
 
   
@@ -72,7 +80,9 @@ public class OrdenPagoCabResponse implements Payload{
          this.numeroReciboCaja = (long) numeroReciboCaja;
          this.pagoCerrado = pagoCerrado;
          this.detalle = new ArrayList<>();
-       
+         this.formaPago = new ArrayList<>();
+         this.pie = new ArrayList<>();
+         
        
     }
 
@@ -83,7 +93,8 @@ public class OrdenPagoCabResponse implements Payload{
     public void setIdSisTipoOperacion(List<SisTipoOperacionResponse> idSisTipoOperacion) {
         this.idSisTipoOperacion = idSisTipoOperacion;
     }
-
+   
+   //---------------------------
     public List<OrdenPagoDetalleResponse> getDetalle() {
         return detalle;
     }
@@ -91,7 +102,10 @@ public class OrdenPagoCabResponse implements Payload{
     public void setDetalle(List<OrdenPagoDetalleResponse> detalle) {
         this.detalle = detalle;
     }
+   
+    
 
+   //----------------------------
     public Integer getIdOPCab() {
         return idOPCab;
     }
@@ -115,6 +129,8 @@ public class OrdenPagoCabResponse implements Payload{
     public void setNumero(long numero) {
         this.numero = numero;
     }
+
+    
 
     public Date getFechaEmision() {
         return fechaEmision;
@@ -220,14 +236,26 @@ public class OrdenPagoCabResponse implements Payload{
         this.moneda = moneda;
     }
 
-  
+    public List<OrdenPagoFormaPagoResponse> getFormaPago() {
+        return formaPago;
+    }
 
-  
+    public void setFormaPago(List<OrdenPagoFormaPagoResponse> formaPago) {
+        this.formaPago = formaPago;
+    }
 
-   
+    public List<OrdenPagoPieResponse> getPie() {
+        return pie;
+    }
 
-   
+    public void setPie(List<OrdenPagoPieResponse> pie) {
+        this.pie = pie;
+    }
 
+    
+    
+    
+    
     public void agregarDetalles(List<OrdenPagoDetalleResponse> f) {
         for(OrdenPagoDetalleResponse op: f) {
             this.detalle.add(op);

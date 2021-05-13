@@ -6,6 +6,7 @@ import entidades.OrdenesPagosDetalle;
 import entidades.FactCab;
 import entidades.Sucursal;
 import java.math.BigDecimal;
+import java.sql.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -15,9 +16,9 @@ import java.util.List;
  * @author DaarioQuiroga
  */
 public class OrdenPagoDetalleResponse implements Payload {
-    private Integer idOPDetalle; 
-   private List<OrdenesPagosPCab> idOPCab; 
-   private  Integer item;
+   private Integer idOPDetalle; 
+   private Integer idOPCab; 
+   private Integer item;
    private  Integer idFactCab;
    private BigDecimal pagadoDolar;  
    private BigDecimal importePesificado;
@@ -27,22 +28,37 @@ public class OrdenPagoDetalleResponse implements Payload {
    private BigDecimal ivaDifCotizacion;
    private Integer idIVA;
     
+   //private FactCabResponse FactCab;
+  
     
-    
-    public OrdenPagoDetalleResponse(OrdenesPagosDetalle c) {
-        this.idOPDetalle = c.getIdOPDetalle();
-        this.idOPCab =  new ArrayList<>();
-        this.item = c.getItem();
-        this.idFactCab = c.getIdFactCab();
-        this.pagadoDolar = c.getPagadoDolar();
-        this.importePesificado = c.getImportePesificado();
-        this.idFormaPago = c.getIdFormaPago();
-        this.cotDolarFact = c.getCotDolarFact();
-        this.difCotizacion = c.getDifCotizacion();
-        this.idIVA = c.getIdIVA();
-        this.ivaDifCotizacion = c.getIvaDifCotizacion();
-                
+    public OrdenPagoDetalleResponse(
+            Integer idOPDetalle, 
+            Integer idOPCab, 
+            Integer item, 
+            Integer idFactCab,
+            BigDecimal pagadoDolar,
+            BigDecimal importePesificado,
+            Integer idFormaPago,
+            BigDecimal cotDolarFact,
+            BigDecimal difCotizacion,
+            Integer idIVA,
+            BigDecimal ivaDifCotizacion) {
+        this.idOPDetalle = idOPDetalle;
+        this.idOPCab =  idOPCab;
+        this.item = item;
+        this.idFactCab = idFactCab;
+        this.pagadoDolar = pagadoDolar;
+        this.importePesificado = importePesificado;
+        this.idFormaPago = idFormaPago;
+        this.cotDolarFact = cotDolarFact;
+        this.difCotizacion = difCotizacion;
+        this.idIVA = idIVA;
+        this.ivaDifCotizacion = ivaDifCotizacion;
+        //this.FactCab=null;
     }
+
+   
+    
 
     public Integer getIdOPDetalle() {
         return idOPDetalle;
@@ -52,13 +68,15 @@ public class OrdenPagoDetalleResponse implements Payload {
         this.idOPDetalle = idOPDetalle;
     }
 
-    public List<OrdenesPagosPCab> getIdOPCab() {
+    public Integer getIdOPCab() {
         return idOPCab;
     }
 
-    public void setIdOPCab(List<OrdenesPagosPCab> idOPCab) {
+    public void setIdOPCab(Integer idOPCab) {
         this.idOPCab = idOPCab;
     }
+
+   
 
     public Integer getItem() {
         return item;
@@ -132,7 +150,15 @@ public class OrdenPagoDetalleResponse implements Payload {
         this.idIVA = idIVA;
     }
 
+    /*public FactCabResponse getFactura() {
+        return FactCab;
+    }
+
+    public void setFactura(FactCabResponse FactCab) {
+        this.FactCab = FactCab;
+    }*/
     
+     
     
     
     @Override

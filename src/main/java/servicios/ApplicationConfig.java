@@ -38,6 +38,9 @@ public class ApplicationConfig extends Application {
         resources.add(servicios.BuscaPosicionStockRest.class);
         resources.add(servicios.BuscaProductosRest.class);
         resources.add(servicios.BuscaStockRest.class);
+        resources.add(servicios.BuscarComprobantesOrdenesPagoRest.class);
+        resources.add(servicios.BuscarOrdenPagoRest.class);
+        resources.add(servicios.BuscarOrdenesPagoRest.class);
         resources.add(servicios.CalculoImportesSubtotales.class);
         resources.add(servicios.CanjesContratosCerealesRest.class);
         resources.add(servicios.CategoriaRest.class);

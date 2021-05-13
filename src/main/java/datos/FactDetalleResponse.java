@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
  *
- * @author FrancoSili
+ * @author Dario
  */
 public class FactDetalleResponse implements Payload{
     private String comprobante;
